@@ -27,7 +27,6 @@
 		DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */; };
 		DAC85AA72FD22E0C0096CC6F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */; };
 		DAC85ACF2FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
-		DAC85AD02FD22E4D0096CC6F /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC82FD22E4D0096CC6F /* Info.plist */; };
 		DAC85AD12FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */; };
 		DAC85AD22FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACB2FD22E4D0096CC6F /* SkyKidWidgetControl.swift */; };
 		DAC85AD32FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */; };
@@ -37,9 +36,7 @@
 		DAC85AD72FD22E4D0096CC6F /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */; };
 		DAC85AD82FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */; };
 		DAC85AD92FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */; };
-		DAC85ADA2FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACB2FD22E4D0096CC6F /* SkyKidWidgetControl.swift */; };
 		DAC85ADB2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */; };
-		DAC85ADC2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACA2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift */; };
 		DAC85ADD2FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */; };
 		DAC85ADE2FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC92FD22E4D0096CC6F /* SkyKidWidget.swift */; };
 		DAC85ADF2FD22E4D0096CC6F /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */; };
@@ -134,10 +131,17 @@
 			);
 			target = DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */;
 		};
+		DAC85AEF2FD235560096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ClothingStatusWidgetView.swift,
+			);
+			target = TARGET /* SkyKid */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SkyKidWidget; sourceTree = "<group>"; };
+		DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (DAC85AEF2FD235560096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SkyKidWidget; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -404,7 +408,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DAC85ACF2FD22E4D0096CC6F /* Assets.xcassets in Resources */,
-				DAC85AD02FD22E4D0096CC6F /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -448,9 +451,7 @@
 				A006 /* RadarMapViewModel.swift in Sources */,
 				A007 /* RainViewerOverlay.swift in Sources */,
 				DAC85AD92FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */,
-				DAC85ADA2FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */,
 				DAC85ADB2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */,
-				DAC85ADC2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */,
 				DAC85ADD2FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */,
 				DAC85ADE2FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */,
 				DAC85ADF2FD22E4D0096CC6F /* AppIntent.swift in Sources */,
@@ -544,8 +545,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SkyKidWidget/Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = /Users/northarion/projects/SkyKid/SkyKidWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SkyKidWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
@@ -622,8 +623,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SkyKidWidget/Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = /Users/northarion/projects/SkyKid/SkyKidWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = SkyKidWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
@@ -661,7 +662,7 @@
 				DEVELOPMENT_TEAM = L436K29P42;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = SkyKid/Info.plist;
+				INFOPLIST_FILE = /Users/northarion/projects/SkyKid/SkyKid/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app;
@@ -709,7 +710,7 @@
 				DEVELOPMENT_TEAM = L436K29P42;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = SkyKid/Info.plist;
+				INFOPLIST_FILE = /Users/northarion/projects/SkyKid/SkyKid/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app;

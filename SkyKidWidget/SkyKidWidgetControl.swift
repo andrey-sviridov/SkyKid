@@ -9,6 +9,7 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
+@available(iOS 18.0, *)
 struct SkyKidWidgetControl: ControlWidget {
     static let kind: String = "com.skykid.app.SkyKidWidget"
 
@@ -30,6 +31,7 @@ struct SkyKidWidgetControl: ControlWidget {
     }
 }
 
+@available(iOS 18.0, *)
 extension SkyKidWidgetControl {
     struct Value {
         var isRunning: Bool
@@ -48,6 +50,7 @@ extension SkyKidWidgetControl {
     }
 }
 
+@available(iOS 18.0, *)
 struct TimerConfiguration: ControlConfigurationIntent {
     static let title: LocalizedStringResource = "Timer Name Configuration"
 
@@ -55,6 +58,7 @@ struct TimerConfiguration: ControlConfigurationIntent {
     var timerName: String
 }
 
+@available(iOS 18.0, *)
 struct StartTimerIntent: SetValueIntent {
     static let title: LocalizedStringResource = "Start a timer"
 
@@ -70,8 +74,10 @@ struct StartTimerIntent: SetValueIntent {
         self.name = name
     }
 
+    @available(iOS 18.0, *)
     func perform() async throws -> some IntentResult {
         // Start the timer…
         return .result()
     }
 }
+

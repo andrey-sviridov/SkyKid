@@ -325,3 +325,33 @@ struct StatusBadgeView: View {
 } timeline: {
     ClothingStatusEntry.placeholder
 }
+// MARK: - Widgets
+
+import WidgetKit
+
+struct ClothingStatusWidget: Widget {
+    let kind: String = "ClothingStatusWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: ClothingStatusProvider()) { entry in
+            ClothingStatusWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Одежда для ребёнка")
+        .description("Рекомендации по одежде с учётом погоды и возраста.")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+struct ClothingStatusLockScreenWidget: Widget {
+    let kind: String = "ClothingStatusLockScreenWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: ClothingStatusProvider()) { entry in
+            ClothingStatusWidgetView(entry: entry)
+        }
+        .configurationDisplayName("Одежда — Экран блокировки")
+        .description("Краткие рекомендации для экрана блокировки.")
+        .supportedFamilies([.accessoryCircular, .accessoryRectangular])
+    }
+}
+

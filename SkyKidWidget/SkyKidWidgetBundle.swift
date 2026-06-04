@@ -12,7 +12,9 @@ import SwiftUI
 struct SkyKidWidgetBundle: WidgetBundle {
     var body: some Widget {
         SkyKidWidget()
-        SkyKidWidgetControl()
         SkyKidWidgetLiveActivity()
+        if #available(iOS 18.0, *) {
+            SkyKidWidgetControl()
+        }
     }
 }
