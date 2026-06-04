@@ -189,23 +189,104 @@ extension String {
     private func dropLast() -> String { String(self.dropLast()) }
 }
 
+// MARK: - App Group shared store
+// ⚠️  Добавьте этот файл (ChildProfile.swift) также в таргет «SkyKidWidget»
+//     через Target Membership в инспекторе файла в Xcode.
+//     Оба таргета должны иметь capability «App Groups» с ID: group.com.skykid.app
+
+enum AppGroup {
+    static let suiteName = "group.com.skykid.app"
+
+    static var defaults: UserDefaults {
+        UserDefaults(suiteName: suiteName) ?? .standard
+    }
+
+    // MARK: Child Profile
+
+    static let profileKey = "child_profile"
+
+    static func saveProfile(_ profile: ChildProfile) {
+        guard let data = try? JSONEncoder().encode(profile) else { return }
+        defaults.set(data, forKey: profileKey)
+    }
+
+    static func loadProfile() -> ChildProfile? {
+        guard let data = defaults.data(forKey: profileKey) else { return nil }
+        return try? JSONDecoder().decode(ChildProfile.self, from: data)
+    }
+
+    static func deleteProfile() {
+        defaults.removeObject(forKey: profileKey)
+    }
+
+    // MARK: Weather Cache
+    // Записывается WeatherViewModel после каждого fetch, читается виджетом.
+
+    private enum WK {
+        static let temp    = "wg_temperature"
+        static let feels   = "wg_apparent_temp"
+        static let code    = "wg_weather_code"
+        static let wind    = "wg_wind_speed"
+        static let precip  = "wg_precipitation"
+        static let city    = "wg_city_name"
+        static let updated = "wg_updated_at"
+    }
+
+    static func saveWeather(
+        temperature: Double, apparentTemp: Double, weatherCode: Int,
+        windSpeed: Double, precipitation: Double, cityName: String
+    ) {
+        let d = defaults
+        d.set(temperature,                  forKey: WK.temp)
+        d.set(apparentTemp,                 forKey: WK.feels)
+        d.set(weatherCode,                  forKey: WK.code)
+        d.set(windSpeed,                    forKey: WK.wind)
+        d.set(precipitation,                forKey: WK.precip)
+        d.set(cityName,                     forKey: WK.city)
+        d.set(Date().timeIntervalSince1970, forKey: WK.updated)
+    }
+
+    /// nil если кэш пуст или устарел (> 2 ч).
+    static func loadCachedWeather() -> CachedWeather? {
+        let d = defaults
+        guard d.object(forKey: WK.temp)    != nil,
+              d.object(forKey: WK.updated) != nil else { return nil }
+        let updatedAt = Date(timeIntervalSince1970: d.double(forKey: WK.updated))
+        guard Date().timeIntervalSince(updatedAt) < 7_200 else { return nil }
+        return CachedWeather(
+            temperature:         d.double(forKey:  WK.temp),
+            apparentTemperature: d.double(forKey:  WK.feels),
+            weatherCode:         d.integer(forKey: WK.code),
+            windSpeed:           d.double(forKey:  WK.wind),
+            precipitation:       d.double(forKey:  WK.precip),
+            cityName:            d.string(forKey:  WK.city) ?? "—",
+            updatedAt:           updatedAt
+        )
+    }
+}
+
+// MARK: - Снимок кешированных данных о погоде
+
+struct CachedWeather: Sendable {
+    let temperature: Double
+    let apparentTemperature: Double
+    let weatherCode: Int
+    let windSpeed: Double
+    let precipitation: Double
+    let cityName: String
+    let updatedAt: Date
+}
+
 // MARK: - Persistence
 
 final class ChildProfileStore: @unchecked Sendable {
     static let shared = ChildProfileStore()
-    private let key = "child_profile"
 
     var profile: ChildProfile? {
-        get {
-            guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
-            return try? JSONDecoder().decode(ChildProfile.self, from: data)
-        }
+        get { AppGroup.loadProfile() }
         set {
-            if let newValue, let data = try? JSONEncoder().encode(newValue) {
-                UserDefaults.standard.set(data, forKey: key)
-            } else {
-                UserDefaults.standard.removeObject(forKey: key)
-            }
+            if let newValue { AppGroup.saveProfile(newValue) }
+            else { AppGroup.deleteProfile() }
         }
     }
 }

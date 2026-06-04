@@ -51,6 +51,7 @@ struct ContentView: View {
             weatherTab
             mapTab
             outfitTab
+            calculatorTab
             profileTab
         }
     }
@@ -105,6 +106,14 @@ struct ContentView: View {
         .tag(2)
     }
 
+    private var calculatorTab: some View {
+        NavigationStack {
+            ClothingCalculatorView()
+        }
+        .tabItem { Label("Конструктор", systemImage: "slider.horizontal.3") }
+        .tag(3)
+    }
+
     private var profileTab: some View {
         NavigationStack {
             ProfileSummaryView(profile: $childProfile)
@@ -115,7 +124,7 @@ struct ContentView: View {
                 systemImage: "person.circle.fill"
             )
         }
-        .tag(3)
+        .tag(4)
     }
 
     private var refreshButton: some ToolbarContent {

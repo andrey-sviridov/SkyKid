@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -23,9 +23,88 @@
 		A014 /* ChildProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* ChildProfile.swift */; };
 		A015 /* ChildProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* ChildProfileSetupView.swift */; };
 		A016 /* ChildWeatherPerception.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* ChildWeatherPerception.swift */; };
+		A017 /* ClothingCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* ClothingCalculatorView.swift */; };
+		DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */; };
+		DAC85AA72FD22E0C0096CC6F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */; };
+		DAC85ACF2FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
+		DAC85AD02FD22E4D0096CC6F /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC82FD22E4D0096CC6F /* Info.plist */; };
+		DAC85AD12FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */; };
+		DAC85AD22FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACB2FD22E4D0096CC6F /* SkyKidWidgetControl.swift */; };
+		DAC85AD32FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */; };
+		DAC85AD42FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACA2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift */; };
+		DAC85AD52FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */; };
+		DAC85AD62FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC92FD22E4D0096CC6F /* SkyKidWidget.swift */; };
+		DAC85AD72FD22E4D0096CC6F /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */; };
+		DAC85AD82FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */; };
+		DAC85AD92FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */; };
+		DAC85ADA2FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACB2FD22E4D0096CC6F /* SkyKidWidgetControl.swift */; };
+		DAC85ADB2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */; };
+		DAC85ADC2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACA2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift */; };
+		DAC85ADD2FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */; };
+		DAC85ADE2FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC92FD22E4D0096CC6F /* SkyKidWidget.swift */; };
+		DAC85ADF2FD22E4D0096CC6F /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */; };
+		DAC85AE02FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */; };
+		DAC85AE12FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
+		DAC85AE32FD22F8D0096CC6F /* ChildProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* ChildProfile.swift */; };
+		DAC85AE62FD232420096CC6F /* SkyKidWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		R001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85A9D2FD21E320096CC6F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		DAC85AE72FD232420096CC6F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJECT /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DAC85AA12FD22E0C0096CC6F;
+			remoteInfo = SkyKidWidgetExtension;
+		};
+		DAC85AEA2FD2325B0096CC6F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJECT /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DAC85AA12FD22E0C0096CC6F;
+			remoteInfo = SkyKidWidgetExtension;
+		};
+		DAC85AEC2FD232940096CC6F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJECT /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DAC85AA12FD22E0C0096CC6F;
+			remoteInfo = SkyKidWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DAC85AE92FD232420096CC6F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				DAC85AE62FD232420096CC6F /* SkyKidWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		DAC85A9D2FD21E320096CC6F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SkyKidWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntent.swift; sourceTree = "<group>"; };
+		DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingStatusProvider.swift; sourceTree = "<group>"; };
+		DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingStatusWidgetView.swift; sourceTree = "<group>"; };
+		DAC85AC82FD22E4D0096CC6F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DAC85AC92FD22E4D0096CC6F /* SkyKidWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidWidget.swift; sourceTree = "<group>"; };
+		DAC85ACA2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidWidgetBundle.swift; sourceTree = "<group>"; };
+		DAC85ACB2FD22E4D0096CC6F /* SkyKidWidgetControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidWidgetControl.swift; sourceTree = "<group>"; };
+		DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidWidgetLiveActivity.swift; sourceTree = "<group>"; };
+		DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetClothingCalculator.swift; sourceTree = "<group>"; };
+		DAC85AE42FD2300D0096CC6F /* SkyKid.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkyKid.entitlements; sourceTree = "<group>"; };
+		DAC85AE52FD2302B0096CC6F /* SkyKidWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkyKidWidgetExtension.entitlements; sourceTree = "<group>"; };
 		F001 /* SkyKidApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidApp.swift; sourceTree = "<group>"; };
 		F002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F003 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
@@ -42,11 +121,35 @@
 		F014 /* ChildProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfile.swift; sourceTree = "<group>"; };
 		F015 /* ChildProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileSetupView.swift; sourceTree = "<group>"; };
 		F016 /* ChildWeatherPerception.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildWeatherPerception.swift; sourceTree = "<group>"; };
+		F017 /* ClothingCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingCalculatorView.swift; sourceTree = "<group>"; };
 		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* SkyKid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyKid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SkyKidWidget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		DAC85A9F2FD22E0C0096CC6F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAC85AA72FD22E0C0096CC6F /* SwiftUI.framework in Frameworks */,
+				DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FRAMEWORKS /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -74,6 +177,32 @@
 				MODGROUP /* Models */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		DAC85AA32FD22E0C0096CC6F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */,
+				DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DAC85ACE2FD22E4D0096CC6F /* SkyKidWidget */ = {
+			isa = PBXGroup;
+			children = (
+				DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */,
+				DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */,
+				DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */,
+				DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */,
+				DAC85AC82FD22E4D0096CC6F /* Info.plist */,
+				DAC85AC92FD22E4D0096CC6F /* SkyKidWidget.swift */,
+				DAC85ACA2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift */,
+				DAC85ACB2FD22E4D0096CC6F /* SkyKidWidgetControl.swift */,
+				DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */,
+				DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */,
+			);
+			path = SkyKidWidget;
 			sourceTree = "<group>";
 		};
 		FEATGROUP /* Features */ = {
@@ -128,6 +257,7 @@
 			children = (
 				F008 /* OutfitView.swift */,
 				F009 /* OutfitAdvisor.swift */,
+				F017 /* ClothingCalculatorView.swift */,
 			);
 			path = Outfit;
 			sourceTree = "<group>";
@@ -136,6 +266,7 @@
 			isa = PBXGroup;
 			children = (
 				PROD /* SkyKid.app */,
+				DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -152,7 +283,12 @@
 		ROOT = {
 			isa = PBXGroup;
 			children = (
+				DAC85AE52FD2302B0096CC6F /* SkyKidWidgetExtension.entitlements */,
+				DAC85ACE2FD22E4D0096CC6F /* SkyKidWidget */,
+				DAC85A9D2FD21E320096CC6F /* Assets.xcassets */,
 				SKYGROUP /* SkyKid */,
+				DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */,
+				DAC85AA32FD22E0C0096CC6F /* Frameworks */,
 				PRODUCTS /* Products */,
 			);
 			sourceTree = "<group>";
@@ -160,6 +296,7 @@
 		SKYGROUP /* SkyKid */ = {
 			isa = PBXGroup;
 			children = (
+				DAC85AE42FD2300D0096CC6F /* SkyKid.entitlements */,
 				APPGROUP /* App */,
 				FEATGROUP /* Features */,
 				COREGROUP /* Core */,
@@ -180,16 +317,43 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		TARGET /* SkyKid */ = {
+		DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CFGLIST /* Build configuration list for PBXNativeTarget "SkyKid" */;
+			buildConfigurationList = DAC85ABD2FD22E0D0096CC6F /* Build configuration list for PBXNativeTarget "SkyKidWidgetExtension" */;
 			buildPhases = (
-				SOURCES /* Sources */,
-				FRAMEWORKS /* Frameworks */,
+				DAC85A9E2FD22E0C0096CC6F /* Sources */,
+				DAC85A9F2FD22E0C0096CC6F /* Frameworks */,
+				DAC85AA02FD22E0C0096CC6F /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */,
+			);
+			name = SkyKidWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = SkyKidWidgetExtension;
+			productReference = DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		TARGET /* SkyKid */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFGLIST /* Build configuration list for PBXNativeTarget "SkyKid" */;
+			buildPhases = (
+				RESOURCES /* Resources */,
+				SOURCES /* Sources */,
+				FRAMEWORKS /* Frameworks */,
+				DAC85AE92FD232420096CC6F /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DAC85AE82FD232420096CC6F /* PBXTargetDependency */,
+				DAC85AEB2FD2325B0096CC6F /* PBXTargetDependency */,
+				DAC85AED2FD232940096CC6F /* PBXTargetDependency */,
 			);
 			name = SkyKid;
 			productName = SkyKid;
@@ -203,9 +367,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					DAC85AA12FD22E0C0096CC6F = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					TARGET = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -226,11 +393,49 @@
 			projectRoot = "";
 			targets = (
 				TARGET /* SkyKid */,
+				DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		DAC85AA02FD22E0C0096CC6F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAC85ACF2FD22E4D0096CC6F /* Assets.xcassets in Resources */,
+				DAC85AD02FD22E4D0096CC6F /* Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		RESOURCES /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAC85AE12FD22E4D0096CC6F /* Assets.xcassets in Resources */,
+				R001 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		DAC85A9E2FD22E0C0096CC6F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAC85AE32FD22F8D0096CC6F /* ChildProfile.swift in Sources */,
+				DAC85AD12FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */,
+				DAC85AD22FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */,
+				DAC85AD32FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */,
+				DAC85AD42FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */,
+				DAC85AD52FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */,
+				DAC85AD62FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */,
+				DAC85AD72FD22E4D0096CC6F /* AppIntent.swift in Sources */,
+				DAC85AD82FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		SOURCES /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -242,6 +447,14 @@
 				A005 /* RadarMapView.swift in Sources */,
 				A006 /* RadarMapViewModel.swift in Sources */,
 				A007 /* RainViewerOverlay.swift in Sources */,
+				DAC85AD92FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */,
+				DAC85ADA2FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */,
+				DAC85ADB2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */,
+				DAC85ADC2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */,
+				DAC85ADD2FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */,
+				DAC85ADE2FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */,
+				DAC85ADF2FD22E4D0096CC6F /* AppIntent.swift in Sources */,
+				DAC85AE02FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */,
 				A008 /* OutfitView.swift in Sources */,
 				A009 /* OutfitAdvisor.swift in Sources */,
 				A010 /* OpenMeteoService.swift in Sources */,
@@ -251,17 +464,198 @@
 				A014 /* ChildProfile.swift in Sources */,
 				A015 /* ChildProfileSetupView.swift in Sources */,
 				A016 /* ChildWeatherPerception.swift in Sources */,
+				A017 /* ClothingCalculatorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		DAC85AE82FD232420096CC6F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */;
+			targetProxy = DAC85AE72FD232420096CC6F /* PBXContainerItemProxy */;
+		};
+		DAC85AEB2FD2325B0096CC6F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */;
+			targetProxy = DAC85AEA2FD2325B0096CC6F /* PBXContainerItemProxy */;
+		};
+		DAC85AED2FD232940096CC6F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */;
+			targetProxy = DAC85AEC2FD232940096CC6F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		DAC85ABA2FD22E0D0096CC6F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = SkyKidWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = L436K29P42;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkyKidWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SkyKidWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app.SkyKidWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DAC85ABB2FD22E0D0096CC6F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_ENTITLEMENTS = SkyKidWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = L436K29P42;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SkyKidWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SkyKidWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app.SkyKidWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		DBGCFG /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SkyKid/SkyKid.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L436K29P42;
@@ -309,6 +703,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SkyKid/SkyKid.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L436K29P42;
@@ -333,6 +728,15 @@
 			buildConfigurations = (
 				DBGCFG /* Debug */,
 				RELCFG /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DAC85ABD2FD22E0D0096CC6F /* Build configuration list for PBXNativeTarget "SkyKidWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DAC85ABA2FD22E0D0096CC6F /* Debug */,
+				DAC85ABB2FD22E0D0096CC6F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
