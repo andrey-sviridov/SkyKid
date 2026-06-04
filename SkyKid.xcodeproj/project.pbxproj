@@ -1,0 +1,352 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A001 /* SkyKidApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* SkyKidApp.swift */; };
+		A002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F002 /* ContentView.swift */; };
+		A003 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003 /* WeatherView.swift */; };
+		A004 /* WeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F004 /* WeatherViewModel.swift */; };
+		A005 /* RadarMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F005 /* RadarMapView.swift */; };
+		A006 /* RadarMapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006 /* RadarMapViewModel.swift */; };
+		A007 /* RainViewerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F007 /* RainViewerOverlay.swift */; };
+		A008 /* OutfitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* OutfitView.swift */; };
+		A009 /* OutfitAdvisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F009 /* OutfitAdvisor.swift */; };
+		A010 /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
+		A011 /* RainViewerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F011 /* RainViewerService.swift */; };
+		A012 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F012 /* LocationManager.swift */; };
+		A013 /* WeatherData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F013 /* WeatherData.swift */; };
+		A014 /* ChildProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* ChildProfile.swift */; };
+		A015 /* ChildProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* ChildProfileSetupView.swift */; };
+		A016 /* ChildWeatherPerception.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* ChildWeatherPerception.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F001 /* SkyKidApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidApp.swift; sourceTree = "<group>"; };
+		F002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		F003 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
+		F004 /* WeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModel.swift; sourceTree = "<group>"; };
+		F005 /* RadarMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapView.swift; sourceTree = "<group>"; };
+		F006 /* RadarMapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapViewModel.swift; sourceTree = "<group>"; };
+		F007 /* RainViewerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerOverlay.swift; sourceTree = "<group>"; };
+		F008 /* OutfitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitView.swift; sourceTree = "<group>"; };
+		F009 /* OutfitAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitAdvisor.swift; sourceTree = "<group>"; };
+		F010 /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
+		F011 /* RainViewerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerService.swift; sourceTree = "<group>"; };
+		F012 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		F013 /* WeatherData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherData.swift; sourceTree = "<group>"; };
+		F014 /* ChildProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfile.swift; sourceTree = "<group>"; };
+		F015 /* ChildProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileSetupView.swift; sourceTree = "<group>"; };
+		F016 /* ChildWeatherPerception.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildWeatherPerception.swift; sourceTree = "<group>"; };
+		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		PROD /* SkyKid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyKid.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FRAMEWORKS /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		APPGROUP /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F001 /* SkyKidApp.swift */,
+				F002 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		COREGROUP /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				NETGROUP /* Network */,
+				LOCGROUP /* Location */,
+				MODGROUP /* Models */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		FEATGROUP /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				WEATHERGROUP /* Weather */,
+				MAPGROUP /* Map */,
+				OUTFITGROUP /* Outfit */,
+				PROFILEGROUP /* Profile */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		LOCGROUP /* Location */ = {
+			isa = PBXGroup;
+			children = (
+				F012 /* LocationManager.swift */,
+			);
+			path = Location;
+			sourceTree = "<group>";
+		};
+		MAPGROUP /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				F005 /* RadarMapView.swift */,
+				F006 /* RadarMapViewModel.swift */,
+				F007 /* RainViewerOverlay.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		MODGROUP /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F013 /* WeatherData.swift */,
+				F014 /* ChildProfile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		NETGROUP /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				F010 /* OpenMeteoService.swift */,
+				F011 /* RainViewerService.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
+		OUTFITGROUP /* Outfit */ = {
+			isa = PBXGroup;
+			children = (
+				F008 /* OutfitView.swift */,
+				F009 /* OutfitAdvisor.swift */,
+			);
+			path = Outfit;
+			sourceTree = "<group>";
+		};
+		PRODUCTS /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				PROD /* SkyKid.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		PROFILEGROUP /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				F015 /* ChildProfileSetupView.swift */,
+				F016 /* ChildWeatherPerception.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		ROOT = {
+			isa = PBXGroup;
+			children = (
+				SKYGROUP /* SkyKid */,
+				PRODUCTS /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		SKYGROUP /* SkyKid */ = {
+			isa = PBXGroup;
+			children = (
+				APPGROUP /* App */,
+				FEATGROUP /* Features */,
+				COREGROUP /* Core */,
+				PLIST /* Info.plist */,
+			);
+			path = SkyKid;
+			sourceTree = "<group>";
+		};
+		WEATHERGROUP /* Weather */ = {
+			isa = PBXGroup;
+			children = (
+				F003 /* WeatherView.swift */,
+				F004 /* WeatherViewModel.swift */,
+			);
+			path = Weather;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		TARGET /* SkyKid */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFGLIST /* Build configuration list for PBXNativeTarget "SkyKid" */;
+			buildPhases = (
+				SOURCES /* Sources */,
+				FRAMEWORKS /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SkyKid;
+			productName = SkyKid;
+			productReference = PROD /* SkyKid.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		PROJECT /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					TARGET = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = PROJCFGLIST /* Build configuration list for PBXProject "SkyKid" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ru;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ru,
+				en,
+				Base,
+			);
+			mainGroup = ROOT;
+			productRefGroup = PRODUCTS /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				TARGET /* SkyKid */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		SOURCES /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A001 /* SkyKidApp.swift in Sources */,
+				A002 /* ContentView.swift in Sources */,
+				A003 /* WeatherView.swift in Sources */,
+				A004 /* WeatherViewModel.swift in Sources */,
+				A005 /* RadarMapView.swift in Sources */,
+				A006 /* RadarMapViewModel.swift in Sources */,
+				A007 /* RainViewerOverlay.swift in Sources */,
+				A008 /* OutfitView.swift in Sources */,
+				A009 /* OutfitAdvisor.swift in Sources */,
+				A010 /* OpenMeteoService.swift in Sources */,
+				A011 /* RainViewerService.swift in Sources */,
+				A012 /* LocationManager.swift in Sources */,
+				A013 /* WeatherData.swift in Sources */,
+				A014 /* ChildProfile.swift in Sources */,
+				A015 /* ChildProfileSetupView.swift in Sources */,
+				A016 /* ChildWeatherPerception.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DBGCFG /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L436K29P42;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SkyKid/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app;
+				PRODUCT_NAME = SkyKid;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		PROJDBG /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		PROJREL /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		RELCFG /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L436K29P42;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SkyKid/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app;
+				PRODUCT_NAME = SkyKid;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CFGLIST /* Build configuration list for PBXNativeTarget "SkyKid" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DBGCFG /* Debug */,
+				RELCFG /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		PROJCFGLIST /* Build configuration list for PBXProject "SkyKid" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				PROJDBG /* Debug */,
+				PROJREL /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = PROJECT /* Project object */;
+}
