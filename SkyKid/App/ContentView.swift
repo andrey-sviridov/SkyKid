@@ -9,6 +9,16 @@ struct ContentView: View {
     @State private var childProfile: ChildProfile? = ChildProfileStore.shared.profile
     @State private var showProfileSetup = false
 
+    @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
+
+    private var preferredScheme: ColorScheme? {
+        switch colorSchemeRaw {
+        case "light": return .light
+        case "dark":  return .dark
+        default:      return nil
+        }
+    }
+
     var body: some View {
         Group {
             if childProfile == nil {
@@ -32,6 +42,7 @@ struct ContentView: View {
         .sheet(isPresented: $showProfileSetup) {
             ChildProfileSetupView(profile: $childProfile)
         }
+        .preferredColorScheme(preferredScheme)
     }
 
     @ViewBuilder
@@ -54,8 +65,15 @@ struct ContentView: View {
                     WeatherView(weather: w, cityName: cityName, profile: childProfile)
                 }
             }
-            .navigationTitle("SkyKid")
-            .toolbar { refreshButton }
+            .navigationTitle("")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("SKY KID")
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .kerning(4)
+                }
+                refreshButton
+            }
         }
         .tabItem { Label("Погода", systemImage: "sun.max.fill") }
         .tag(0)
@@ -120,6 +138,7 @@ struct ContentView: View {
 struct ProfileSummaryView: View {
     @Binding var profile: ChildProfile?
     @State private var showEdit = false
+    @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
 
     var body: some View {
         List {
@@ -158,6 +177,19 @@ struct ProfileSummaryView: View {
                         Text(offset == 0 ? "Как у взрослого" : "\(Int(offset))° (ощущает холоднее)")
                             .font(.body)
                     }
+                }
+
+                Section("Оформление") {
+                    Picker("Тема", selection: $colorSchemeRaw) {
+                        Label("Системная", systemImage: "circle.lefthalf.filled")
+                            .tag("system")
+                        Label("Светлая", systemImage: "sun.max.fill")
+                            .tag("light")
+                        Label("Тёмная", systemImage: "moon.fill")
+                            .tag("dark")
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
                 }
 
                 Section {

@@ -2,11 +2,13 @@ import SwiftUI
 
 struct ChildProfileSetupView: View {
     @Binding var profile: ChildProfile?
+    @Environment(\.dismiss) private var dismiss
 
     @State private var name = ""
     @State private var gender: ChildGender = .boy
     @State private var birthday = Calendar.current.date(byAdding: .year, value: -2, to: Date()) ?? Date()
     @State private var nameError = false
+    @FocusState private var nameFocused: Bool
 
     private var isEditing: Bool { profile != nil }
 
@@ -23,6 +25,8 @@ struct ChildProfileSetupView: View {
                 }
                 .padding(20)
             }
+            // Тап по ScrollView вне TextField скрывает клавиатуру
+            .scrollDismissesKeyboard(.immediately)
             .background(Color(.systemGroupedBackground))
             .navigationTitle(isEditing ? "Данные ребёнка" : "")
             .navigationBarTitleDisplayMode(.inline)
@@ -44,6 +48,8 @@ struct ChildProfileSetupView: View {
         }
     }
 
+    // MARK: - Sections
+
     private var welcomeHeader: some View {
         VStack(spacing: 12) {
             Text("👶")
@@ -60,13 +66,17 @@ struct ChildProfileSetupView: View {
 
     private var formCard: some View {
         VStack(spacing: 0) {
-            // Name
+
+            // Имя — тап по всей ячейке фокусирует поле
             VStack(alignment: .leading, spacing: 6) {
                 Label("Имя", systemImage: "person.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 TextField("Имя ребёнка", text: $name)
                     .font(.body)
+                    .focused($nameFocused)
+                    .submitLabel(.done)                          // Показывает «Готово» на клавиатуре
+                    .onSubmit { nameFocused = false }            // Enter скрывает клавиатуру
                     .onChange(of: name) { _, _ in nameError = false }
                 if nameError {
                     Text("Введите имя")
@@ -75,10 +85,12 @@ struct ChildProfileSetupView: View {
                 }
             }
             .padding(16)
+            .contentShape(Rectangle())
+            .onTapGesture { nameFocused = true }                 // Тап по всей строке = фокус
 
             Divider().padding(.leading, 16)
 
-            // Gender picker
+            // Пол
             VStack(alignment: .leading, spacing: 10) {
                 Label("Пол", systemImage: "figure.child")
                     .font(.caption)
@@ -86,6 +98,7 @@ struct ChildProfileSetupView: View {
                 HStack(spacing: 12) {
                     ForEach(ChildGender.allCases, id: \.self) { g in
                         GenderButton(gender: g, isSelected: gender == g) {
+                            nameFocused = false  // скрыть клавиатуру при выборе пола
                             gender = g
                         }
                     }
@@ -95,20 +108,21 @@ struct ChildProfileSetupView: View {
 
             Divider().padding(.leading, 16)
 
-            // Birthday
-            VStack(alignment: .leading, spacing: 6) {
+            // Дата рождения — compact избегает конфликта жестов со ScrollView
+            HStack {
                 Label("Дата рождения", systemImage: "birthday.cake.fill")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Spacer()
                 DatePicker(
                     "",
                     selection: $birthday,
                     in: maxBirthday...Date(),
                     displayedComponents: .date
                 )
-                .datePickerStyle(.wheel)
+                .datePickerStyle(.compact)
                 .labelsHidden()
-                .frame(maxWidth: .infinity)
+                .onChange(of: birthday) { _, _ in nameFocused = false }
             }
             .padding(16)
         }
@@ -148,16 +162,27 @@ struct ChildProfileSetupView: View {
         }
     }
 
+    // MARK: - Save
+
     private func save() {
-        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else {
             nameError = true
             return
         }
-        let p = ChildProfile(name: name.trimmingCharacters(in: .whitespaces), gender: gender, birthday: birthday)
+        nameFocused = false  // скрыть клавиатуру перед закрытием
+
+        let p = ChildProfile(name: trimmed, gender: gender, birthday: birthday)
         ChildProfileStore.shared.profile = p
         profile = p
+
+        // В режиме редактирования (sheet) нужно явно закрыть экран.
+        // В режиме онбординга profile-изменение само переключает ContentView.
+        if isEditing { dismiss() }
     }
 }
+
+// MARK: - GenderButton
 
 struct GenderButton: View {
     let gender: ChildGender
@@ -181,7 +206,10 @@ struct GenderButton: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? (gender == .boy ? Color.blue : Color.pink) : Color.clear, lineWidth: 1.5)
+                    .stroke(
+                        isSelected ? (gender == .boy ? Color.blue : Color.pink) : Color.clear,
+                        lineWidth: 1.5
+                    )
             )
         }
         .buttonStyle(.plain)
