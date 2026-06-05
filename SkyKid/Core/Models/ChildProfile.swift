@@ -277,16 +277,3 @@ struct CachedWeather: Sendable {
     let updatedAt: Date
 }
 
-// MARK: - Persistence
-
-final class ChildProfileStore: @unchecked Sendable {
-    static let shared = ChildProfileStore()
-
-    var profile: ChildProfile? {
-        get { AppGroup.loadProfile() }
-        set {
-            if let newValue { AppGroup.saveProfile(newValue) }
-            else { AppGroup.deleteProfile() }
-        }
-    }
-}

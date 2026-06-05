@@ -24,6 +24,10 @@
 		A015 /* ChildProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* ChildProfileSetupView.swift */; };
 		A016 /* ChildWeatherPerception.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* ChildWeatherPerception.swift */; };
 		A017 /* ClothingCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* ClothingCalculatorView.swift */; };
+		A018 /* ChildProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F018 /* ChildProfileStore.swift */; };
+		A019 /* WeatherServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* WeatherServiceProtocol.swift */; };
+		A020 /* GarmentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020 /* GarmentCatalog.swift */; };
+		A021 /* WardrobeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* WardrobeModel.swift */; };
 		DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */; };
 		DAC85AA72FD22E0C0096CC6F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */; };
 		DAC85ACF2FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
@@ -119,6 +123,10 @@
 		F015 /* ChildProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileSetupView.swift; sourceTree = "<group>"; };
 		F016 /* ChildWeatherPerception.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildWeatherPerception.swift; sourceTree = "<group>"; };
 		F017 /* ClothingCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingCalculatorView.swift; sourceTree = "<group>"; };
+		F018 /* ChildProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileStore.swift; sourceTree = "<group>"; };
+		F019 /* WeatherServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherServiceProtocol.swift; sourceTree = "<group>"; };
+		F020 /* GarmentCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentCatalog.swift; sourceTree = "<group>"; };
+		F021 /* WardrobeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeModel.swift; sourceTree = "<group>"; };
 		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* SkyKid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyKid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -243,6 +251,7 @@
 			children = (
 				F013 /* WeatherData.swift */,
 				F014 /* ChildProfile.swift */,
+				F018 /* ChildProfileStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -250,6 +259,7 @@
 		NETGROUP /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				F019 /* WeatherServiceProtocol.swift */,
 				F010 /* OpenMeteoService.swift */,
 				F011 /* RainViewerService.swift */,
 			);
@@ -261,6 +271,8 @@
 			children = (
 				F008 /* OutfitView.swift */,
 				F009 /* OutfitAdvisor.swift */,
+				F020 /* GarmentCatalog.swift */,
+				F021 /* WardrobeModel.swift */,
 				F017 /* ClothingCalculatorView.swift */,
 			);
 			path = Outfit;
@@ -466,6 +478,10 @@
 				A015 /* ChildProfileSetupView.swift in Sources */,
 				A016 /* ChildWeatherPerception.swift in Sources */,
 				A017 /* ClothingCalculatorView.swift in Sources */,
+				A018 /* ChildProfileStore.swift in Sources */,
+				A019 /* WeatherServiceProtocol.swift in Sources */,
+				A020 /* GarmentCatalog.swift in Sources */,
+				A021 /* WardrobeModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

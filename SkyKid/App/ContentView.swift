@@ -108,7 +108,7 @@ struct ContentView: View {
 
     private var calculatorTab: some View {
         NavigationStack {
-            ClothingCalculatorView()
+            ClothingCalculatorView(profile: childProfile)
         }
         .tabItem { Label("Конструктор", systemImage: "slider.horizontal.3") }
         .tag(3)

@@ -1,21 +1,23 @@
 import Foundation
 import CoreLocation
 
-struct OpenMeteoService {
+// DIP: конформанс к WeatherService позволяет подменять реализацию в ViewModel.
+
+struct OpenMeteoService: WeatherService {
     private static let base = "https://api.open-meteo.com/v1/forecast"
 
-    static func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData {
-        var components = URLComponents(string: base)!
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData {
+        var components = URLComponents(string: Self.base)!
         components.queryItems = [
-            .init(name: "latitude", value: String(coordinate.latitude)),
-            .init(name: "longitude", value: String(coordinate.longitude)),
-            .init(name: "current", value: [
+            .init(name: "latitude",        value: String(coordinate.latitude)),
+            .init(name: "longitude",       value: String(coordinate.longitude)),
+            .init(name: "current",         value: [
                 "temperature_2m", "apparent_temperature",
                 "relative_humidity_2m", "wind_speed_10m",
                 "wind_direction_10m", "weather_code", "precipitation"
             ].joined(separator: ",")),
             .init(name: "wind_speed_unit", value: "ms"),
-            .init(name: "timezone", value: "auto")
+            .init(name: "timezone",        value: "auto"),
         ]
 
         let (data, _) = try await URLSession.shared.data(from: components.url!)
@@ -23,13 +25,13 @@ struct OpenMeteoService {
         let c = root.current
 
         return WeatherData(
-            temperature: c.temperature_2m,
+            temperature:         c.temperature_2m,
             apparentTemperature: c.apparent_temperature,
-            humidity: c.relative_humidity_2m,
-            windSpeed: c.wind_speed_10m,
-            windDirection: c.wind_direction_10m,
-            precipitation: c.precipitation,
-            weatherCode: c.weather_code
+            humidity:            c.relative_humidity_2m,
+            windSpeed:           c.wind_speed_10m,
+            windDirection:       c.wind_direction_10m,
+            precipitation:       c.precipitation,
+            weatherCode:         c.weather_code
         )
     }
 }
