@@ -84,13 +84,13 @@ final class WardrobeModel {
         if isExtremeHeat { return "ОПАСНО: КРИТИЧЕСКИЙ ПЕРЕГРЕВ" }
         if isExtremeCold { return "ОПАСНО: РИСК ОБМОРОЖЕНИЯ" }
         switch riskLevel {
-        case .dangerouslyCold:  return "⚠️ Опасно холодно!"
+        case .dangerouslyCold:  return "Опасно холодно!"
         case .cold:             return "Холодно"
         case .slightlyCold:     return "Прохладно"
-        case .optimal:          return "Идеально 👍"
+        case .optimal:          return "Идеально"
         case .warm:             return "Тепловато"
         case .hot:              return tempZone == .cold ? "Очень жарко" : "Жарко"
-        case .criticalOverheat: return "⚠️ Критический перегрев!"
+        case .criticalOverheat: return "Критический перегрев!"
         }
     }
 
