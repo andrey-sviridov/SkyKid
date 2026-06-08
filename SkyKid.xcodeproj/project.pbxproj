@@ -15,7 +15,7 @@
 		A006 /* RadarMapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006 /* RadarMapViewModel.swift */; };
 		A007 /* RainViewerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F007 /* RainViewerOverlay.swift */; };
 		A008 /* OutfitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* OutfitView.swift */; };
-		A009 /* OutfitAdvisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F009 /* OutfitAdvisor.swift */; };
+
 		A010 /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
 		A011 /* RainViewerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F011 /* RainViewerService.swift */; };
 		A012 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F012 /* LocationManager.swift */; };
@@ -28,23 +28,19 @@
 		A019 /* WeatherServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* WeatherServiceProtocol.swift */; };
 		A020 /* GarmentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020 /* GarmentCatalog.swift */; };
 		A021 /* WardrobeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* WardrobeModel.swift */; };
+		A022 /* ClothingRecommendationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F022 /* ClothingRecommendationEngine.swift */; };
+		A023 /* BiasStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F023 /* BiasStore.swift */; };
+		A024 /* OpenWeatherMapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F024 /* OpenWeatherMapService.swift */; };
+		A025 /* WeatherServiceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F025 /* WeatherServiceSettings.swift */; };
+		A026 /* WeatherAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F026 /* WeatherAPIService.swift */; };
+		A027 /* WeatherKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F027 /* WeatherKit.framework */; };
+		A028 /* WeatherKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F028 /* WeatherKitService.swift */; };
+		A029 /* OpenMeteoService.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
+		A030 /* WeatherData.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = F013 /* WeatherData.swift */; };
+		A031 /* WeatherServiceProtocol.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = F019 /* WeatherServiceProtocol.swift */; };
+		A032 /* SkyKidIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F029 /* SkyKidIntents.swift */; };
 		DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */; };
 		DAC85AA72FD22E0C0096CC6F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */; };
-		DAC85ACF2FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
-		DAC85AD12FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */; };
-		DAC85AD22FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACB2FD22E4D0096CC6F /* SkyKidWidgetControl.swift */; };
-		DAC85AD32FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */; };
-		DAC85AD42FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACA2FD22E4D0096CC6F /* SkyKidWidgetBundle.swift */; };
-		DAC85AD52FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */; };
-		DAC85AD62FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC92FD22E4D0096CC6F /* SkyKidWidget.swift */; };
-		DAC85AD72FD22E4D0096CC6F /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */; };
-		DAC85AD82FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */; };
-		DAC85AD92FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC72FD22E4D0096CC6F /* ClothingStatusWidgetView.swift */; };
-		DAC85ADB2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACC2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift */; };
-		DAC85ADD2FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */; };
-		DAC85ADE2FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC92FD22E4D0096CC6F /* SkyKidWidget.swift */; };
-		DAC85ADF2FD22E4D0096CC6F /* AppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */; };
-		DAC85AE02FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */; };
 		DAC85AE12FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
 		DAC85AE32FD22F8D0096CC6F /* ChildProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* ChildProfile.swift */; };
 		DAC85AE62FD232420096CC6F /* SkyKidWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -114,7 +110,7 @@
 		F006 /* RadarMapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapViewModel.swift; sourceTree = "<group>"; };
 		F007 /* RainViewerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerOverlay.swift; sourceTree = "<group>"; };
 		F008 /* OutfitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitView.swift; sourceTree = "<group>"; };
-		F009 /* OutfitAdvisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitAdvisor.swift; sourceTree = "<group>"; };
+
 		F010 /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
 		F011 /* RainViewerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerService.swift; sourceTree = "<group>"; };
 		F012 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
@@ -127,6 +123,14 @@
 		F019 /* WeatherServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherServiceProtocol.swift; sourceTree = "<group>"; };
 		F020 /* GarmentCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentCatalog.swift; sourceTree = "<group>"; };
 		F021 /* WardrobeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeModel.swift; sourceTree = "<group>"; };
+		F022 /* ClothingRecommendationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingRecommendationEngine.swift; sourceTree = "<group>"; };
+		F023 /* BiasStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiasStore.swift; sourceTree = "<group>"; };
+		F024 /* OpenWeatherMapService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenWeatherMapService.swift; sourceTree = "<group>"; };
+		F025 /* WeatherServiceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherServiceSettings.swift; sourceTree = "<group>"; };
+		F026 /* WeatherAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAPIService.swift; sourceTree = "<group>"; };
+		F027 /* WeatherKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WeatherKit.framework; path = System/Library/Frameworks/WeatherKit.framework; sourceTree = SDKROOT; };
+		F028 /* WeatherKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitService.swift; sourceTree = "<group>"; };
+		F029 /* SkyKidIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidIntents.swift; sourceTree = "<group>"; };
 		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* SkyKid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyKid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -139,17 +143,10 @@
 			);
 			target = DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */;
 		};
-		DAC85AEF2FD235560096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				ClothingStatusWidgetView.swift,
-			);
-			target = TARGET /* SkyKid */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (DAC85AEF2FD235560096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SkyKidWidget; sourceTree = "<group>"; };
+		DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SkyKidWidget; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,6 +174,7 @@
 			children = (
 				F001 /* SkyKidApp.swift */,
 				F002 /* ContentView.swift */,
+				F029 /* SkyKidIntents.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -196,6 +194,7 @@
 			children = (
 				DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */,
 				DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */,
+				F027 /* WeatherKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -252,6 +251,7 @@
 				F013 /* WeatherData.swift */,
 				F014 /* ChildProfile.swift */,
 				F018 /* ChildProfileStore.swift */,
+				F023 /* BiasStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -262,6 +262,10 @@
 				F019 /* WeatherServiceProtocol.swift */,
 				F010 /* OpenMeteoService.swift */,
 				F011 /* RainViewerService.swift */,
+				F024 /* OpenWeatherMapService.swift */,
+				F025 /* WeatherServiceSettings.swift */,
+				F026 /* WeatherAPIService.swift */,
+				F028 /* WeatherKitService.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -270,10 +274,11 @@
 			isa = PBXGroup;
 			children = (
 				F008 /* OutfitView.swift */,
-				F009 /* OutfitAdvisor.swift */,
+
 				F020 /* GarmentCatalog.swift */,
 				F021 /* WardrobeModel.swift */,
 				F017 /* ClothingCalculatorView.swift */,
+				F022 /* ClothingRecommendationEngine.swift */,
 			);
 			path = Outfit;
 			sourceTree = "<group>";
@@ -419,7 +424,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DAC85ACF2FD22E4D0096CC6F /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -440,14 +444,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				DAC85AE32FD22F8D0096CC6F /* ChildProfile.swift in Sources */,
-				DAC85AD12FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */,
-				DAC85AD22FD22E4D0096CC6F /* SkyKidWidgetControl.swift in Sources */,
-				DAC85AD32FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */,
-				DAC85AD42FD22E4D0096CC6F /* SkyKidWidgetBundle.swift in Sources */,
-				DAC85AD52FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */,
-				DAC85AD62FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */,
-				DAC85AD72FD22E4D0096CC6F /* AppIntent.swift in Sources */,
-				DAC85AD82FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */,
+				A029 /* OpenMeteoService.swift in Sources (Widget) */,
+				A030 /* WeatherData.swift in Sources (Widget) */,
+				A031 /* WeatherServiceProtocol.swift in Sources (Widget) */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -462,14 +461,8 @@
 				A005 /* RadarMapView.swift in Sources */,
 				A006 /* RadarMapViewModel.swift in Sources */,
 				A007 /* RainViewerOverlay.swift in Sources */,
-				DAC85AD92FD22E4D0096CC6F /* ClothingStatusWidgetView.swift in Sources */,
-				DAC85ADB2FD22E4D0096CC6F /* SkyKidWidgetLiveActivity.swift in Sources */,
-				DAC85ADD2FD22E4D0096CC6F /* ClothingStatusProvider.swift in Sources */,
-				DAC85ADE2FD22E4D0096CC6F /* SkyKidWidget.swift in Sources */,
-				DAC85ADF2FD22E4D0096CC6F /* AppIntent.swift in Sources */,
-				DAC85AE02FD22E4D0096CC6F /* WidgetClothingCalculator.swift in Sources */,
 				A008 /* OutfitView.swift in Sources */,
-				A009 /* OutfitAdvisor.swift in Sources */,
+
 				A010 /* OpenMeteoService.swift in Sources */,
 				A011 /* RainViewerService.swift in Sources */,
 				A012 /* LocationManager.swift in Sources */,
@@ -482,6 +475,13 @@
 				A019 /* WeatherServiceProtocol.swift in Sources */,
 				A020 /* GarmentCatalog.swift in Sources */,
 				A021 /* WardrobeModel.swift in Sources */,
+				A022 /* ClothingRecommendationEngine.swift in Sources */,
+				A023 /* BiasStore.swift in Sources */,
+				A024 /* OpenWeatherMapService.swift in Sources */,
+				A025 /* WeatherServiceSettings.swift in Sources */,
+				A026 /* WeatherAPIService.swift in Sources */,
+				A028 /* WeatherKitService.swift in Sources */,
+				A032 /* SkyKidIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

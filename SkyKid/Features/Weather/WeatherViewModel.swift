@@ -15,11 +15,12 @@ final class WeatherViewModel {
     var isLoading = false
     var error: String?
 
-    init(service: any WeatherService = OpenMeteoService()) {
+    init(service: any WeatherService) {
         self.service = service
     }
 
     func load(coordinate: CLLocationCoordinate2D, cityName: String = "Моё местоположение") async {
+        AppGroup.saveLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         isLoading = true
         error = nil
         do {

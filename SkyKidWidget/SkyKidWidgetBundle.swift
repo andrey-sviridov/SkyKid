@@ -11,10 +11,7 @@ import SwiftUI
 @main
 struct SkyKidWidgetBundle: WidgetBundle {
     var body: some Widget {
-        SkyKidWidget()
-        SkyKidWidgetLiveActivity()
-        if #available(iOS 18.0, *) {
-            SkyKidWidgetControl()
-        }
+        ClothingStatusWidget()
+        ClothingStatusLockScreenWidget()
     }
 }

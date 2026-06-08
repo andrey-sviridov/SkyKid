@@ -1,4 +1,35 @@
 import Foundation
+import CoreLocation
+
+// MARK: - ActivityLevel
+
+enum ActivityLevel: String, Codable, CaseIterable, Identifiable {
+    case low      = "Низкая"      // в коляске, дремлет
+    case moderate = "Умеренная"   // спокойно играет
+    case high     = "Высокая"     // активно бегает
+
+    var id: String { rawValue }
+
+    /// Поправка к температуре ощущений (°C).
+    /// Высокая активность → сам греется → воспринимает как теплее.
+    var temperatureAdjustment: Double {
+        switch self {
+        case .low:      return -2.0
+        case .moderate: return  0.0
+        case .high:     return +3.0
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .low:      return "tortoise.fill"
+        case .moderate: return "figure.walk"
+        case .high:     return "figure.run"
+        }
+    }
+}
+
+// MARK: - ChildGender
 
 enum ChildGender: String, Codable, CaseIterable {
     case boy = "boy"
@@ -10,10 +41,14 @@ enum ChildGender: String, Codable, CaseIterable {
     var pronounCapital: String { self == .boy ? "Он" : "Она" }
 }
 
-struct ChildProfile: Codable, Equatable {
+struct ChildProfile: Equatable {
     var name: String
     var gender: ChildGender
     var birthday: Date
+    /// Уровень физической активности ребёнка во время прогулки.
+    var activityLevel: ActivityLevel = .moderate
+    /// Накопленный сдвиг предпочтений (°C), изменяется через `ClothingRecommendationEngine.adjustPreferences`.
+    var temperaturePreferenceOffset: Double = 0.0
 
     var ageComponents: DateComponents {
         Calendar.current.dateComponents([.year, .month], from: birthday, to: Date())
@@ -64,6 +99,23 @@ struct ChildProfile: Codable, Equatable {
         case 2, 3, 4: return "месяца"
         default: return "месяцев"
         }
+    }
+}
+
+// MARK: - Codable (backward-compatible: новые поля имеют дефолты при отсутствии в JSON)
+
+extension ChildProfile: Codable {
+    enum CodingKeys: String, CodingKey {
+        case name, gender, birthday, activityLevel, temperaturePreferenceOffset
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name     = try c.decode(String.self,      forKey: .name)
+        gender   = try c.decode(ChildGender.self, forKey: .gender)
+        birthday = try c.decode(Date.self,        forKey: .birthday)
+        activityLevel              = (try? c.decode(ActivityLevel.self, forKey: .activityLevel))              ?? .moderate
+        temperaturePreferenceOffset = (try? c.decode(Double.self, forKey: .temperaturePreferenceOffset))       ?? 0.0
     }
 }
 
@@ -185,8 +237,8 @@ extension String {
         }
     }
 
-    // Вспомогательный метод для String.dropLast() → String
-    private func dropLast() -> String { String(self.dropLast()) }
+    // dropLast(1) вызывает BidirectionalCollection.dropLast(_:), не этот метод
+    private func dropLast() -> String { String(self.dropLast(1)) }
 }
 
 // MARK: - App Group shared store
@@ -197,9 +249,10 @@ extension String {
 enum AppGroup {
     static let suiteName = "group.com.skykid.app"
 
-    static var defaults: UserDefaults {
+    // nonisolated(unsafe): UserDefaults — thread-safe, unsafe здесь означает только
+    // «компилятор не проверяет», но Sendable-семантика соблюдается платформой.
+    nonisolated(unsafe) static let defaults: UserDefaults =
         UserDefaults(suiteName: suiteName) ?? .standard
-    }
 
     // MARK: Child Profile
 
@@ -246,14 +299,48 @@ enum AppGroup {
         d.set(Date().timeIntervalSince1970, forKey: WK.updated)
     }
 
-    /// nil если кэш пуст или устарел (> 2 ч).
+    // MARK: Location Cache
+
+    private enum LK {
+        static let lat = "wg_latitude"
+        static let lon = "wg_longitude"
+    }
+
+    static func saveLocation(latitude: Double, longitude: Double) {
+        defaults.set(latitude,  forKey: LK.lat)
+        defaults.set(longitude, forKey: LK.lon)
+    }
+
+    static func loadLastKnownCoordinate() -> CLLocationCoordinate2D? {
+        guard defaults.object(forKey: LK.lat) != nil,
+              defaults.object(forKey: LK.lon) != nil else { return nil }
+        return CLLocationCoordinate2D(
+            latitude:  defaults.double(forKey: LK.lat),
+            longitude: defaults.double(forKey: LK.lon)
+        )
+    }
+
+    /// nil если кэш пуст или устарел (> 2 ч). Основной читатель — виджет.
     static func loadCachedWeather() -> CachedWeather? {
         let d = defaults
         guard d.object(forKey: WK.temp)    != nil,
               d.object(forKey: WK.updated) != nil else { return nil }
         let updatedAt = Date(timeIntervalSince1970: d.double(forKey: WK.updated))
         guard Date().timeIntervalSince(updatedAt) < 7_200 else { return nil }
-        return CachedWeather(
+        return cachedWeather(from: d, updatedAt: updatedAt)
+    }
+
+    /// Читает кеш без проверки возраста — для виджетного fallback при устаревших данных.
+    static func loadCachedWeatherIgnoringAge() -> CachedWeather? {
+        let d = defaults
+        guard d.object(forKey: WK.temp)    != nil,
+              d.object(forKey: WK.updated) != nil else { return nil }
+        let updatedAt = Date(timeIntervalSince1970: d.double(forKey: WK.updated))
+        return cachedWeather(from: d, updatedAt: updatedAt)
+    }
+
+    private static func cachedWeather(from d: UserDefaults, updatedAt: Date) -> CachedWeather {
+        CachedWeather(
             temperature:         d.double(forKey:  WK.temp),
             apparentTemperature: d.double(forKey:  WK.feels),
             weatherCode:         d.integer(forKey: WK.code),

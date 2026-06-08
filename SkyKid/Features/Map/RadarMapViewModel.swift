@@ -17,10 +17,14 @@ final class RadarMapViewModel {
 
     var currentTimeLabel: String {
         guard let frame = currentFrame else { return "" }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        return formatter.string(from: frame.time)
+        return Self.timeFormatter.string(from: frame.time)
     }
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
+        return f
+    }()
 
     func loadFrames() async {
         isLoading = true

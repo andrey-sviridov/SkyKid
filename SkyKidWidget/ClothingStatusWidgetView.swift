@@ -38,11 +38,33 @@ struct ClothingStatusWidgetView: View {
 struct SmallWidgetView: View {
     let entry: ClothingStatusEntry
     private var rec: WidgetOutfitRecommendation { entry.recommendation }
+    private var isExtreme: Bool { rec.status == .extremeHeat || rec.status == .extremeCold }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        ZStack {
+            if isExtreme {
+                smallExtremeView
+            } else {
+                smallNormalView
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .containerBackground(
+            LinearGradient(
+                colors: isExtreme
+                    ? [rec.status.color.opacity(0.35), rec.status.color.opacity(0.08)]
+                    : [rec.status.color.opacity(0.18), Color(.systemBackground)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            for: .widget
+        )
+    }
 
-            // Строка: город + эмодзи статуса
+    // Обычный вид
+    private var smallNormalView: some View {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
                 Text(rec.cityName)
                     .font(.caption2)
@@ -55,7 +77,6 @@ struct SmallWidgetView: View {
 
             Spacer(minLength: 6)
 
-            // Большая температура
             HStack(alignment: .lastTextBaseline, spacing: 1) {
                 Text("\(Int(rec.temperature.rounded()))°")
                     .font(.system(size: 38, weight: .thin, design: .rounded))
@@ -66,17 +87,14 @@ struct SmallWidgetView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // Ощущаемая температура для ребёнка
             Text("Ребёнок: \(Int(rec.effectiveChildTemp.rounded()))°")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 6)
 
-            // Бейдж статуса
             StatusBadgeView(status: rec.status)
                 .padding(.bottom, 6)
 
-            // Топ-2 вещи
             ForEach(rec.outfitItems.prefix(2), id: \.self) { item in
                 Text("· \(item)")
                     .font(.caption2)
@@ -86,16 +104,34 @@ struct SmallWidgetView: View {
 
             Spacer(minLength: 0)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .containerBackground(
-            LinearGradient(
-                colors: [rec.status.color.opacity(0.18), Color(.systemBackground)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            for: .widget
-        )
+    }
+
+    // Баннер опасности — вся площадь виджета
+    private var smallExtremeView: some View {
+        VStack(alignment: .center, spacing: 6) {
+            Image(systemName: rec.status.systemImage)
+                .font(.system(size: 26, weight: .bold))
+                .foregroundStyle(rec.status.color)
+
+            Text(rec.status.label)
+                .font(.caption.weight(.black))
+                .foregroundStyle(rec.status.color)
+                .multilineTextAlignment(.center)
+
+            if let warning = rec.status.safetyWarning {
+                Text(warning)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(rec.status.color.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text("\(Int(rec.temperature.rounded()))°C")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -112,47 +148,14 @@ struct SmallWidgetView: View {
 struct MediumWidgetView: View {
     let entry: ClothingStatusEntry
     private var rec: WidgetOutfitRecommendation { entry.recommendation }
+    private var isExtreme: Bool { rec.status == .extremeHeat || rec.status == .extremeCold }
 
     var body: some View {
         HStack(spacing: 0) {
 
-            // Левая колонка: температура и статус
-            VStack(alignment: .leading, spacing: 3) {
-                Text(rec.cityName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-
-                HStack(alignment: .lastTextBaseline, spacing: 1) {
-                    Text("\(Int(rec.temperature.rounded()))°")
-                        .font(.system(size: 46, weight: .thin, design: .rounded))
-                        .foregroundStyle(rec.status.color)
-                    Text("C")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-
-                Text("Ощущается \(Int(rec.apparentTemperature.rounded()))°")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
-                Text("Для \(rec.ageLabel): \(Int(rec.effectiveChildTemp.rounded()))°")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-
-                Spacer(minLength: 4)
-
-                StatusBadgeView(status: rec.status)
-
-                if let warning = rec.status.safetyWarning {
-                    Text(warning)
-                        .font(.caption2.weight(.medium))
-                        .foregroundStyle(rec.status.color)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            // Левая колонка: температура, статус (одинакова в обоих режимах)
+            leftColumn
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             // Разделитель
             Rectangle()
@@ -161,32 +164,22 @@ struct MediumWidgetView: View {
                 .padding(.vertical, 6)
                 .padding(.horizontal, 12)
 
-            // Правая колонка: список одежды
-            VStack(alignment: .leading, spacing: 5) {
-                Text("Что надеть")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-
-                ForEach(rec.outfitItems.prefix(4), id: \.self) { item in
-                    Label {
-                        Text(item)
-                            .lineLimit(1)
-                    } icon: {
-                        Image(systemName: sfSymbol(for: item))
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundStyle(rec.status.color)
-                            .frame(width: 16)
-                    }
-                    .font(.caption)
-                }
+            // Правая колонка: либо список одежды, либо баннер опасности
+            if isExtreme {
+                mediumExtremeBanner
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                outfitColumn
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(
             LinearGradient(
-                colors: [rec.status.color.opacity(0.12), Color(.systemBackground)],
+                colors: isExtreme
+                    ? [rec.status.color.opacity(0.28), rec.status.color.opacity(0.06)]
+                    : [rec.status.color.opacity(0.12), Color(.systemBackground)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
@@ -194,7 +187,84 @@ struct MediumWidgetView: View {
         )
     }
 
-    /// Подбирает SF Symbol для наименования вещи
+    // MARK: - Колонки
+
+    private var leftColumn: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(rec.cityName)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            HStack(alignment: .lastTextBaseline, spacing: 1) {
+                Text("\(Int(rec.temperature.rounded()))°")
+                    .font(.system(size: 46, weight: .thin, design: .rounded))
+                    .foregroundStyle(rec.status.color)
+                Text("C")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Ощущается \(Int(rec.apparentTemperature.rounded()))°")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            Text("Для \(rec.ageLabel): \(Int(rec.effectiveChildTemp.rounded()))°")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            Spacer(minLength: 4)
+
+            StatusBadgeView(status: rec.status)
+        }
+    }
+
+    private var outfitColumn: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Что надеть")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            ForEach(rec.outfitItems.prefix(4), id: \.self) { item in
+                Label {
+                    Text(item).lineLimit(1)
+                } icon: {
+                    Image(systemName: sfSymbol(for: item))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(rec.status.color)
+                        .frame(width: 16)
+                }
+                .font(.caption)
+            }
+        }
+    }
+
+    // Баннер экстремального риска — правая колонка
+    private var mediumExtremeBanner: some View {
+        VStack(alignment: .center, spacing: 8) {
+            Image(systemName: rec.status.systemImage)
+                .font(.system(size: 30, weight: .bold))
+                .foregroundStyle(rec.status.color)
+
+            Text(rec.status.label)
+                .font(.caption.weight(.black))
+                .foregroundStyle(rec.status.color)
+                .multilineTextAlignment(.center)
+
+            if let warning = rec.status.safetyWarning {
+                Text(warning)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(rec.status.color.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 4)
+    }
+
+    // MARK: - SF Symbol lookup
+
     private func sfSymbol(for item: String) -> String {
         let lower = item.lowercased()
         if lower.contains("куртк") || lower.contains("комбез") || lower.contains("ветровк") { return "cloud.fill" }

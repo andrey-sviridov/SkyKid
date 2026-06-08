@@ -13,7 +13,17 @@ import SwiftUI
 
 struct ClothingCalculatorView: View {
     var profile: ChildProfile?
-    @State private var model = WardrobeModel()
+    var weather: WeatherData?          // feelsLike used as initial temperature
+    @State private var model: WardrobeModel
+
+    init(profile: ChildProfile? = nil, weather: WeatherData? = nil) {
+        self.profile = profile
+        self.weather = weather
+        _model = State(initialValue: WardrobeModel(
+            temperature: weather?.apparentTemperature ?? 12.0,
+            ageGroup:    profile?.ageGroup.toWardrobeAgeGroup ?? .newborn
+        ))
+    }
 
     var body: some View {
         ScrollView {

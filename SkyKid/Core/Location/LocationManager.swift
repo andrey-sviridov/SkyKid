@@ -11,7 +11,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        // Километровая точность достаточна для погоды и даёт фикс быстрее
+        manager.desiredAccuracy = kCLLocationAccuracyKilometer
     }
 
     func requestWhenInUse() {
@@ -29,8 +30,18 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
-        if authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways {
-            startUpdating()
+        guard authorizationStatus == .authorizedWhenInUse
+           || authorizationStatus == .authorizedAlways else { return }
+
+        // Используем кешированную позицию iOS сразу — погода начнёт грузиться
+        // ещё до получения нового GPS-фикса. Для последующих запусков это
+        // убирает задержку 3–8 секунд и заменяет её на ~0 мс.
+        if let cached = manager.location {
+            location = cached
         }
+
+        // Параллельно запускаем обновление для свежей позиции.
+        // Когда придёт — onChange сработает повторно и обновит погоду в фоне.
+        startUpdating()
     }
 }

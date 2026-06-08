@@ -63,7 +63,6 @@ struct ChildWeatherPerception {
     var ageContextNote: String {
         let name = profile.name
         let group = profile.ageGroup
-        let pronoun = profile.gender.pronoun
 
         switch group {
         case .infant:

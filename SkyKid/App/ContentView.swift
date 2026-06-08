@@ -3,7 +3,7 @@ import CoreLocation
 
 struct ContentView: View {
     @State private var locationManager = LocationManager()
-    @State private var weatherVM = WeatherViewModel()
+    @State private var weatherVM = WeatherViewModel(service: WeatherProvider.activeService)
     @State private var selectedTab = 0
 
     @State private var childProfile: ChildProfile? = ChildProfileStore.shared.profile
@@ -35,9 +35,13 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: locationManager.location) { _, location in
-            guard let location else { return }
-            Task { await weatherVM.load(coordinate: location.coordinate) }
+        .onChange(of: locationManager.location) { old, new in
+            guard let new else { return }
+            // Не перегружаем погоду, если позиция почти не изменилась (< 5 км).
+            // Кешированная позиция → сразу грузит. Свежий фикс → обновит только
+            // если пользователь реально переместился.
+            if let old, new.distance(from: old) < 5_000, weatherVM.weather != nil { return }
+            Task { await weatherVM.load(coordinate: new.coordinate) }
         }
         .sheet(isPresented: $showProfileSetup) {
             ChildProfileSetupView(profile: $childProfile)
@@ -60,8 +64,22 @@ struct ContentView: View {
         NavigationStack {
             Group {
                 if weatherVM.isLoading || weatherVM.weather == nil {
-                    ProgressView("Загружаем погоду…")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ZStack {
+                        LinearGradient(
+                            colors: [Color(red: 0.04, green: 0.20, blue: 0.44),
+                                     Color(red: 0.06, green: 0.46, blue: 0.68)],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                        .ignoresSafeArea()
+                        VStack(spacing: 14) {
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(1.2)
+                            Text("Загружаем погоду…")
+                                .font(.subheadline)
+                                .foregroundStyle(.white.opacity(0.75))
+                        }
+                    }
                 } else if let w = weatherVM.weather {
                     WeatherView(weather: w, cityName: cityName, profile: childProfile)
                 }
@@ -108,7 +126,7 @@ struct ContentView: View {
 
     private var calculatorTab: some View {
         NavigationStack {
-            ClothingCalculatorView(profile: childProfile)
+            ClothingCalculatorView(profile: childProfile, weather: weatherVM.weather)
         }
         .tabItem { Label("Конструктор", systemImage: "slider.horizontal.3") }
         .tag(3)
@@ -150,68 +168,182 @@ struct ProfileSummaryView: View {
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
 
     var body: some View {
-        List {
+        ScrollView {
             if let p = profile {
-                Section {
-                    HStack(spacing: 16) {
-                        Text(p.gender.emoji)
-                            .font(.system(size: 52))
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(p.name)
-                                .font(.title2.weight(.semibold))
-                            Text(p.ageLabel)
-                                .foregroundStyle(.secondary)
-                            Text(p.ageGroup.description)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 8)
+                VStack(spacing: 20) {
+                    avatarHeader(p)
+                    infoCards(p)
+                    themeCard
+                    editButton
                 }
-
-                Section("День рождения") {
-                    Label(
-                        p.birthday.formatted(.dateTime.day().month(.wide).year()),
-                        systemImage: "birthday.cake.fill"
-                    )
-                }
-
-                Section("Возрастная группа") {
-                    Label(p.ageGroup.description, systemImage: "figure.child")
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Поправка к температуре")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        let offset = p.ageGroup.temperatureOffset
-                        Text(offset == 0 ? "Как у взрослого" : "\(Int(offset))° (ощущает холоднее)")
-                            .font(.body)
-                    }
-                }
-
-                Section("Оформление") {
-                    Picker("Тема", selection: $colorSchemeRaw) {
-                        Label("Системная", systemImage: "circle.lefthalf.filled")
-                            .tag("system")
-                        Label("Светлая", systemImage: "sun.max.fill")
-                            .tag("light")
-                        Label("Тёмная", systemImage: "moon.fill")
-                            .tag("dark")
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                }
-
-                Section {
-                    Button("Изменить данные ребёнка") {
-                        showEdit = true
-                    }
-                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Профиль")
         .sheet(isPresented: $showEdit) {
             ChildProfileSetupView(profile: $profile)
         }
+    }
+
+    // MARK: - Avatar header
+
+    private func avatarHeader(_ p: ChildProfile) -> some View {
+        VStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: p.gender == .boy
+                                ? [Color(red: 0.28, green: 0.42, blue: 0.96),
+                                   Color(red: 0.12, green: 0.60, blue: 0.86)]
+                                : [Color(red: 0.92, green: 0.32, blue: 0.60),
+                                   Color(red: 0.72, green: 0.18, blue: 0.78)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 90, height: 90)
+                    .shadow(color: (p.gender == .boy ? Color.blue : Color.pink).opacity(0.4),
+                            radius: 14, y: 5)
+                Text(p.gender.emoji)
+                    .font(.system(size: 46))
+            }
+
+            VStack(spacing: 4) {
+                Text(p.name)
+                    .font(.title2.weight(.bold))
+                Text(p.ageLabel + " · " + p.ageGroup.description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .padding(.horizontal, 16)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 22))
+    }
+
+    // MARK: - Info cards
+
+    private func infoCards(_ p: ChildProfile) -> some View {
+        VStack(spacing: 1) {
+            infoRow(
+                icon: "birthday.cake.fill", color: .pink,
+                title: "День рождения",
+                value: p.birthday.formatted(.dateTime.day().month(.wide).year()),
+                isFirst: true, isLast: false
+            )
+            infoRow(
+                icon: "figure.child", color: .orange,
+                title: "Возрастная группа",
+                value: p.ageGroup.description,
+                isFirst: false, isLast: false
+            )
+            let offset = p.ageGroup.temperatureOffset
+            infoRow(
+                icon: "thermometer.medium", color: .blue,
+                title: "Поправка к температуре",
+                value: offset == 0 ? "Как у взрослого" : "\(Int(offset))° (ощущает холоднее)",
+                isFirst: false, isLast: true
+            )
+        }
+    }
+
+    private func infoRow(icon: String, color: Color, title: String, value: String,
+                         isFirst: Bool, isLast: Bool) -> some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(color.opacity(0.13))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(color)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .font(.body)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 13)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(UnevenRoundedRectangle(
+            topLeadingRadius:     isFirst ? 18 : 5,
+            bottomLeadingRadius:  isLast  ? 18 : 5,
+            bottomTrailingRadius: isLast  ? 18 : 5,
+            topTrailingRadius:    isFirst ? 18 : 5
+        ))
+        .padding(.vertical, 0.5)
+    }
+
+    // MARK: - Theme card
+
+    private var themeCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Тема оформления", systemImage: "paintpalette.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
+
+            HStack(spacing: 10) {
+                themeOption(label: "Авто",    icon: "circle.lefthalf.filled", tag: "system")
+                themeOption(label: "Светлая", icon: "sun.max.fill",           tag: "light")
+                themeOption(label: "Тёмная",  icon: "moon.fill",              tag: "dark")
+            }
+        }
+        .padding(16)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private func themeOption(label: String, icon: String, tag: String) -> some View {
+        let selected = colorSchemeRaw == tag
+        return Button {
+            withAnimation(.spring(response: 0.3)) { colorSchemeRaw = tag }
+        } label: {
+            VStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(selected ? Color.blue.opacity(0.14) : Color(.tertiarySystemBackground))
+                        .frame(height: 48)
+                    Image(systemName: icon)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(selected ? .blue : .secondary)
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(selected ? Color.blue : Color.clear, lineWidth: 1.5)
+                )
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(selected ? .blue : .secondary)
+                    .fontWeight(selected ? .semibold : .regular)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Edit button
+
+    private var editButton: some View {
+        Button { showEdit = true } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "pencil")
+                    .font(.body.weight(.medium))
+                Text("Изменить данные ребёнка")
+                    .font(.body.weight(.medium))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 15)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+        }
+        .buttonStyle(.plain)
     }
 }
 

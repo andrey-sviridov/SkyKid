@@ -11,7 +11,7 @@ final class RainViewerOverlay: MKTileOverlay {
     }
 
     override func url(forTilePath path: MKTileOverlayPath) -> URL {
-        RainViewerService.tileURL(path: radarPath, z: path.z, x: path.x, y: path.y)
+        RainViewerService.tileURL(path: radarPath, layer: .radar, z: path.z, x: path.x, y: path.y)
     }
 }
 

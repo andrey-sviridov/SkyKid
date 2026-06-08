@@ -10,9 +10,14 @@ import SwiftUI
 final class WardrobeModel {
 
     // ── Inputs (drive all derived values) ─────────────────────────────────
-    var temperature: Double = 12.0
-    var ageGroup: WardrobeAgeGroup = .newborn
+    var temperature: Double
+    var ageGroup: WardrobeAgeGroup
     var selectedItems: Set<GarmentItem> = []
+
+    init(temperature: Double = 12.0, ageGroup: WardrobeAgeGroup = .newborn) {
+        self.temperature = temperature
+        self.ageGroup    = ageGroup
+    }
 
     // ── Температурная зона (задаёт допуски риска) ─────────────────────────
     private enum TempZone { case hot, mild, cold }
@@ -111,8 +116,6 @@ final class WardrobeModel {
             return "Опасно для жизни! Ребёнок перегреется за минуты. Оставьте только подгузник!"
         case .criticalOverheat:
             return "Риск теплового удара — немедленно снимите лишнюю одежду!"
-        default:
-            return ""
         }
     }
 

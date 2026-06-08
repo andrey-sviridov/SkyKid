@@ -19,69 +19,76 @@ struct ClothingStatusEntry: TimelineEntry {
 
 // MARK: - Timeline Provider
 
-/// Читает кешированные данные о погоде из App Group UserDefaults.
-/// Кеш заполняется основным приложением при каждом fetch (WeatherViewModel).
-///
-/// Для подключения реальной геолокации в виджете: замените `makeEntry()` на
-/// асинхронный вариант с CLLocationManager + OpenMeteoService.
+/// Читает кешированные данные из AppGroup.
+/// Если кеш старше 90 минут — пытается самостоятельно получить свежую погоду
+/// через OpenMeteoService, используя последние известные координаты из AppGroup.
 struct ClothingStatusProvider: TimelineProvider {
 
-    // MARK: Протокол TimelineProvider
+    // MARK: TimelineProvider
 
     func placeholder(in context: Context) -> ClothingStatusEntry {
         .placeholder
     }
 
     func getSnapshot(in context: Context, completion: @escaping (ClothingStatusEntry) -> Void) {
-        // В галерее виджетов показываем заглушку с реалистичными данными
         if context.isPreview {
             completion(.placeholder)
         } else {
-            completion(makeEntry())
+            Task { completion(await makeEntry()) }
         }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<ClothingStatusEntry>) -> Void) {
-        let entry = makeEntry()
-
-        // Следующее обновление — через 30 минут.
-        // WidgetKit соблюдает бюджет обновлений (~40-70 в день для активных виджетов).
-        // При загрузке погоды в приложении вызывается WidgetCenter.reloadAllTimelines(),
-        // поэтому реальная задержка будет значительно меньше.
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
-        completion(timeline)
+        Task {
+            let entry = await makeEntry()
+            // Следующее плановое обновление — через 30 минут.
+            // При загрузке погоды в приложении WidgetCenter.reloadAllTimelines()
+            // вызывается раньше, поэтому реальная задержка обычно меньше.
+            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
+            completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        }
     }
 
-    // MARK: Построение записи из кеша
+    // MARK: - Entry construction
 
-    private func makeEntry() -> ClothingStatusEntry {
-        let weather = AppGroup.loadCachedWeather()
+    private func makeEntry() async -> ClothingStatusEntry {
         let profile = AppGroup.loadProfile()
 
-        guard let weather else {
-            // Кеш пуст или устарел: просим пользователя открыть приложение
-            return .placeholder
+        // Пробуем прочитать кеш без ограничения возраста
+        let rawCached = AppGroup.loadCachedWeatherIgnoringAge()
+        let cacheAge  = rawCached.map { Date().timeIntervalSince($0.updatedAt) } ?? .infinity
+
+        // Кеш свежий (< 90 мин) — используем его напрямую
+        if cacheAge < 5_400, let cached = rawCached {
+            return entry(from: cached, profile: profile)
         }
 
+        // Кеш устарел или пуст — пробуем живой fetch
+        if let coordinate = AppGroup.loadLastKnownCoordinate(),
+           let weatherData = try? await OpenMeteoService().fetch(coordinate: coordinate) {
+            let fresh = CachedWeather(
+                temperature:         weatherData.temperature,
+                apparentTemperature: weatherData.apparentTemperature,
+                weatherCode:         weatherData.weatherCode,
+                windSpeed:           weatherData.windSpeed,
+                precipitation:       weatherData.precipitation,
+                // Название города берём из старого кеша, если есть
+                cityName:            rawCached?.cityName ?? "—",
+                updatedAt:           Date()
+            )
+            return entry(from: fresh, profile: profile)
+        }
+
+        // Последний вариант: устаревший кеш лучше, чем заглушка
+        if let stale = rawCached {
+            return entry(from: stale, profile: profile)
+        }
+
+        return .placeholder
+    }
+
+    private func entry(from weather: CachedWeather, profile: ChildProfile?) -> ClothingStatusEntry {
         let rec = WidgetClothingCalculator.recommend(weather: weather, profile: profile)
         return ClothingStatusEntry(date: Date(), recommendation: rec, isPlaceholder: false)
     }
 }
-
-// MARK: - Замена на реальную геолокацию в виджете (TODO)
-//
-// Чтобы виджет сам получал погоду без запуска приложения:
-//
-// 1. Добавьте Background Modes → Background fetch в capabilities виджета.
-// 2. Замените makeEntry() на async вариант:
-//
-//    private func fetchEntry() async -> ClothingStatusEntry {
-//        guard let location = await resolveLocation() else { return .placeholder }
-//        guard let weather  = try? await OpenMeteoService.fetch(coordinate: location) else { return .placeholder }
-//        let cached = CachedWeather(temperature: weather.temperature, ...)
-//        let rec = WidgetClothingCalculator.recommend(weather: cached, profile: AppGroup.loadProfile())
-//        return ClothingStatusEntry(date: Date(), recommendation: rec, isPlaceholder: false)
-//    }
-//
-// 3. Смените политику обновления на .atEnd для более частых обновлений.
