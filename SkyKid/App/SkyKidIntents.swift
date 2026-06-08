@@ -88,7 +88,7 @@ struct OutfitSnippetView: View {
                 Text(ageLabel + " · " + cityName)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 0) {
@@ -121,11 +121,11 @@ struct OutfitSnippetView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(layer.name)
                             .font(.subheadline.weight(.medium))
-                            .lineLimit(1)
+                            .fixedSize(horizontal: false, vertical: true)
                         Text(layer.reason)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -145,20 +145,7 @@ struct OutfitSnippetView: View {
     }
 }
 
-// MARK: - App Shortcuts Provider
-
-@available(iOS 17, *)
-struct SkyKidShortcuts: AppShortcutsProvider {
-    static var appShortcuts: [AppShortcut] {
-        AppShortcut(
-            intent: GetOutfitRecommendationIntent(),
-            phrases: [
-                "Что надеть \(.applicationName)",
-                "Одежда для ребёнка \(.applicationName)",
-                "Рекомендация одежды \(.applicationName)",
-            ],
-            shortTitle: "Что надеть",
-            systemImageName: "hanger"
-        )
-    }
-}
+// AppShortcutsProvider намеренно не используется:
+// фиксированные фразы с .applicationName проблематичны при локализации.
+// Пользователь добавляет GetOutfitRecommendationIntent вручную
+// через приложение Shortcuts с любой фразой на своём языке.

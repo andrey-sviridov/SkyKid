@@ -246,12 +246,14 @@ struct OutfitView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(layer.name)
                     .font(.body.weight(.medium))
+                    .fixedSize(horizontal: false, vertical: true)
                 Text(layer.reason)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            Spacer()
+            Spacer(minLength: 8)
 
             Image(systemName: "checkmark")
                 .font(.caption2.weight(.semibold))

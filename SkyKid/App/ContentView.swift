@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+import AppIntents
 
 struct ContentView: View {
     @State private var locationManager = LocationManager()
@@ -174,6 +175,7 @@ struct ProfileSummaryView: View {
                     avatarHeader(p)
                     infoCards(p)
                     themeCard
+                    siriCard
                     editButton
                 }
                 .padding(.horizontal, 20)
@@ -227,26 +229,61 @@ struct ProfileSummaryView: View {
     // MARK: - Info cards
 
     private func infoCards(_ p: ChildProfile) -> some View {
-        VStack(spacing: 1) {
-            infoRow(
-                icon: "birthday.cake.fill", color: .pink,
-                title: "День рождения",
-                value: p.birthday.formatted(.dateTime.day().month(.wide).year()),
-                isFirst: true, isLast: false
-            )
-            infoRow(
-                icon: "figure.child", color: .orange,
-                title: "Возрастная группа",
-                value: p.ageGroup.description,
-                isFirst: false, isLast: false
-            )
-            let offset = p.ageGroup.temperatureOffset
-            infoRow(
-                icon: "thermometer.medium", color: .blue,
-                title: "Поправка к температуре",
-                value: offset == 0 ? "Как у взрослого" : "\(Int(offset))° (ощущает холоднее)",
-                isFirst: false, isLast: true
-            )
+        let ageOffset = p.ageGroup.temperatureOffset
+        let showHealth = !p.healthFeatures.isEmpty
+        let showTempPref = p.temperaturePreferenceOffset != 0
+
+        return VStack(spacing: 1) {
+            infoRow(icon: "birthday.cake.fill", color: .pink,
+                    title: "День рождения",
+                    value: p.birthday.formatted(.dateTime.day().month(.wide).year()),
+                    isFirst: true, isLast: false)
+
+            infoRow(icon: "figure.child", color: .orange,
+                    title: "Возрастная группа",
+                    value: p.ageGroup.description,
+                    isFirst: false, isLast: false)
+
+            infoRow(icon: p.activityLevel.icon, color: .green,
+                    title: "Активность",
+                    value: p.activityLevel.rawValue + " · " + activityDetail(p.activityLevel),
+                    isFirst: false, isLast: false)
+
+            infoRow(icon: p.walkType.icon, color: .teal,
+                    title: "Тип прогулки",
+                    value: p.walkType.label + " (" + p.walkType.detail + ")",
+                    isFirst: false, isLast: false)
+
+            infoRow(icon: "thermometer.medium", color: .blue,
+                    title: "Возрастная поправка",
+                    value: ageOffset == 0 ? "Как у взрослого" : "\(Int(ageOffset))° (ощущает холоднее)",
+                    isFirst: false, isLast: !showTempPref && !showHealth)
+
+            if showTempPref {
+                let off = p.temperaturePreferenceOffset
+                let sign = off > 0 ? "+" : ""
+                infoRow(icon: "slider.horizontal.3", color: .purple,
+                        title: "Склонность",
+                        value: off < -1 ? "Мёрзнет (\(sign)\(Int(off))°)" :
+                               off > 1  ? "Жаркий (\(sign)\(Int(off))°)" :
+                               "Нейтрально",
+                        isFirst: false, isLast: !showHealth)
+            }
+
+            if showHealth {
+                infoRow(icon: "cross.case.fill", color: .red,
+                        title: "Особенности здоровья",
+                        value: p.healthFeatures.map(\.label).joined(separator: ", "),
+                        isFirst: false, isLast: true)
+            }
+        }
+    }
+
+    private func activityDetail(_ level: ActivityLevel) -> String {
+        switch level {
+        case .low:      return "в коляске / спокойно"
+        case .moderate: return "обычная прогулка"
+        case .high:     return "активно бегает"
         }
     }
 
@@ -327,6 +364,39 @@ struct ProfileSummaryView: View {
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Siri card
+
+    private var siriCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Спросить Siri", systemImage: "mic.circle.fill")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            Text("Добавьте шорткат «Что надеть» в приложение Shortcuts и назовите его любой фразой — Siri будет вызывать рекомендацию без открытия SkyKid.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if #available(iOS 17, *) {
+                ShortcutsLink()
+                    .shortcutsLinkStyle(.automaticOutline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Button {
+                    if let url = URL(string: "shortcuts://") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Label("Открыть Shortcuts", systemImage: "arrow.up.forward.app")
+                        .font(.subheadline.weight(.medium))
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(16)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
     }
 
     // MARK: - Edit button

@@ -1,6 +1,111 @@
 import Foundation
 import CoreLocation
 
+// MARK: - HealthFeature
+
+enum HealthFeature: String, Codable, CaseIterable, Identifiable, Hashable {
+    case frequentIllness = "frequent_illness"  // часто болеет → одевать теплее
+    case coldSensitive   = "cold_sensitive"    // аллергия/реакция на холод
+    case premature       = "premature"         // недоношенный → как младший возраст
+    case heatSensitive   = "heat_sensitive"    // плохо переносит жару
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .frequentIllness: return "Часто болеет"
+        case .coldSensitive:   return "Реакция на холод"
+        case .premature:       return "Недоношенный"
+        case .heatSensitive:   return "Плохо переносит жару"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .frequentIllness: return "−1.5° к порогу одевания"
+        case .coldSensitive:   return "−2° к порогу одевания"
+        case .premature:       return "−2° к порогу одевания"
+        case .heatSensitive:   return "+1.5° к порогу одевания"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .frequentIllness: return "cross.case.fill"
+        case .coldSensitive:   return "thermometer.snowflake"
+        case .premature:       return "heart.fill"
+        case .heatSensitive:   return "thermometer.sun.fill"
+        }
+    }
+
+    var color: String { // used in UI accent
+        switch self {
+        case .frequentIllness: return "red"
+        case .coldSensitive:   return "blue"
+        case .premature:       return "pink"
+        case .heatSensitive:   return "orange"
+        }
+    }
+
+    /// Поправка к effectiveTemp: отрицательная → одеть теплее.
+    var temperatureAdjustment: Double {
+        switch self {
+        case .frequentIllness: return -1.5
+        case .coldSensitive:   return -2.0
+        case .premature:       return -2.0
+        case .heatSensitive:   return +1.5
+        }
+    }
+}
+
+// MARK: - WalkType
+
+enum WalkType: String, Codable, CaseIterable, Identifiable {
+    case short   = "short"    // ≤ 30 мин
+    case regular = "regular"  // ~ 1 час
+    case long    = "long"     // 2+ часа
+    case park    = "park"     // парк / лес
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .short:   return "Короткая"
+        case .regular: return "Обычная"
+        case .long:    return "Долгая"
+        case .park:    return "Парк / лес"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .short:   return "до 30 мин"
+        case .regular: return "около 1 часа"
+        case .long:    return "2+ часа"
+        case .park:    return "ветер, влажность"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .short:   return "timer"
+        case .regular: return "figure.walk"
+        case .long:    return "figure.hiking"
+        case .park:    return "leaf.fill"
+        }
+    }
+
+    /// Поправка к effectiveTemp.
+    var temperatureAdjustment: Double {
+        switch self {
+        case .short:   return +1.0   // недолго → чуть теплее воспринимает
+        case .regular: return  0.0
+        case .long:    return -1.5   // долго на улице → нужен запас тепла
+        case .park:    return -1.0   // ветер и влажность в парке/лесу
+        }
+    }
+}
+
 // MARK: - ActivityLevel
 
 enum ActivityLevel: String, Codable, CaseIterable, Identifiable {
@@ -47,8 +152,17 @@ struct ChildProfile: Equatable {
     var birthday: Date
     /// Уровень физической активности ребёнка во время прогулки.
     var activityLevel: ActivityLevel = .moderate
-    /// Накопленный сдвиг предпочтений (°C), изменяется через `ClothingRecommendationEngine.adjustPreferences`.
+    /// Тип прогулки — влияет на продолжительность и условия.
+    var walkType: WalkType = .regular
+    /// Особенности здоровья, влияющие на чувствительность к температуре.
+    var healthFeatures: Set<HealthFeature> = []
+    /// Постоянная поправка к температуре: мёрзнет (−) / жаркий (+).
     var temperaturePreferenceOffset: Double = 0.0
+
+    /// Суммарная поправка от особенностей здоровья (°C).
+    var healthTemperatureAdjustment: Double {
+        healthFeatures.map(\.temperatureAdjustment).reduce(0, +)
+    }
 
     var ageComponents: DateComponents {
         Calendar.current.dateComponents([.year, .month], from: birthday, to: Date())
@@ -106,7 +220,7 @@ struct ChildProfile: Equatable {
 
 extension ChildProfile: Codable {
     enum CodingKeys: String, CodingKey {
-        case name, gender, birthday, activityLevel, temperaturePreferenceOffset
+        case name, gender, birthday, activityLevel, walkType, healthFeatures, temperaturePreferenceOffset
     }
 
     init(from decoder: Decoder) throws {
@@ -114,8 +228,10 @@ extension ChildProfile: Codable {
         name     = try c.decode(String.self,      forKey: .name)
         gender   = try c.decode(ChildGender.self, forKey: .gender)
         birthday = try c.decode(Date.self,        forKey: .birthday)
-        activityLevel              = (try? c.decode(ActivityLevel.self, forKey: .activityLevel))              ?? .moderate
-        temperaturePreferenceOffset = (try? c.decode(Double.self, forKey: .temperaturePreferenceOffset))       ?? 0.0
+        activityLevel               = (try? c.decode(ActivityLevel.self,       forKey: .activityLevel))               ?? .moderate
+        walkType                    = (try? c.decode(WalkType.self,             forKey: .walkType))                    ?? .regular
+        healthFeatures              = (try? c.decode(Set<HealthFeature>.self,   forKey: .healthFeatures))              ?? []
+        temperaturePreferenceOffset = (try? c.decode(Double.self,               forKey: .temperaturePreferenceOffset)) ?? 0.0
     }
 }
 

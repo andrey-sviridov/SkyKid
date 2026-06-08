@@ -294,13 +294,15 @@ enum ClothingRecommendationEngine {
 
     // MARK: - Effective temperature formula
 
-    /// EffectiveTemp = FeelsLike + ActivityAdjustment + AgeOffset + ManualOffset + LearnedBias
+    /// EffectiveTemp = FeelsLike + ActivityAdjustment + AgeOffset + WalkType + HealthAdjustment + ManualOffset + LearnedBias
     ///
     /// Components:
-    ///   • `ActivityAdjustment`: +3°C (high) / 0°C (moderate) / −2°C (low)
-    ///   • `AgeOffset`         : −5°C (infant) … 0°C (teen) — already negative, lowers effectiveTemp
-    ///   • `ManualOffset`      : user-set permanent preference (profile.temperaturePreferenceOffset)
-    ///   • `LearnedBias`       : time-weighted per-zone bias from BiasStore (see ClothingBiasEngine)
+    ///   • `ActivityAdjustment` : +3°C (high) / 0°C (moderate) / −2°C (low)
+    ///   • `AgeOffset`          : −5°C (infant) … 0°C (teen)
+    ///   • `WalkTypeAdjustment` : +1°C (short) / 0°C (regular) / −1°C (park) / −1.5°C (long)
+    ///   • `HealthAdjustment`   : сумма поправок от Set<HealthFeature>
+    ///   • `ManualOffset`       : постоянная поправка родителя (temperaturePreferenceOffset)
+    ///   • `LearnedBias`        : адаптивный bias из BiasStore (ClothingBiasEngine)
     static func effectiveTemperature(
         weather:     WeatherData,
         profile:     ChildProfile,
@@ -309,6 +311,8 @@ enum ClothingRecommendationEngine {
         weather.apparentTemperature
             + profile.activityLevel.temperatureAdjustment
             + profile.ageGroup.temperatureOffset
+            + profile.walkType.temperatureAdjustment
+            + profile.healthTemperatureAdjustment
             + profile.temperaturePreferenceOffset
             + learnedBias
     }

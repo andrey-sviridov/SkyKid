@@ -14,9 +14,13 @@ final class WardrobeModel {
     var ageGroup: WardrobeAgeGroup
     var selectedItems: Set<GarmentItem> = []
 
+    /// Температура из погодной вкладки — база для сброса.
+    var weatherTemperature: Double
+
     init(temperature: Double = 12.0, ageGroup: WardrobeAgeGroup = .newborn) {
-        self.temperature = temperature
-        self.ageGroup    = ageGroup
+        self.temperature        = temperature
+        self.weatherTemperature = temperature
+        self.ageGroup           = ageGroup
     }
 
     // ── Температурная зона (задаёт допуски риска) ─────────────────────────
@@ -170,7 +174,10 @@ final class WardrobeModel {
     }
 
     func resetAll() {
-        withAnimation(.spring(response: 0.35)) { selectedItems = [] }
+        withAnimation(.spring(response: 0.35)) {
+            temperature   = weatherTemperature
+            selectedItems = []
+        }
     }
 
     // ── Вспомогательный вычислитель риска для произвольного набора ─────────

@@ -29,6 +29,7 @@ struct ClothingCalculatorView: View {
         ScrollView {
             VStack(spacing: 16) {
 
+
                 WeatherControlsCard(model: model)
 
                 RiskMeterCard(
@@ -84,11 +85,16 @@ struct ClothingCalculatorView: View {
                 model.ageGroup = profile.ageGroup.toWardrobeAgeGroup
             }
         }
+        .onChange(of: weather?.apparentTemperature) { _, newTemp in
+            guard let t = newTemp else { return }
+            model.weatherTemperature = t
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Сбросить") { model.resetAll() }
                     .tint(.secondary)
-                    .disabled(model.selectedItems.isEmpty)
+                    .disabled(model.selectedItems.isEmpty &&
+                              model.temperature == model.weatherTemperature)
             }
         }
     }
