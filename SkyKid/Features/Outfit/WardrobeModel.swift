@@ -17,7 +17,7 @@ final class WardrobeModel {
     /// Температура из погодной вкладки — база для сброса.
     var weatherTemperature: Double
 
-    init(temperature: Double = 12.0, ageGroup: WardrobeAgeGroup = .newborn) {
+    init(temperature: Double = 12.0, ageGroup: WardrobeAgeGroup = .earlyInfant) {
         self.temperature        = temperature
         self.weatherTemperature = temperature
         self.ageGroup           = ageGroup
@@ -32,10 +32,19 @@ final class WardrobeModel {
     }
 
     // ── Формула потребности в тепле ───────────────────────────────────────
-    // +35°C → 0 CLO | +24°C → 0 CLO | 0°C → 12 CLO | −20°C → 22 CLO
+    // +35°C → 0 CLO | baseline → 0 CLO | 0°C → ~12 CLO | −20°C → ~22 CLO
+    // Source: neonatology.pdf, с. 55 + Алгоритм одевания, стр. 9
     var requiredHeat: Double {
-        let base = max(0.0, (24.0 - temperature) * 0.5)
-        return (ageGroup == .active && temperature < 15) ? base * 0.85 : base
+        let baseline: Double
+        switch ageGroup {
+        case .earlyInfant: baseline = Self.earlyInfantComfortBaseline
+        case .infant:      baseline = Self.newbornComfortBaseline
+        case .active:      baseline = Self.defaultComfortBaseline
+        }
+        let base = max(0.0, (baseline - temperature) * Self.heatSlopePerDegree)
+        return (ageGroup == .active && temperature < Self.activeHeatThreshold)
+            ? base * Self.activeHeatReduction
+            : base
     }
 
     var currentHeat: Double { selectedItems.reduce(0) { $0 + $1.heatValue } }
@@ -48,7 +57,20 @@ final class WardrobeModel {
     var isExtremeCold: Bool { temperature <= -10 }
 
     // Единственная точка изменения ширины «Идеального» коридора (Rule 3)
+    // Source: Алгоритм одевания младенца, стр. 9 — |deviation| ≤ 0.2 CLO = optimal
     private static let idealBandCLO: Double = 0.2
+
+    // Source: neonatology.pdf, с. 55 — три физиологических периода:
+    // 0–3 мес: нет дрожательного термогенеза, бурый жир, комфорт 24–28°C
+    // 3–12 мес: подкожный жир развивается, комфорт 22–26°C
+    // 1+ лет: взрослая норма 20–24°C
+    private static let earlyInfantComfortBaseline: Double = 28.0
+    private static let newbornComfortBaseline:      Double = 26.0
+    private static let defaultComfortBaseline:      Double = 24.0
+    // Source: Алгоритм одевания, стр. 9 — коэффициент теплопотребности
+    private static let heatSlopePerDegree:  Double = 0.5
+    private static let activeHeatReduction: Double = 0.85
+    private static let activeHeatThreshold: Double = 15.0
 
     // ── Зональная оценка риска ────────────────────────────────────────────
     var riskLevel: ThermalRisk {
@@ -212,7 +234,8 @@ final class WardrobeModel {
         }
 
         let t = temperature
-        let isNewborn = (ageGroup == .newborn)
+        // earlyInfant и infant — оба в коляске, используют "стационарный" маршрут одевания
+        let isNewborn = (ageGroup == .earlyInfant || ageGroup == .infant)
 
         let orderedIDs: [String]
         switch t {
@@ -261,11 +284,15 @@ final class WardrobeModel {
         }
 
         let heavyOuterIDs: Set<String> = ["demi", "winter"]
+        // Носки взаимоисключающие: надевают либо тонкие, либо тёплые — не оба.
+        let sockIDs: Set<String> = ["thin_socks", "warm_socks"]
 
         for id in orderedIDs {
             guard let item = GarmentCatalog.byID[id] else { continue }
             // Rule 4: never stack two heavy outer shells
             if heavyOuterIDs.contains(id) && result.contains(where: { heavyOuterIDs.contains($0.id) }) { continue }
+            // Rule 5: only one sock type at a time
+            if sockIDs.contains(id) && result.contains(where: { sockIDs.contains($0.id) }) { continue }
             let rAfterAdd = computeRisk(for: result.union([item]))
             if rAfterAdd == .criticalOverheat { continue }
             let currRisk = computeRisk(for: result)

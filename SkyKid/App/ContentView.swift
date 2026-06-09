@@ -82,7 +82,13 @@ struct ContentView: View {
                         }
                     }
                 } else if let w = weatherVM.weather {
-                    WeatherView(weather: w, cityName: cityName, profile: childProfile)
+                    WeatherView(
+                        weather:          w,
+                        cityName:         cityName,
+                        profile:          childProfile,
+                        currentProvider:  weatherVM.currentProvider,
+                        onProviderChange: { provider, key in weatherVM.switchProvider(provider, apiKey: key) }
+                    )
                 }
             }
             .navigationTitle("")
@@ -102,7 +108,7 @@ struct ContentView: View {
     private var mapTab: some View {
         NavigationStack {
             if let coord = locationManager.location?.coordinate {
-                RadarMapView(coordinate: coord)
+                MapWeatherView(coordinate: coord)
             } else {
                 ProgressView("Определяем местоположение…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -208,8 +214,9 @@ struct ProfileSummaryView: View {
                     .frame(width: 90, height: 90)
                     .shadow(color: (p.gender == .boy ? Color.blue : Color.pink).opacity(0.4),
                             radius: 14, y: 5)
-                Text(p.gender.emoji)
-                    .font(.system(size: 46))
+                Image(systemName: "figure.child")
+                    .font(.system(size: 40, weight: .medium))
+                    .foregroundStyle(.white)
             }
 
             VStack(spacing: 4) {

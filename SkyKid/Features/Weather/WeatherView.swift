@@ -6,6 +6,10 @@ struct WeatherView: View {
     let weather: WeatherData
     let cityName: String
     var profile: ChildProfile?
+    var currentProvider: WeatherProvider = .openMeteo
+    var onProviderChange: ((WeatherProvider, String?) -> Void)?
+
+    @State private var showProviderSheet = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -23,6 +27,17 @@ struct WeatherView: View {
         // Прозрачный nav bar + белые иконки поверх градиента
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .sheet(isPresented: $showProviderSheet) {
+            ProviderPickerView(
+                current: currentProvider,
+                onSelect: { provider, key in
+                    onProviderChange?(provider, key)
+                    showProviderSheet = false
+                }
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        }
     }
 
     // MARK: - Hero (белый текст на градиенте)
@@ -57,7 +72,25 @@ struct WeatherView: View {
             Text("Ощущается как \(Int(weather.apparentTemperature.rounded()))°")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.72))
-                .padding(.bottom, 40)
+
+            // Attribution chip — не навязчивый, но доступный
+            Button {
+                showProviderSheet = true
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: currentProvider.iconName)
+                        .font(.system(size: 9, weight: .medium))
+                    Text(currentProvider.displayName)
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .foregroundStyle(.white.opacity(0.45))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(.white.opacity(0.10), in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+            .padding(.bottom, 40)
         }
         .padding(.horizontal, 24)
     }
@@ -143,34 +176,32 @@ struct ChildPerceptionCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
 
-            // Шапка: эмодзи + имя + температура для малыша
             HStack(alignment: .top, spacing: 14) {
                 ZStack {
                     Circle()
                         .fill(comfortColor.opacity(0.14))
                         .frame(width: 56, height: 56)
-                    Text(perception.moodEmoji)
-                        .font(.system(size: 30))
+                    Image(systemName: comfortIcon)
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(comfortColor)
+                        .symbolRenderingMode(.hierarchical)
                 }
 
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text(perception.profile.name)
-                            .font(.headline)
-                        Text("·")
-                            .foregroundStyle(.secondary)
-                        Text(perception.profile.ageLabel)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(perception.profile.name)
+                        .font(.headline)
+                        .lineLimit(1)
+                    Text(perception.profile.ageLabel)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                     Label(perception.comfortLabel, systemImage: comfortIcon)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(comfortColor)
                 }
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                // Эффективная температура
                 VStack(spacing: 1) {
                     Text("\(Int(perception.effectiveFeelsLike.rounded()))°")
                         .font(.system(size: 34, weight: .semibold, design: .rounded))
@@ -230,6 +261,160 @@ struct ChildPerceptionCard: View {
         case 30..<55:  return "thermometer.low"
         default:       return "exclamationmark.circle.fill"
         }
+    }
+}
+
+// MARK: - ProviderPickerView
+
+struct ProviderPickerView: View {
+    let current: WeatherProvider
+    let onSelect: (WeatherProvider, String?) -> Void
+
+    private static let integratedProviders: [WeatherProvider] = [.openMeteo, .openWeatherMap, .weatherAPI, .yandex]
+
+    @State private var selected: WeatherProvider
+    @State private var apiKey: String = ""
+    @FocusState private var keyFocused: Bool
+
+    init(current: WeatherProvider, onSelect: @escaping (WeatherProvider, String?) -> Void) {
+        self.current = current
+        self.onSelect = onSelect
+        _selected = State(initialValue: current)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(Self.integratedProviders) { provider in
+                        ProviderRow(
+                            provider: provider,
+                            isSelected: selected == provider,
+                            action: {
+                                withAnimation(.spring(response: 0.28)) {
+                                    selected = provider
+                                    apiKey = ""
+                                    keyFocused = false
+                                }
+                                if !provider.requiresKey { onSelect(provider, nil) }
+                            }
+                        )
+                    }
+                } header: {
+                    Text("Доступные источники")
+                } footer: {
+                    Text("Источник влияет на точность ощущаемой температуры. Все сервисы передают ветер и влажность.")
+                }
+
+                if selected.requiresKey {
+                    Section {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("API-ключ для \(selected.displayName)")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            TextField("Введите ключ", text: $apiKey)
+                                .font(.body.monospaced())
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .focused($keyFocused)
+                            if let url = apiKeyURL(for: selected) {
+                                Link("Получить ключ →", destination: url)
+                                    .font(.caption)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    } header: {
+                        Text("Авторизация")
+                    }
+
+                    Section {
+                        Button {
+                            let stored = storedKey(for: selected)
+                            onSelect(selected, apiKey.isEmpty ? stored : apiKey)
+                        } label: {
+                            Text("Применить")
+                                .frame(maxWidth: .infinity)
+                                .foregroundStyle(apiKey.isEmpty && storedKey(for: selected) == nil ? Color.secondary : Color.blue)
+                        }
+                        .disabled(apiKey.isEmpty && storedKey(for: selected) == nil)
+                    }
+                    .onAppear { apiKey = storedKey(for: selected) ?? "" }
+                }
+
+            }
+            .navigationTitle("Источник данных")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private func storedKey(for provider: WeatherProvider) -> String? {
+        switch provider {
+        case .openWeatherMap: return UserDefaults.standard.string(forKey: WeatherProvider.owmKeyKey)
+        case .weatherAPI:     return UserDefaults.standard.string(forKey: WeatherProvider.wapiKeyKey)
+        case .yandex:         return UserDefaults.standard.string(forKey: WeatherProvider.yandexKeyKey)
+        default:              return nil
+        }
+    }
+
+    private func apiKeyURL(for provider: WeatherProvider) -> URL? {
+        switch provider {
+        case .openWeatherMap: return URL(string: "https://openweathermap.org/api")
+        case .weatherAPI:     return URL(string: "https://www.weatherapi.com/signup.aspx")
+        case .yandex:         return URL(string: "https://developer.tech.yandex.ru/services/meteoreader")
+        default:              return nil
+        }
+    }
+}
+
+// MARK: - ProviderRow
+
+private struct ProviderRow: View {
+    let provider: WeatherProvider
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? Color.blue.opacity(0.14) : Color(.tertiarySystemBackground))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: provider.iconName)
+                        .font(.system(size: 16))
+                        .foregroundStyle(isSelected ? .blue : .secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(provider.displayName)
+                            .foregroundStyle(.primary)
+                            .font(.body.weight(isSelected ? .semibold : .regular))
+                        if !provider.requiresKey {
+                            Text("Бесплатно")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.green)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.green.opacity(0.12), in: Capsule())
+                        }
+                    }
+                    Text(provider.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.blue)
+                        .font(.system(size: 18))
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -135,13 +135,26 @@ struct WidgetClothingCalculator {
     }
 
     // MARK: Главный метод: из кеша + профиля → готовая рекомендация
+    // Реплицирует ClothingRecommendationEngine.effectiveTemperature — те же 8 компонент.
 
     static func recommend(
         weather: CachedWeather,
         profile: ChildProfile?
     ) -> WidgetOutfitRecommendation {
-        let ageOffset    = profile?.ageGroup.temperatureOffset ?? 0.0
-        let effectiveTemp = weather.apparentTemperature + ageOffset
+        var effectiveTemp = weather.apparentTemperature
+        if let p = profile {
+            effectiveTemp += p.ageGroup.temperatureOffset
+            effectiveTemp += p.activityLevel.temperatureAdjustment
+            effectiveTemp += p.walkType.temperatureAdjustment
+            effectiveTemp += p.healthTemperatureAdjustment
+            effectiveTemp += p.temperaturePreferenceOffset
+            if p.usesStroller {
+                effectiveTemp += p.strollerType.effectiveTempAdjustment
+            }
+            if p.isNewbornPeriod {
+                effectiveTemp -= 1.0
+            }
+        }
         let items = outfitItems(
             effectiveTemp: effectiveTemp,
             weatherCode:   weather.weatherCode,

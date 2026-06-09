@@ -3,10 +3,18 @@ import Foundation
 struct ChildWeatherPerception {
     let profile: ChildProfile
     let weather: WeatherData
+    /// Если передана явно (из outfit.effectiveTemp) — используется как есть.
+    /// По умолчанию — apparentTemp + ageOffset (простая формула для вкладки «Погода»).
+    private let _effectiveTemp: Double?
 
-    // Эффективная температура с поправкой на возраст
+    init(profile: ChildProfile, weather: WeatherData, effectiveTemp: Double? = nil) {
+        self.profile = profile
+        self.weather = weather
+        self._effectiveTemp = effectiveTemp
+    }
+
     var effectiveFeelsLike: Double {
-        weather.apparentTemperature + profile.ageGroup.temperatureOffset
+        _effectiveTemp ?? (weather.apparentTemperature + profile.ageGroup.temperatureOffset)
     }
 
     // Главное: как ребёнок сейчас чувствует погоду — одним предложением
@@ -80,14 +88,23 @@ struct ChildWeatherPerception {
         }
     }
 
-    // Иконка настроения
-    var moodEmoji: String {
+    var moodSystemImage: String {
         switch effectiveFeelsLike {
-        case ..<(-10): return "🥶"
-        case -10..<0:  return "😬"
-        case 0..<10:   return "😐"
-        case 10..<20:  return "😊"
-        default:       return "🥵"
+        case ..<(-10): return "thermometer.snowflake.circle.fill"
+        case -10..<0:  return "thermometer.snowflake"
+        case 0..<10:   return "cloud.fill"
+        case 10..<20:  return "sun.max.fill"
+        default:       return "thermometer.sun.fill"
+        }
+    }
+
+    var moodColor: (Double, Double, Double) {
+        switch effectiveFeelsLike {
+        case ..<(-10): return (0.1, 0.3, 0.9)
+        case -10..<0:  return (0.3, 0.55, 1.0)
+        case 0..<10:   return (0.2, 0.65, 0.9)
+        case 10..<20:  return (0.2, 0.78, 0.4)
+        default:       return (1.0, 0.45, 0.1)
         }
     }
 

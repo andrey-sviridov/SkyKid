@@ -62,16 +62,17 @@ enum WeatherProvider: String, CaseIterable, Identifiable {
     /// Whether the provider has a working integration in this app.
     var isIntegrated: Bool {
         switch self {
-        case .openMeteo, .weatherKit, .openWeatherMap, .weatherAPI: return true
-        case .gismeteo, .yandex:                                     return false
+        case .openMeteo, .weatherKit, .openWeatherMap, .weatherAPI, .yandex: return true
+        case .gismeteo:                                                       return false
         }
     }
 
     // MARK: - UserDefaults keys
 
-    static let providerKey = "weatherProvider"
-    static let owmKeyKey   = "owmApiKey"       // OpenWeatherMap
-    static let wapiKeyKey  = "wapiApiKey"       // WeatherAPI.com
+    static let providerKey    = "weatherProvider"
+    static let owmKeyKey      = "owmApiKey"        // OpenWeatherMap
+    static let wapiKeyKey     = "wapiApiKey"        // WeatherAPI.com
+    static let yandexKeyKey   = "yandexApiKey"      // Яндекс Погода
 
     // MARK: - Factory
 
@@ -96,7 +97,12 @@ enum WeatherProvider: String, CaseIterable, Identifiable {
             guard !key.isEmpty else { return nil }
             return WeatherAPIService(apiKey: key)
 
-        case .gismeteo, .yandex:
+        case .yandex:
+            let key = UserDefaults.standard.string(forKey: yandexKeyKey) ?? ""
+            guard !key.isEmpty else { return nil }
+            return YandexWeatherService(apiKey: key)
+
+        case .gismeteo:
             return nil
         }
     }

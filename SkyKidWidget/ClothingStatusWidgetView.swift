@@ -71,8 +71,10 @@ struct SmallWidgetView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                Text(rec.status.emoji)
-                    .font(.title3)
+                Image(systemName: rec.status.systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(rec.status.color)
+                    .symbolRenderingMode(.hierarchical)
             }
 
             Spacer(minLength: 6)

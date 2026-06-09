@@ -48,7 +48,8 @@ struct WeatherData: Equatable {
 }
 
 struct RadarFrame: Identifiable {
-    let id = UUID()
+    let id   = UUID()
     let time: Date
     let path: String
+    let host: String  // из API-ответа, не хардкодить
 }

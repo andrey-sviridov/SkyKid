@@ -21,7 +21,7 @@ struct ClothingCalculatorView: View {
         self.weather = weather
         _model = State(initialValue: WardrobeModel(
             temperature: weather?.apparentTemperature ?? 12.0,
-            ageGroup:    profile?.ageGroup.toWardrobeAgeGroup ?? .newborn
+            ageGroup:    profile?.wardrobeAgeGroup ?? .earlyInfant
         ))
     }
 
@@ -82,7 +82,7 @@ struct ClothingCalculatorView: View {
         .animation(.easeInOut(duration: 0.25), value: model.showColdAlert)
         .onAppear {
             if let profile {
-                model.ageGroup = profile.ageGroup.toWardrobeAgeGroup
+                model.ageGroup = profile.wardrobeAgeGroup
             }
         }
         .onChange(of: weather?.apparentTemperature) { _, newTemp in

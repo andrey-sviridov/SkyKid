@@ -21,27 +21,48 @@ enum GarmentLayer: String, CaseIterable, Identifiable {
 }
 
 // MARK: - WardrobeAgeGroup
+// Source: neonatology.pdf с.55 — три физиологических периода:
+// 0–3 мес: нет дрожательного термогенеза, только бурый жир
+// 3–12 мес: подкожный жир развивается, начало движения
+// 1+ лет: ходит, самостоятельно вырабатывает тепло
 
 enum WardrobeAgeGroup: String, CaseIterable, Identifiable {
-    case newborn = "0–5 мес"
-    case active  = "6–12 мес"
+    case earlyInfant = "0–3 мес"
+    case infant      = "3–12 мес"
+    case active      = "1+ лет"
 
     var id: String { rawValue }
 
     var subtitle: String {
-        self == .newborn
-            ? "Лежит / в коляске — нужен доп. слой"
-            : "Активный / ходит — генерирует тепло"
+        switch self {
+        case .earlyInfant: return "Лежит в коляске — нет мышечного тепла"
+        case .infant:      return "В коляске или начинает ползать"
+        case .active:      return "Ходит/двигается — генерирует тепло"
+        }
     }
 }
 
 extension AgeGroup {
-    // .newborn = лежит/в коляске (infant + baby)
-    // .active  = ходит/двигается (toddler и старше)
+    // Fallback-маппинг по AgeGroup (без точного возраста).
+    // Для точного маппинга использовать ChildProfile.wardrobeAgeGroup.
     var toWardrobeAgeGroup: WardrobeAgeGroup {
         switch self {
-        case .infant, .baby: return .newborn
-        default:             return .active
+        case .infant:              return .earlyInfant  // консервативно для 0–5 мес
+        case .baby:                return .infant        // 6–11 мес
+        default:                   return .active
+        }
+    }
+}
+
+extension ChildProfile {
+    /// Точный маппинг в группу конструктора по реальному возрасту в месяцах.
+    /// Точнее, чем AgeGroup.toWardrobeAgeGroup, т.к. учитывает границу 3 мес.
+    var wardrobeAgeGroup: WardrobeAgeGroup {
+        let totalMonths = ageYears * 12 + ageMonths
+        switch totalMonths {
+        case 0..<3:  return .earlyInfant
+        case 3..<12: return .infant
+        default:     return .active
         }
     }
 }

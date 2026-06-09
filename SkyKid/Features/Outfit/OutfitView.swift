@@ -28,11 +28,17 @@ struct OutfitView: View {
                 .ignoresSafeArea()
                 .animation(.easeInOut(duration: 0.9), value: gradientKey)
 
-            if let profile, let outfit {
+            if let profile, profile.strollerType.isSafetyAlarm,
+               profile.ageGroup == .infant || profile.ageGroup == .baby {
+                // Source: Алгоритм одевания младенца, стр. 5-6
+                // Накрытая коляска → парниковый эффект + ребризинг CO₂ → риск СВСМ.
+                // Алерт только для детей до 12 мес — СВСМ-риск специфичен для этого возраста.
+                strollerSafetyAlertView(profile: profile)
+            } else if let profile, let outfit {
                 ScrollView {
                     VStack(spacing: 14) {
                         heroCard(outfit: outfit, profile: profile)
-                        perceptionNote(profile: profile)
+                        perceptionNote(profile: profile, outfit: outfit)
                         conditionsBadges
                         layersSection(outfit: outfit)
                         feedbackSection(profile: profile)
@@ -55,6 +61,61 @@ struct OutfitView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+    }
+
+    // MARK: - Stroller safety alert
+
+    private func strollerSafetyAlertView(profile: ChildProfile) -> some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 64))
+                        .foregroundStyle(.white)
+                        .symbolEffect(.pulse)
+                        .padding(.top, 32)
+                    Text("ОПАСНО")
+                        .font(.system(size: 32, weight: .black))
+                        .foregroundStyle(.white)
+                    Text("Накрытая коляска опасна для жизни")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .multilineTextAlignment(.center)
+                }
+
+                VStack(alignment: .leading, spacing: 14) {
+                    strollerAlertRow(icon: "thermometer.sun.fill",
+                                     text: "Температура внутри накрытой коляски достигает критического уровня за 30 минут")
+                    strollerAlertRow(icon: "lungs.fill",
+                                     text: "Плотная накидка блокирует воздух — накапливается CO₂, угнетается дыхание")
+                    strollerAlertRow(icon: "heart.slash.fill",
+                                     text: "Прямой риск синдрома внезапной смерти младенца (СВСМ)")
+                }
+                .padding(18)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.red.opacity(0.4), lineWidth: 1))
+
+                Text("Снимите накидку прямо сейчас. Для защиты от солнца используйте только сетчатый тент с вентиляцией.")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 40)
+            }
+            .padding(.horizontal, 24)
+        }
+    }
+
+    private func strollerAlertRow(icon: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(.red)
+                .frame(width: 26)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     // MARK: - Background gradient
@@ -120,10 +181,18 @@ struct OutfitView: View {
                     Text("На улице \(Int(weather.temperature.rounded()))° · ощущается \(Int(weather.apparentTemperature.rounded()))°")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.70))
+                    let delta = Int((outfit.effectiveTemp - weather.apparentTemperature).rounded())
+                    if delta != 0 {
+                        Text("С учётом профиля: \(delta > 0 ? "+" : "")\(delta)°")
+                            .font(.caption2)
+                            .foregroundStyle(.white.opacity(0.50))
+                    }
                 }
                 Spacer()
-                Text(outfitEmoji)
-                    .font(.system(size: 38))
+                Image(systemName: outfitIcon)
+                    .font(.system(size: 34, weight: .light))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .symbolRenderingMode(.hierarchical)
                     .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
             }
         }
@@ -134,11 +203,15 @@ struct OutfitView: View {
 
     // MARK: - Perception note
 
-    private func perceptionNote(profile: ChildProfile) -> some View {
-        let p = ChildWeatherPerception(profile: profile, weather: weather)
+    private func perceptionNote(profile: ChildProfile, outfit: LayeredOutfit) -> some View {
+        // Используем effectiveTemp из рекомендации — одна формула с расчётом одежды
+        let p = ChildWeatherPerception(profile: profile, weather: weather, effectiveTemp: outfit.effectiveTemp)
         return HStack(alignment: .top, spacing: 12) {
-            Text(p.moodEmoji)
-                .font(.title2)
+            Image(systemName: p.moodSystemImage)
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(Color(red: p.moodColor.0, green: p.moodColor.1, blue: p.moodColor.2))
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 30)
             VStack(alignment: .leading, spacing: 4) {
                 Text(p.summary)
                     .font(.subheadline)
@@ -378,13 +451,13 @@ struct OutfitView: View {
 
     // MARK: - Helpers
 
-    private var outfitEmoji: String {
+    private var outfitIcon: String {
         switch effectiveTemp {
-        case ..<(-10): return "🥶"
-        case -10..<0:  return "🧊"
-        case 0..<10:   return "🧥"
-        case 10..<18:  return "😊"
-        default:       return "☀️"
+        case ..<(-10): return "thermometer.snowflake.circle.fill"
+        case -10..<0:  return "snowflake"
+        case 0..<10:   return "cloud.snow.fill"
+        case 10..<18:  return "cloud.sun.fill"
+        default:       return "sun.max.fill"
         }
     }
 

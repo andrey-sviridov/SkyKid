@@ -11,6 +11,7 @@ struct ChildProfileSetupView: View {
     // Behaviour
     @State private var activityLevel: ActivityLevel = .moderate
     @State private var walkType: WalkType = .regular
+    @State private var strollerType: StrollerType = .open
     // Preferences
     @State private var tempOffset: Double = 0
     @State private var healthFeatures: Set<HealthFeature> = []
@@ -27,6 +28,7 @@ struct ChildProfileSetupView: View {
                     if !isEditing { welcomeHeader }
                     formCard
                     behaviourCard
+                    if isInfantOrBaby { strollerCard }
                     preferencesCard
                     previewCard
                     saveButton
@@ -53,6 +55,7 @@ struct ChildProfileSetupView: View {
                 birthday       = p.birthday
                 activityLevel  = p.activityLevel
                 walkType       = p.walkType
+                strollerType   = p.strollerType
                 tempOffset     = p.temperaturePreferenceOffset
                 healthFeatures = p.healthFeatures
             }
@@ -292,6 +295,43 @@ struct ChildProfileSetupView: View {
         .shadow(color: Color(red: 0.28, green: 0.42, blue: 0.96).opacity(0.35), radius: 12, y: 4)
     }
 
+    // MARK: - Stroller card (только для детей до 12 мес)
+
+    // Коляска используется до 3 лет: показывать карточку для детей до 36 мес.
+    private var isInfantOrBaby: Bool {
+        let months = Calendar.current.dateComponents([.month], from: birthday, to: Date()).month ?? 0
+        return months < 36
+    }
+
+    private var strollerCard: some View {
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Тип коляски", systemImage: "baby.carriage")
+                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+
+                VStack(spacing: 8) {
+                    ForEach(StrollerType.allCases) { type in
+                        StrollerTypeButton(type: type, isSelected: strollerType == type) {
+                            withAnimation(.spring(response: 0.28)) { strollerType = type }
+                        }
+                    }
+                }
+
+                if strollerType == .covered {
+                    Label("Снимите накидку — парниковый эффект и риск СВСМ",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .padding(.top, 4)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .padding(16)
+        }
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .animation(.spring(response: 0.3), value: strollerType)
+    }
+
     // MARK: - Helpers
 
     private var sliderTint: Color {
@@ -333,6 +373,7 @@ struct ChildProfileSetupView: View {
         var p = ChildProfile(name: trimmed, gender: gender, birthday: birthday)
         p.activityLevel               = activityLevel
         p.walkType                    = walkType
+        p.strollerType                = strollerType
         p.temperaturePreferenceOffset = tempOffset
         p.healthFeatures              = healthFeatures
         ChildProfileStore.shared.profile = p
@@ -473,5 +514,56 @@ struct HealthFeatureRow: View {
         if !isLast {
             Divider().padding(.leading, 46)
         }
+    }
+}
+
+// MARK: - StrollerTypeButton
+
+struct StrollerTypeButton: View {
+    let type: StrollerType
+    let isSelected: Bool
+    let action: () -> Void
+
+    private var accent: Color {
+        switch type {
+        case .open:       return .blue
+        case .deepWinter: return .indigo
+        case .covered:    return .red
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? accent.opacity(0.15) : Color(.tertiarySystemBackground))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: type.icon)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(isSelected ? accent : .secondary)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(type.label)
+                        .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                        .foregroundStyle(isSelected ? accent : .primary)
+                    Text(type.detail)
+                        .font(.caption2)
+                        .foregroundStyle(type == .covered ? .red : .secondary)
+                }
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(accent)
+                        .font(.system(size: 18))
+                }
+            }
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .background(isSelected ? accent.opacity(0.08) : Color(.tertiarySystemBackground),
+                        in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(isSelected ? accent.opacity(0.5) : Color.clear, lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
     }
 }

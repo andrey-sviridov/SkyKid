@@ -119,12 +119,18 @@ struct StandardLayerStrategy: LayerStrategy {
     func accessories(for t: Double, ageGroup: AgeGroup, weather: WeatherData) -> [LayeredOutfit.Layer] {
         var result: [LayeredOutfit.Layer] = []
 
+        // Source: pediatria3.pdf, с. 314-315 — терморегуляторная функция кожи
+        // несовершенна у детей 1-3 лет. Тоддлер требует более раннего
+        // надевания шапки и варежек, чем дети 3+ лет.
+        let hatThreshold:     Double = (ageGroup == .toddler) ? 14.0 : 10.0
+        let mittensThreshold: Double = (ageGroup == .toddler) ?  7.0 :  5.0
+
         // Головной убор
-        if t < 10 {
+        if t < hatThreshold {
             result.append(.init(
                 name: t < 0 ? "Тёплая шапка" : "Лёгкая шапочка",
                 systemImage: t < 0 ? "moon.stars.fill" : "moon.fill",
-                reason: "Защита головы от холода"
+                reason: t < 0 ? "Мороз — шапка обязательна" : "Прохладно — защита головы"
             ))
         } else if t >= 22 {
             result.append(.init(name: "Панамка / кепка",
@@ -133,16 +139,16 @@ struct StandardLayerStrategy: LayerStrategy {
         }
 
         // Перчатки / варежки
-        if t < 5 {
+        if t < mittensThreshold {
             result.append(.init(
                 name: t < -5 ? "Варежки" : "Перчатки",
                 systemImage: "hand.raised.fill",
-                reason: t < -5 ? "Сильный мороз — варежки теплее перчаток" : "Холодные руки"
+                reason: t < -5 ? "Сильный мороз — варежки теплее перчаток" : "Защита рук от холода"
             ))
         }
 
-        // Защита шеи — с учётом безопасности на площадке
-        if t < 5 { result.append(neckLayer(for: ageGroup)) }
+        // Защита шеи — порог выровнен с варежками (обе дистальные зоны)
+        if t < mittensThreshold { result.append(neckLayer(for: ageGroup)) }
 
         // Обувь
         let hasSnow = (71...77).contains(weather.weatherCode)
@@ -180,6 +186,17 @@ struct StandardLayerStrategy: LayerStrategy {
 
 struct InfantLayerStrategy: LayerStrategy {
 
+    // Source: Алгоритм одевания младенца, стр. 7
+    // Малыш в коляске не генерирует тепло движением — ветровой порог
+    // в 1.75× ниже, чем для ходячих детей (4 м/с vs 7 м/с).
+    private static let windProtectionThreshold: Double = 4.0
+
+    // Source: Алгоритм, стр. 8 — AgeExtrasRule: дистальные конечности;
+    // neonatology.pdf, с. 55 — незрелость вегетативного контроля сосудов.
+    // Периферийное кровообращение у новорождённых хуже взрослого →
+    // варежки нужны раньше, чем при 0°C.
+    private static let mittensThreshold: Double = 5.0
+
     func baseLayer(for t: Double, ageGroup: AgeGroup) -> LayeredOutfit.Layer? {
         if t >= 22 {
             return .init(name: "Хлопковый слип / боди", systemImage: "figure.child",
@@ -201,7 +218,13 @@ struct InfantLayerStrategy: LayerStrategy {
     }
 
     func outerLayer(for t: Double, ageGroup: AgeGroup, weather: WeatherData) -> LayeredOutfit.Layer? {
-        guard t < 22 else { return nil }
+        let hasWind = weather.windSpeed > Self.windProtectionThreshold
+        // Source: Алгоритм, стр. 7 — WindRule для коляски
+        if t >= 22 {
+            guard hasWind else { return nil }
+            return .init(name: "Ветрозащитный чехол на коляску", systemImage: "wind",
+                         reason: "Ветер \(Int(weather.windSpeed.rounded())) м/с — малыш не согревается движением")
+        }
         let hasRain = (51...82).contains(weather.weatherCode) || weather.precipitation > 0.1
         if hasRain {
             return .init(name: "Непромокаемый конверт / дождевик на коляску",
@@ -229,15 +252,14 @@ struct InfantLayerStrategy: LayerStrategy {
             systemImage: "moon.fill",
             reason: "Голова малыша — главная зона теплообмена"
         ))
+        if t < Self.mittensThreshold {
+            result.append(.init(name: "Варежки-царапки", systemImage: "hand.raised.fill",
+                                reason: t < 0 ? "Мороз — защита ручек" : "Периферийное кровообращение малыша слабее взрослого"))
+        }
         if t < 5 {
             result.append(.init(name: "Пинетки / тёплые носочки", systemImage: "capsule.fill",
                                 reason: "Ножки мёрзнут быстро даже в конверте"))
         }
-        if t < 0 {
-            result.append(.init(name: "Варежки-царапки", systemImage: "hand.raised.fill",
-                                reason: "Защита ручек от холода"))
-        }
-        // Обувь при осадках — та же логика, что у StandardLayerStrategy
         let hasSnow = (71...77).contains(weather.weatherCode)
         let hasRain = (51...82).contains(weather.weatherCode) || weather.precipitation > 0.1
         if hasSnow {
@@ -281,7 +303,7 @@ enum ClothingRecommendationEngine {
         learnedBias: Double = 0
     ) -> LayeredOutfit {
         let t        = effectiveTemperature(weather: weather, profile: profile, learnedBias: learnedBias)
-        let strategy = Self.strategy(for: profile.ageGroup)
+        let strategy = Self.strategy(for: profile)
         let age      = profile.ageGroup
         return LayeredOutfit(
             effectiveTemp: t,
@@ -294,33 +316,48 @@ enum ClothingRecommendationEngine {
 
     // MARK: - Effective temperature formula
 
-    /// EffectiveTemp = FeelsLike + ActivityAdjustment + AgeOffset + WalkType + HealthAdjustment + ManualOffset + LearnedBias
+    /// EffectiveTemp = FeelsLike + ActivityAdjustment + AgeOffset + WalkType + HealthAdjustment + ManualOffset + LearnedBias + StrollerAdjustment
     ///
     /// Components:
-    ///   • `ActivityAdjustment` : +3°C (high) / 0°C (moderate) / −2°C (low)
-    ///   • `AgeOffset`          : −5°C (infant) … 0°C (teen)
-    ///   • `WalkTypeAdjustment` : +1°C (short) / 0°C (regular) / −1°C (park) / −1.5°C (long)
-    ///   • `HealthAdjustment`   : сумма поправок от Set<HealthFeature>
-    ///   • `ManualOffset`       : постоянная поправка родителя (temperaturePreferenceOffset)
-    ///   • `LearnedBias`        : адаптивный bias из BiasStore (ClothingBiasEngine)
+    ///   • `ActivityAdjustment`  : +3°C (high) / 0°C (moderate) / −2°C (low)
+    ///   • `AgeOffset`           : −5°C (infant) … 0°C (teen)
+    ///   • `WalkTypeAdjustment`  : +1°C (short) / 0°C (regular) / −1°C (park) / −1.5°C (long)
+    ///   • `HealthAdjustment`    : сумма поправок от Set<HealthFeature>
+    ///   • `ManualOffset`        : постоянная поправка родителя (temperaturePreferenceOffset)
+    ///   • `LearnedBias`         : адаптивный bias из BiasStore (ClothingBiasEngine)
+    ///   • `StrollerAdjustment`  : +3°C (глубокая зимняя люлька) / 0°C (остальные)
+    ///     Source: Алгоритм одевания младенца, стр. 5 — тепловое сопротивление корпуса люльки
     static func effectiveTemperature(
         weather:     WeatherData,
         profile:     ChildProfile,
         learnedBias: Double = 0
     ) -> Double {
-        weather.apparentTemperature
+        let strollerAdjustment = profile.usesStroller ? profile.strollerType.effectiveTempAdjustment : 0
+        // Source: neonatology.pdf — период новорождённости (0-28 дней) = максимальный риск.
+        // Нет дрожательного термогенеза, бурый жир истощается при охлаждении за минуты.
+        // Дополнительный -1°C сверх возрастного offset -5°C = итого -6°C для новорождённых.
+        let newbornOffset: Double = profile.isNewbornPeriod ? -1.0 : 0.0
+        return weather.apparentTemperature
             + profile.activityLevel.temperatureAdjustment
             + profile.ageGroup.temperatureOffset
             + profile.walkType.temperatureAdjustment
             + profile.healthTemperatureAdjustment
             + profile.temperaturePreferenceOffset
             + learnedBias
+            + strollerAdjustment
+            + newbornOffset
     }
 
     // MARK: - Private
 
-    private static func strategy(for ageGroup: AgeGroup) -> any LayerStrategy {
-        switch ageGroup {
+    private static func strategy(for profile: ChildProfile) -> any LayerStrategy {
+        // Source: Алгоритм одевания младенца, стр. 3
+        // До 44 нед. постконцептуального возраста — консервативный режим.
+        // Недоношенный тоддлер (1-3 г.) физиологически ближе к младенцу.
+        if profile.healthFeatures.contains(.premature), profile.ageGroup == .toddler {
+            return InfantLayerStrategy()
+        }
+        switch profile.ageGroup {
         case .infant, .baby: return InfantLayerStrategy()
         default:             return StandardLayerStrategy()
         }

@@ -6,18 +6,35 @@ import MapKit
 struct MapWeatherView: View {
     let coordinate: CLLocationCoordinate2D
     @State private var vm = MapWeatherViewModel()
+    @State private var locationCenterTrigger = 0
     @AppStorage("owmApiKey") private var owmApiKey: String = ""
 
     var body: some View {
         ZStack(alignment: .bottom) {
             WeatherMapRepresentable(
-                userCoordinate: coordinate,
-                frames:         vm.frames,
-                currentIndex:   vm.currentIndex,
-                activeLayer:    vm.activeLayer,
-                owmApiKey:      owmApiKey
+                userCoordinate:        coordinate,
+                frames:                vm.frames,
+                currentIndex:          vm.currentIndex,
+                activeLayer:           vm.activeLayer,
+                owmApiKey:             owmApiKey,
+                locationCenterTrigger: locationCenterTrigger
             )
             .ignoresSafeArea()
+
+            // Кнопка «вернуть к моему местоположению»
+            Button {
+                locationCenterTrigger += 1
+            } label: {
+                Image(systemName: "location.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.blue)
+                    .padding(12)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            .padding(.trailing, 16)
+            .padding(.top, 56)
 
             VStack(spacing: 10) {
                 if vm.activeLayer.isAnimated && !vm.frames.isEmpty {
@@ -158,17 +175,18 @@ struct MapPlayerPanel: View {
 // MARK: - UIViewRepresentable map
 
 struct WeatherMapRepresentable: UIViewRepresentable {
-    let userCoordinate: CLLocationCoordinate2D
-    let frames:         [RadarFrame]
-    let currentIndex:   Int
-    let activeLayer:    WeatherMapLayer
-    let owmApiKey:      String
+    let userCoordinate:        CLLocationCoordinate2D
+    let frames:                [RadarFrame]
+    let currentIndex:          Int
+    let activeLayer:           WeatherMapLayer
+    let owmApiKey:             String
+    let locationCenterTrigger: Int
 
     func makeUIView(context: Context) -> MKMapView {
         let mv = MKMapView()
-        mv.delegate           = context.coordinator
-        mv.showsUserLocation  = false
-        mv.mapType            = .standard
+        mv.delegate              = context.coordinator
+        mv.showsUserLocation     = false
+        mv.mapType               = .mutedStandard  // убирает иероглифы/текст поверх карты
         mv.pointOfInterestFilter = .excludingAll
         mv.setRegion(
             MKCoordinateRegion(
@@ -186,20 +204,33 @@ struct WeatherMapRepresentable: UIViewRepresentable {
     func updateUIView(_ mv: MKMapView, context: Context) {
         let c = context.coordinator
 
+        // Recenter map on user location when button tapped
+        if c.lastCenterTrigger != locationCenterTrigger {
+            c.lastCenterTrigger = locationCenterTrigger
+            mv.setRegion(
+                MKCoordinateRegion(
+                    center: userCoordinate,
+                    span:   MKCoordinateSpan(latitudeDelta: 3, longitudeDelta: 3)
+                ),
+                animated: true
+            )
+        }
+
         if activeLayer.isAnimated {
             let rvLayer = activeLayer.rvLayer ?? .radar
 
-            // Rebuild overlay pool when layer changes or frames load for the first time
             if c.loadedLayerType != activeLayer || c.loadedFrameCount != frames.count {
                 mv.removeOverlays(mv.overlays)
                 c.renderers.removeAll()
                 c.loadedLayerType    = activeLayer
                 c.loadedFrameCount   = frames.count
                 c.lastDisplayedIndex = -1
+                // Set activeIndex BEFORE adding overlays — rendererFor uses it for initial alpha
+                c.activeIndex        = currentIndex
 
                 for (i, frame) in frames.enumerated() {
                     mv.addOverlay(
-                        WeatherTileOverlay(frameIndex: i, framePath: frame.path, rvLayer: rvLayer),
+                        WeatherTileOverlay(frameIndex: i, frame: frame, rvLayer: rvLayer),
                         level: .aboveRoads
                     )
                 }
@@ -207,13 +238,13 @@ struct WeatherMapRepresentable: UIViewRepresentable {
 
             // Swap alpha — NO overlay add/remove, just renderer opacity
             if c.lastDisplayedIndex != currentIndex {
+                c.activeIndex = currentIndex  // update so lazily-created renderers get right alpha
                 c.renderers[c.lastDisplayedIndex]?.alpha = 0
                 c.renderers[currentIndex]?.alpha         = 0.6
                 c.lastDisplayedIndex = currentIndex
             }
 
         } else {
-            // Static OWM layer — rebuild only when layer changes
             if c.loadedLayerType != activeLayer {
                 mv.removeOverlays(mv.overlays)
                 c.renderers.removeAll()
@@ -237,14 +268,19 @@ struct WeatherMapRepresentable: UIViewRepresentable {
 
     final class Coordinator: NSObject, MKMapViewDelegate {
         var renderers:          [Int: MKTileOverlayRenderer] = [:]
-        var loadedFrameCount:   Int            = 0
-        var loadedLayerType:    WeatherMapLayer = .radar
-        var lastDisplayedIndex: Int            = -1
+        var loadedFrameCount:   Int             = 0
+        var loadedLayerType:    WeatherMapLayer  = .radar
+        var lastDisplayedIndex: Int             = -1
+        /// Desired active frame index — set BEFORE overlays are added so rendererFor
+        /// can assign the correct initial alpha when MapKit creates renderers lazily.
+        var activeIndex:        Int             = 0
+        var lastCenterTrigger:  Int             = 0
 
         func mapView(_ mv: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             if let tile = overlay as? WeatherTileOverlay {
                 let r = MKTileOverlayRenderer(tileOverlay: tile)
-                r.alpha = 0  // hidden until updateUIView sets the active frame
+                // Assign correct alpha immediately — updateUIView may have already run
+                r.alpha = (tile.frameIndex == activeIndex) ? 0.6 : 0
                 renderers[tile.frameIndex] = r
                 return r
             }

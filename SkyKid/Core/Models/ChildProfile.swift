@@ -134,6 +134,57 @@ enum ActivityLevel: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - StrollerType
+
+/// Конструктивный тип коляски — влияет на тепловое сопротивление корпуса
+/// и безопасность нахождения ребёнка.
+/// Source: Алгоритм одевания младенца, стр. 5 — таблица ΔCLO колясок.
+enum StrollerType: String, Codable, CaseIterable, Identifiable {
+    case open        = "open"        // прогулочный блок, открытый капор
+    case deepWinter  = "deep_winter" // глубокая закрытая люлька
+    case covered     = "covered"     // накрыта дождевиком / плотной накидкой
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .open:       return "Открытая"
+        case .deepWinter: return "Закрытая люлька"
+        case .covered:    return "Накрыта накидкой"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .open:       return "обычный капор"
+        case .deepWinter: return "корпус сам греет"
+        case .covered:    return "ОПАСНО: парниковый эффект"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .open:       return "baby.carriage"
+        case .deepWinter: return "thermometer.snowflake"
+        case .covered:    return "exclamationmark.triangle.fill"
+        }
+    }
+
+    // Source: Алгоритм одевания младенца, стр. 5
+    // Глубокая зимняя люлька добавляет тепловое сопротивление корпуса →
+    // ребёнок ощущает температуру выше, нужно меньше слоёв одежды.
+    var effectiveTempAdjustment: Double {
+        switch self {
+        case .open:       return  0.0
+        case .deepWinter: return +3.0
+        case .covered:    return  0.0  // расчёт блокируется на уровне View
+        }
+    }
+
+    /// Требует показа красного алерта — накрытая коляска опасна для жизни.
+    var isSafetyAlarm: Bool { self == .covered }
+}
+
 // MARK: - ChildGender
 
 enum ChildGender: String, Codable, CaseIterable {
@@ -158,6 +209,17 @@ struct ChildProfile: Equatable {
     var healthFeatures: Set<HealthFeature> = []
     /// Постоянная поправка к температуре: мёрзнет (−) / жаркий (+).
     var temperaturePreferenceOffset: Double = 0.0
+    /// Тип коляски — влияет на тепловое сопротивление и безопасность.
+    var strollerType: StrollerType = .open
+
+    /// Ребёнок использует коляску (до 3 лет).
+    var usesStroller: Bool { ageGroup == .infant || ageGroup == .baby || ageGroup == .toddler }
+
+
+    /// Период новорождённости: первые 28 дней жизни.
+    /// Source: neonatology.pdf — самый критичный период терморегуляции.
+    /// Нет дрожательного термогенеза, бурый жир истощается быстро.
+    var isNewbornPeriod: Bool { ageYears == 0 && ageMonths == 0 }
 
     /// Суммарная поправка от особенностей здоровья (°C).
     var healthTemperatureAdjustment: Double {
@@ -220,7 +282,7 @@ struct ChildProfile: Equatable {
 
 extension ChildProfile: Codable {
     enum CodingKeys: String, CodingKey {
-        case name, gender, birthday, activityLevel, walkType, healthFeatures, temperaturePreferenceOffset
+        case name, gender, birthday, activityLevel, walkType, healthFeatures, temperaturePreferenceOffset, strollerType
     }
 
     init(from decoder: Decoder) throws {
@@ -232,6 +294,7 @@ extension ChildProfile: Codable {
         walkType                    = (try? c.decode(WalkType.self,             forKey: .walkType))                    ?? .regular
         healthFeatures              = (try? c.decode(Set<HealthFeature>.self,   forKey: .healthFeatures))              ?? []
         temperaturePreferenceOffset = (try? c.decode(Double.self,               forKey: .temperaturePreferenceOffset)) ?? 0.0
+        strollerType                = (try? c.decode(StrollerType.self,         forKey: .strollerType))                ?? .open
     }
 }
 

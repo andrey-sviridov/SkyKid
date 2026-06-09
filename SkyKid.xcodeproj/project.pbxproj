@@ -14,6 +14,9 @@
 		A005 /* RadarMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F005 /* RadarMapView.swift */; };
 		A006 /* RadarMapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006 /* RadarMapViewModel.swift */; };
 		A007 /* RainViewerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F007 /* RainViewerOverlay.swift */; };
+		A034 /* MapWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F031 /* MapWeatherView.swift */; };
+		A035 /* MapWeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F032 /* MapWeatherViewModel.swift */; };
+		A036 /* WeatherTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F033 /* WeatherTileOverlay.swift */; };
 		A008 /* OutfitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* OutfitView.swift */; };
 
 		A010 /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
@@ -33,6 +36,7 @@
 		A024 /* OpenWeatherMapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F024 /* OpenWeatherMapService.swift */; };
 		A025 /* WeatherServiceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F025 /* WeatherServiceSettings.swift */; };
 		A026 /* WeatherAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F026 /* WeatherAPIService.swift */; };
+		A033 /* YandexWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* YandexWeatherService.swift */; };
 		A027 /* WeatherKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F027 /* WeatherKit.framework */; };
 		A028 /* WeatherKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F028 /* WeatherKitService.swift */; };
 		A029 /* OpenMeteoService.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
@@ -109,6 +113,9 @@
 		F005 /* RadarMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapView.swift; sourceTree = "<group>"; };
 		F006 /* RadarMapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapViewModel.swift; sourceTree = "<group>"; };
 		F007 /* RainViewerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerOverlay.swift; sourceTree = "<group>"; };
+		F031 /* MapWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWeatherView.swift; sourceTree = "<group>"; };
+		F032 /* MapWeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWeatherViewModel.swift; sourceTree = "<group>"; };
+		F033 /* WeatherTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTileOverlay.swift; sourceTree = "<group>"; };
 		F008 /* OutfitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitView.swift; sourceTree = "<group>"; };
 
 		F010 /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
@@ -128,6 +135,7 @@
 		F024 /* OpenWeatherMapService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenWeatherMapService.swift; sourceTree = "<group>"; };
 		F025 /* WeatherServiceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherServiceSettings.swift; sourceTree = "<group>"; };
 		F026 /* WeatherAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAPIService.swift; sourceTree = "<group>"; };
+		F030 /* YandexWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YandexWeatherService.swift; sourceTree = "<group>"; };
 		F027 /* WeatherKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WeatherKit.framework; path = System/Library/Frameworks/WeatherKit.framework; sourceTree = SDKROOT; };
 		F028 /* WeatherKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitService.swift; sourceTree = "<group>"; };
 		F029 /* SkyKidIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidIntents.swift; sourceTree = "<group>"; };
@@ -241,6 +249,9 @@
 				F005 /* RadarMapView.swift */,
 				F006 /* RadarMapViewModel.swift */,
 				F007 /* RainViewerOverlay.swift */,
+				F031 /* MapWeatherView.swift */,
+				F032 /* MapWeatherViewModel.swift */,
+				F033 /* WeatherTileOverlay.swift */,
 			);
 			path = Map;
 			sourceTree = "<group>";
@@ -266,6 +277,7 @@
 				F025 /* WeatherServiceSettings.swift */,
 				F026 /* WeatherAPIService.swift */,
 				F028 /* WeatherKitService.swift */,
+				F030 /* YandexWeatherService.swift */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -461,6 +473,9 @@
 				A005 /* RadarMapView.swift in Sources */,
 				A006 /* RadarMapViewModel.swift in Sources */,
 				A007 /* RainViewerOverlay.swift in Sources */,
+				A034 /* MapWeatherView.swift in Sources */,
+				A035 /* MapWeatherViewModel.swift in Sources */,
+				A036 /* WeatherTileOverlay.swift in Sources */,
 				A008 /* OutfitView.swift in Sources */,
 
 				A010 /* OpenMeteoService.swift in Sources */,
@@ -481,6 +496,7 @@
 				A025 /* WeatherServiceSettings.swift in Sources */,
 				A026 /* WeatherAPIService.swift in Sources */,
 				A028 /* WeatherKitService.swift in Sources */,
+				A033 /* YandexWeatherService.swift in Sources */,
 				A032 /* SkyKidIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
