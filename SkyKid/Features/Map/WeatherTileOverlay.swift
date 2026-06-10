@@ -30,11 +30,11 @@ final class WeatherTileOverlay: MKTileOverlay {
         tileSize             = CGSize(width: 256, height: 256)
         isGeometryFlipped    = true
         canReplaceMapContent = false
-        // RainViewer radar tiles доступны на zoom levels 0-6 (глобальный радар).
-        // MapKit не будет запрашивать тайлы выше этого уровня — вместо этого
-        // автоматически масштабирует z=6 тайлы, устраняя "Zoom Level Not Supported".
+        // RainViewer отдаёт тайлы на всех уровнях зума (проверено z=4…13, HTTP 200).
+        // НЕ ограничиваем maximumZ — иначе MapKit вообще не запрашивает тайлы
+        // на детальных уровнях и слой осадков пропадает.
         minimumZ = 0
-        maximumZ = 6
+        maximumZ = 12
     }
 
     override func url(forTilePath path: MKTileOverlayPath) -> URL {
@@ -48,14 +48,15 @@ final class WeatherTileOverlay: MKTileOverlay {
             return
         }
         let tileURL = url(forTilePath: path)
-        URLSession.shared.dataTask(with: tileURL) { data, response, error in
-            // Отфильтровываем error-тайлы RainViewer (PNG с текстом "Not Supported")
-            // которые идут с HTTP 200 но содержат PNG < 200 байт
-            if let data, data.count > 200 {
+        URLSession.shared.dataTask(with: tileURL) { data, response, _ in
+            // Error-тайлы RainViewer приходят с HTTP 404 — фильтруем по статусу,
+            // а НЕ по размеру: валидный «нет осадков» тайл тоже маленький (~300 байт).
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if status == 200, let data, !data.isEmpty {
                 TileCache.shared.set(key, data: data)
                 result(data, nil)
             } else {
-                result(nil, nil)  // пустой тайл → MapKit показывает прозрачность
+                result(nil, nil)  // прозрачный тайл
             }
         }.resume()
     }

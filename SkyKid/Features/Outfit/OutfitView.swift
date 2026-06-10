@@ -8,16 +8,39 @@ struct OutfitView: View {
 
     @State private var feedbackSent: UserFeedback? = nil
 
-    // MARK: Engine integration
+    // MARK: Engine integration (new TOG pipeline)
 
-    private var outfit: LayeredOutfit? {
+    private var recommendation: OutfitRecommendation? {
         guard let profile else { return nil }
-        let bias = BiasStore.shared.currentBias(for: profile, feelsLike: weather.apparentTemperature)
-        return ClothingRecommendationEngine.recommend(weather: weather, profile: profile, learnedBias: bias)
+        let gear = GearSetup.from(profile: profile)
+        return OutfitRecommendationService.shared.recommend(weather: weather,
+                                                            profile: profile,
+                                                            gearSetup: gear)
+    }
+
+    // Adapter: maps OutfitRecommendation back to [LayeredOutfit.Layer] for existing UI
+    private var displayLayers: [LayeredOutfit.Layer] {
+        guard let rec = recommendation else { return [] }
+        return rec.allDisplayLayers.map {
+            LayeredOutfit.Layer(name: $0.name, systemImage: $0.systemImage, reason: $0.reason)
+        }
     }
 
     private var effectiveTemp: Double {
-        outfit?.effectiveTemp ?? weather.apparentTemperature
+        recommendation?.explanation.first(where: { $0.unit == "°C" })?.value
+            ?? weather.apparentTemperature
+    }
+
+    // Synthesized LayeredOutfit for hero card and perception note
+    private var syntheticOutfit: LayeredOutfit? {
+        guard let profile else { return nil }
+        return LayeredOutfit(
+            effectiveTemp: effectiveTemp,
+            baseLayer: displayLayers.first,
+            midLayer: displayLayers.dropFirst().first,
+            outerLayer: nil,
+            accessories: []
+        )
     }
 
     // MARK: - Body
@@ -34,14 +57,17 @@ struct OutfitView: View {
                 // Накрытая коляска → парниковый эффект + ребризинг CO₂ → риск СВСМ.
                 // Алерт только для детей до 12 мес — СВСМ-риск специфичен для этого возраста.
                 strollerSafetyAlertView(profile: profile)
-            } else if let profile, let outfit {
+            } else if let profile, let rec = recommendation, let outfit = syntheticOutfit {
                 ScrollView {
                     VStack(spacing: 14) {
                         heroCard(outfit: outfit, profile: profile)
                         perceptionNote(profile: profile, outfit: outfit)
+                        if !rec.warnings.filter({ $0.severity == .danger || $0.severity == .caution }).isEmpty {
+                            safetyWarningsBanner(rec.warnings)
+                        }
                         conditionsBadges
-                        layersSection(outfit: outfit)
-                        feedbackSection(profile: profile)
+                        layersSection(layers: displayLayers)
+                        feedbackSection(profile: profile, tMicro: rec.explanation.first(where: { $0.unit == "°C" && $0.label.contains("§3") })?.value ?? weather.apparentTemperature)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -57,10 +83,20 @@ struct OutfitView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle(profile.map { "Одеваем \($0.name(.accusative))" } ?? "Что надеть")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(spacing: 7) {
+                    Image(systemName: "hanger")
+                        .font(.subheadline.weight(.semibold))
+                    Text(profile.map { "Гардероб · \($0.name)" } ?? "Что надеть")
+                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                }
+                .foregroundStyle(.white)
+            }
+        }
     }
 
     // MARK: - Stroller safety alert
@@ -212,18 +248,18 @@ struct OutfitView: View {
                 .foregroundStyle(Color(red: p.moodColor.0, green: p.moodColor.1, blue: p.moodColor.2))
                 .symbolRenderingMode(.hierarchical)
                 .frame(width: 30)
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(p.summary)
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.92))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(p.ageContextNote)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.62))
+                    .foregroundStyle(.white.opacity(0.85))
                     .fixedSize(horizontal: false, vertical: true)
-                    .lineLimit(3)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.12), lineWidth: 1))
@@ -262,11 +298,37 @@ struct OutfitView: View {
             .overlay(Capsule().strokeBorder(color.opacity(0.35), lineWidth: 1))
     }
 
+    // MARK: - Safety warnings banner
+
+    @ViewBuilder
+    private func safetyWarningsBanner(_ warnings: [SafetyWarning]) -> some View {
+        VStack(spacing: 8) {
+            ForEach(Array(warnings.filter { $0.severity == .danger || $0.severity == .caution }.prefix(3).enumerated()), id: \.offset) { _, warning in
+                HStack(spacing: 12) {
+                    Image(systemName: warning.systemImage)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(warning.severity == .danger ? .red : .orange)
+                        .frame(width: 24)
+                    Text(warning.message)
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder((warning.severity == .danger ? Color.red : Color.orange).opacity(0.4), lineWidth: 1)
+                )
+            }
+        }
+    }
+
     // MARK: - Layers section
 
     @ViewBuilder
-    private func layersSection(outfit: LayeredOutfit) -> some View {
-        let layers = outfit.allLayers
+    private func layersSection(layers: [LayeredOutfit.Layer]) -> some View {
         if layers.isEmpty {
             Text("Лёгкое и удобное — больше ничего не нужно")
                 .font(.subheadline)
@@ -300,6 +362,7 @@ struct OutfitView: View {
             }
         }
     }
+
 
     private func layerRow(layer: LayeredOutfit.Layer, index: Int, isLast: Bool) -> some View {
         let isFirst = index == 0
@@ -357,7 +420,7 @@ struct OutfitView: View {
 
     // MARK: - Feedback section
 
-    private func feedbackSection(profile: ChildProfile) -> some View {
+    private func feedbackSection(profile: ChildProfile, tMicro: Double) -> some View {
         VStack(spacing: 0) {
             HStack {
                 Label("Оцените одежду", systemImage: "hand.thumbsup")
@@ -373,7 +436,7 @@ struct OutfitView: View {
                     confirmationBanner(feedback: sent)
                         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .center)))
                 } else {
-                    feedbackButtons(profile: profile)
+                    feedbackButtons(profile: profile, tMicro: tMicro)
                         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .center)))
                 }
             }
@@ -381,17 +444,20 @@ struct OutfitView: View {
         }
     }
 
-    private func feedbackButtons(profile: ChildProfile) -> some View {
+    private func feedbackButtons(profile: ChildProfile, tMicro: Double) -> some View {
         HStack(spacing: 8) {
             feedbackButton(label: "Холодно", icon: "thermometer.snowflake", color: .blue) {
                 BiasStore.shared.record(.tooCold, for: profile, feelsLike: weather.apparentTemperature)
+                PersonalOffsetStore.shared.record(.tooCold, for: profile, tMicro: tMicro)
                 triggerFeedback(.tooCold)
             }
             feedbackButton(label: "Комфортно", icon: "checkmark.circle", color: .green) {
+                PersonalOffsetStore.shared.record(.comfortable, for: profile, tMicro: tMicro)
                 triggerFeedback(.comfortable)
             }
             feedbackButton(label: "Жарко", icon: "thermometer.sun", color: .red) {
                 BiasStore.shared.record(.tooWarm, for: profile, feelsLike: weather.apparentTemperature)
+                PersonalOffsetStore.shared.record(.tooWarm, for: profile, tMicro: tMicro)
                 triggerFeedback(.tooWarm)
             }
         }

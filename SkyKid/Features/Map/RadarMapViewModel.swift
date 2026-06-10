@@ -8,6 +8,8 @@ final class RadarMapViewModel {
     var currentIndex: Int = 0
     var isPlaying = false
     var isLoading = false
+    var activeLayer: RainViewerService.Layer = .radar
+    var loadError = false
 
     private var playTask: Task<Void, Never>?
 
@@ -28,14 +30,23 @@ final class RadarMapViewModel {
 
     func loadFrames() async {
         isLoading = true
+        loadError = false
         do {
-            frames = try await RainViewerService.fetchFrames()
-            // Start on most recent past frame
+            frames = try await RainViewerService.fetchFrames(layer: activeLayer)
             currentIndex = max(0, frames.firstIndex(where: { $0.time >= Date() }) ?? frames.count - 1)
         } catch {
             frames = []
+            loadError = true
         }
         isLoading = false
+    }
+
+    func switchLayer(_ layer: RainViewerService.Layer) async {
+        guard layer != activeLayer else { return }
+        pause()
+        activeLayer = layer
+        frames = []
+        await loadFrames()
     }
 
     func togglePlay() {

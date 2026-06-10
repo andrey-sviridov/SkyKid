@@ -49,6 +49,13 @@ final class WeatherViewModel {
         isLoading = false
     }
 
+    /// Принудительно перезагружает погоду для последней координаты,
+    /// игнорируя дистанционный guard в ContentView. Вызывается кнопкой обновления.
+    func reload() async {
+        guard let coordinate = lastCoordinate else { return }
+        await load(coordinate: coordinate, cityName: lastCityName)
+    }
+
     /// Переключает провайдера, сохраняет API-ключ (если нужен) и перезагружает погоду.
     func switchProvider(_ provider: WeatherProvider, apiKey: String? = nil) {
         if let key = apiKey, !key.isEmpty {

@@ -112,13 +112,6 @@ struct WeatherView: View {
         .frame(maxWidth: .infinity)
         .background(Color(.systemBackground))
         .clipShape(UnevenRoundedRectangle(topLeadingRadius: 30, topTrailingRadius: 30))
-        .overlay(alignment: .top) {
-            // Тонкая разделительная линия — хорошо видна в обеих темах
-            RoundedRectangle(cornerRadius: 30)
-                .strokeBorder(.white.opacity(0.18), lineWidth: 1)
-                .frame(height: 60)
-                .clipped()
-        }
     }
 
     // MARK: - Stats grid
@@ -243,7 +236,8 @@ struct ChildPerceptionCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(12)
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
         }
         .padding(18)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))

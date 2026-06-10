@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		17D10F40EF89310B36736B4C /* OutfitCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */; };
+		1E31DFD1C82635B2F6F3C38C /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
+		21D5913D896A929BDD29B1EC /* OutfitOutputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */; };
+		24C4F50274A10C38308ED2B8 /* OutfitRecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98352411F7F430C375933E52 /* OutfitRecommendationService.swift */; };
+		2C05E8BDC0B573B969E9B7DE /* TOGCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */; };
+		48EE3988618308CA1F261E03 /* OutfitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */; };
+		4A6EE286E4B4E015FB160AFB /* MicroclimateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D2D238BD9B3BE6CCE1A80 /* MicroclimateCalculator.swift */; };
+		8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */; };
 		A001 /* SkyKidApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* SkyKidApp.swift */; };
 		A002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F002 /* ContentView.swift */; };
 		A003 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003 /* WeatherView.swift */; };
@@ -14,11 +22,7 @@
 		A005 /* RadarMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F005 /* RadarMapView.swift */; };
 		A006 /* RadarMapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006 /* RadarMapViewModel.swift */; };
 		A007 /* RainViewerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F007 /* RainViewerOverlay.swift */; };
-		A034 /* MapWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F031 /* MapWeatherView.swift */; };
-		A035 /* MapWeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F032 /* MapWeatherViewModel.swift */; };
-		A036 /* WeatherTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F033 /* WeatherTileOverlay.swift */; };
 		A008 /* OutfitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* OutfitView.swift */; };
-
 		A010 /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
 		A011 /* RainViewerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F011 /* RainViewerService.swift */; };
 		A012 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F012 /* LocationManager.swift */; };
@@ -36,22 +40,35 @@
 		A024 /* OpenWeatherMapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F024 /* OpenWeatherMapService.swift */; };
 		A025 /* WeatherServiceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F025 /* WeatherServiceSettings.swift */; };
 		A026 /* WeatherAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F026 /* WeatherAPIService.swift */; };
-		A033 /* YandexWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* YandexWeatherService.swift */; };
-		A027 /* WeatherKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F027 /* WeatherKit.framework */; };
 		A028 /* WeatherKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F028 /* WeatherKitService.swift */; };
-		A029 /* OpenMeteoService.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
-		A030 /* WeatherData.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = F013 /* WeatherData.swift */; };
-		A031 /* WeatherServiceProtocol.swift in Sources (Widget) */ = {isa = PBXBuildFile; fileRef = F019 /* WeatherServiceProtocol.swift */; };
+		A029 /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
+		A030 /* WeatherData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F013 /* WeatherData.swift */; };
+		A031 /* WeatherServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* WeatherServiceProtocol.swift */; };
 		A032 /* SkyKidIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F029 /* SkyKidIntents.swift */; };
+		A033 /* YandexWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* YandexWeatherService.swift */; };
+		A034 /* MapWeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F031 /* MapWeatherView.swift */; };
+		A035 /* MapWeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F032 /* MapWeatherViewModel.swift */; };
+		A036 /* WeatherTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F033 /* WeatherTileOverlay.swift */; };
+		AA91445FBD0D9886F63DC858 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECE8061C83759412BE23B087 /* Foundation.framework */; };
+		D350AE15738B6C3E14C484C1 /* OutfitSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AF5BBA29EAF6086B51119 /* OutfitSolver.swift */; };
 		DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */; };
 		DAC85AA72FD22E0C0096CC6F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */; };
 		DAC85AE12FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
 		DAC85AE32FD22F8D0096CC6F /* ChildProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* ChildProfile.swift */; };
 		DAC85AE62FD232420096CC6F /* SkyKidWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DEC402649260087CE142BCC6 /* SafetyRulesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBB05756B2851EB6CF8BD55 /* SafetyRulesEngine.swift */; };
+		F94E09BE167EB286CDC877F0 /* EffectiveTemperatureCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547831DAA43B9BBCF7C08EBA /* EffectiveTemperatureCalculator.swift */; };
 		R001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85A9D2FD21E320096CC6F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		C72DB0A4240C23F4A0384F40 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PROJECT /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = TARGET;
+			remoteInfo = SkyKid;
+		};
 		DAC85AE72FD232420096CC6F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = PROJECT /* Project object */;
@@ -90,10 +107,20 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0A4AF5BBA29EAF6086B51119 /* OutfitSolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OutfitSolver.swift; path = OutfitSolver.swift; sourceTree = "<group>"; };
+		0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitCalculatorTests.swift; sourceTree = "<group>"; };
+		14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OutfitOutputModels.swift; path = OutfitOutputModels.swift; sourceTree = "<group>"; };
+		394C0803F4348866DB8BF4DA /* GearModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GearModels.swift; path = GearModels.swift; sourceTree = "<group>"; };
+		4FBB05756B2851EB6CF8BD55 /* SafetyRulesEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SafetyRulesEngine.swift; path = SafetyRulesEngine.swift; sourceTree = "<group>"; };
+		547831DAA43B9BBCF7C08EBA /* EffectiveTemperatureCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EffectiveTemperatureCalculator.swift; path = EffectiveTemperatureCalculator.swift; sourceTree = "<group>"; };
+		9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OutfitConfig.swift; path = OutfitConfig.swift; sourceTree = "<group>"; };
+		952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TOGCalculator.swift; path = TOGCalculator.swift; sourceTree = "<group>"; };
+		98352411F7F430C375933E52 /* OutfitRecommendationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OutfitRecommendationService.swift; path = OutfitRecommendationService.swift; sourceTree = "<group>"; };
+		D08D2D238BD9B3BE6CCE1A80 /* MicroclimateCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MicroclimateCalculator.swift; path = MicroclimateCalculator.swift; sourceTree = "<group>"; };
 		DAC85A9D2FD21E320096CC6F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SkyKidWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = WidgetKit.framework; sourceTree = SDKROOT; };
+		DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = SwiftUI.framework; sourceTree = SDKROOT; };
 		DAC85AC42FD22E4D0096CC6F /* AppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntent.swift; sourceTree = "<group>"; };
 		DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DAC85AC62FD22E4D0096CC6F /* ClothingStatusProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingStatusProvider.swift; sourceTree = "<group>"; };
@@ -106,6 +133,7 @@
 		DAC85ACD2FD22E4D0096CC6F /* WidgetClothingCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetClothingCalculator.swift; sourceTree = "<group>"; };
 		DAC85AE42FD2300D0096CC6F /* SkyKid.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkyKid.entitlements; sourceTree = "<group>"; };
 		DAC85AE52FD2302B0096CC6F /* SkyKidWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SkyKidWidgetExtension.entitlements; sourceTree = "<group>"; };
+		ECE8061C83759412BE23B087 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		F001 /* SkyKidApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidApp.swift; sourceTree = "<group>"; };
 		F002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F003 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
@@ -113,11 +141,7 @@
 		F005 /* RadarMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapView.swift; sourceTree = "<group>"; };
 		F006 /* RadarMapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapViewModel.swift; sourceTree = "<group>"; };
 		F007 /* RainViewerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerOverlay.swift; sourceTree = "<group>"; };
-		F031 /* MapWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWeatherView.swift; sourceTree = "<group>"; };
-		F032 /* MapWeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWeatherViewModel.swift; sourceTree = "<group>"; };
-		F033 /* WeatherTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTileOverlay.swift; sourceTree = "<group>"; };
 		F008 /* OutfitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitView.swift; sourceTree = "<group>"; };
-
 		F010 /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
 		F011 /* RainViewerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerService.swift; sourceTree = "<group>"; };
 		F012 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
@@ -135,16 +159,21 @@
 		F024 /* OpenWeatherMapService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenWeatherMapService.swift; sourceTree = "<group>"; };
 		F025 /* WeatherServiceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherServiceSettings.swift; sourceTree = "<group>"; };
 		F026 /* WeatherAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAPIService.swift; sourceTree = "<group>"; };
-		F030 /* YandexWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YandexWeatherService.swift; sourceTree = "<group>"; };
-		F027 /* WeatherKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WeatherKit.framework; path = System/Library/Frameworks/WeatherKit.framework; sourceTree = SDKROOT; };
+		F027 /* WeatherKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WeatherKit.framework; path = WeatherKit.framework; sourceTree = SDKROOT; };
 		F028 /* WeatherKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitService.swift; sourceTree = "<group>"; };
 		F029 /* SkyKidIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidIntents.swift; sourceTree = "<group>"; };
+		F030 /* YandexWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YandexWeatherService.swift; sourceTree = "<group>"; };
+		F031 /* MapWeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWeatherView.swift; sourceTree = "<group>"; };
+		F032 /* MapWeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWeatherViewModel.swift; sourceTree = "<group>"; };
+		F033 /* WeatherTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTileOverlay.swift; sourceTree = "<group>"; };
+		F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PersonalOffsetStore.swift; path = PersonalOffsetStore.swift; sourceTree = "<group>"; };
+		FC48EEA4B450C53B8FEFB3B3 /* SkyKidTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyKidTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* SkyKid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyKid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		DAC85ABC2FD22E0D0096CC6F /* Exceptions for "SkyKidWidget" folder in "SkyKidWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -154,10 +183,29 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (DAC85ABC2FD22E0D0096CC6F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SkyKidWidget; sourceTree = "<group>"; };
+		DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DAC85ABC2FD22E0D0096CC6F /* Exceptions for "SkyKidWidget" folder in "SkyKidWidgetExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = SkyKidWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4D61044F9EF28FF05CE55E8D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA91445FBD0D9886F63DC858 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DAC85A9F2FD22E0C0096CC6F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -177,6 +225,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		32AE25F665A2C0E2DB773A47 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				ECE8061C83759412BE23B087 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 		APPGROUP /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -197,12 +253,22 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
+		D33386E2718AAD7AE26BADB0 /* SkyKidTests */ = {
+			isa = PBXGroup;
+			children = (
+				0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */,
+			);
+			name = SkyKidTests;
+			path = SkyKidTests;
+			sourceTree = "<group>";
+		};
 		DAC85AA32FD22E0C0096CC6F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */,
 				DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */,
 				F027 /* WeatherKit.framework */,
+				32AE25F665A2C0E2DB773A47 /* iOS */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -263,6 +329,7 @@
 				F014 /* ChildProfile.swift */,
 				F018 /* ChildProfileStore.swift */,
 				F023 /* BiasStore.swift */,
+				F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -286,11 +353,19 @@
 			isa = PBXGroup;
 			children = (
 				F008 /* OutfitView.swift */,
-
 				F020 /* GarmentCatalog.swift */,
 				F021 /* WardrobeModel.swift */,
 				F017 /* ClothingCalculatorView.swift */,
 				F022 /* ClothingRecommendationEngine.swift */,
+				9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */,
+				394C0803F4348866DB8BF4DA /* GearModels.swift */,
+				14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */,
+				547831DAA43B9BBCF7C08EBA /* EffectiveTemperatureCalculator.swift */,
+				D08D2D238BD9B3BE6CCE1A80 /* MicroclimateCalculator.swift */,
+				952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */,
+				0A4AF5BBA29EAF6086B51119 /* OutfitSolver.swift */,
+				4FBB05756B2851EB6CF8BD55 /* SafetyRulesEngine.swift */,
+				98352411F7F430C375933E52 /* OutfitRecommendationService.swift */,
 			);
 			path = Outfit;
 			sourceTree = "<group>";
@@ -300,6 +375,7 @@
 			children = (
 				PROD /* SkyKid.app */,
 				DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */,
+				FC48EEA4B450C53B8FEFB3B3 /* SkyKidTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -323,6 +399,7 @@
 				DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */,
 				DAC85AA32FD22E0C0096CC6F /* Frameworks */,
 				PRODUCTS /* Products */,
+				D33386E2718AAD7AE26BADB0 /* SkyKidTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -350,6 +427,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		97A41C8947D962AC4E8508DB /* SkyKidTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E67F9D35134B9A7A22DA4553 /* Build configuration list for PBXNativeTarget "SkyKidTests" */;
+			buildPhases = (
+				E3FDBF154316681C318E82D9 /* Sources */,
+				4D61044F9EF28FF05CE55E8D /* Frameworks */,
+				D454E9F06A0FD3176CD2C0AE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				673F7917A3054FDEB26DC3CC /* PBXTargetDependency */,
+			);
+			name = SkyKidTests;
+			productName = SkyKidTests;
+			productReference = FC48EEA4B450C53B8FEFB3B3 /* SkyKidTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = DAC85ABD2FD22E0D0096CC6F /* Build configuration list for PBXNativeTarget "SkyKidWidgetExtension" */;
@@ -366,8 +461,6 @@
 				DAC85AA82FD22E0C0096CC6F /* SkyKidWidget */,
 			);
 			name = SkyKidWidgetExtension;
-			packageProductDependencies = (
-			);
 			productName = SkyKidWidgetExtension;
 			productReference = DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -427,11 +520,19 @@
 			targets = (
 				TARGET /* SkyKid */,
 				DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */,
+				97A41C8947D962AC4E8508DB /* SkyKidTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D454E9F06A0FD3176CD2C0AE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DAC85AA02FD22E0C0096CC6F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -456,9 +557,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				DAC85AE32FD22F8D0096CC6F /* ChildProfile.swift in Sources */,
-				A029 /* OpenMeteoService.swift in Sources (Widget) */,
-				A030 /* WeatherData.swift in Sources (Widget) */,
-				A031 /* WeatherServiceProtocol.swift in Sources (Widget) */,
+				A029 /* OpenMeteoService.swift in Sources */,
+				A030 /* WeatherData.swift in Sources */,
+				A031 /* WeatherServiceProtocol.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E3FDBF154316681C318E82D9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				17D10F40EF89310B36736B4C /* OutfitCalculatorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -477,7 +586,6 @@
 				A035 /* MapWeatherViewModel.swift in Sources */,
 				A036 /* WeatherTileOverlay.swift in Sources */,
 				A008 /* OutfitView.swift in Sources */,
-
 				A010 /* OpenMeteoService.swift in Sources */,
 				A011 /* RainViewerService.swift in Sources */,
 				A012 /* LocationManager.swift in Sources */,
@@ -498,12 +606,28 @@
 				A028 /* WeatherKitService.swift in Sources */,
 				A033 /* YandexWeatherService.swift in Sources */,
 				A032 /* SkyKidIntents.swift in Sources */,
+				48EE3988618308CA1F261E03 /* OutfitConfig.swift in Sources */,
+				1E31DFD1C82635B2F6F3C38C /* GearModels.swift in Sources */,
+				21D5913D896A929BDD29B1EC /* OutfitOutputModels.swift in Sources */,
+				F94E09BE167EB286CDC877F0 /* EffectiveTemperatureCalculator.swift in Sources */,
+				4A6EE286E4B4E015FB160AFB /* MicroclimateCalculator.swift in Sources */,
+				2C05E8BDC0B573B969E9B7DE /* TOGCalculator.swift in Sources */,
+				D350AE15738B6C3E14C484C1 /* OutfitSolver.swift in Sources */,
+				DEC402649260087CE142BCC6 /* SafetyRulesEngine.swift in Sources */,
+				24C4F50274A10C38308ED2B8 /* OutfitRecommendationService.swift in Sources */,
+				8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		673F7917A3054FDEB26DC3CC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = SkyKid;
+			target = TARGET /* SkyKid */;
+			targetProxy = C72DB0A4240C23F4A0384F40 /* PBXContainerItemProxy */;
+		};
 		DAC85AE82FD232420096CC6F /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = DAC85AA12FD22E0C0096CC6F /* SkyKidWidgetExtension */;
@@ -522,6 +646,45 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		589A9FD4E5A12C5F16FE78B0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SkyKidTests;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app.tests;
+				PRODUCT_NAME = SkyKidTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkyKid.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkyKid";
+			};
+			name = Debug;
+		};
+		ACBF5CADA1230BEE3EC8DDC6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SkyKidTests;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.skykid.app.tests;
+				PRODUCT_NAME = SkyKidTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SkyKid.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SkyKid";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		DAC85ABA2FD22E0D0096CC6F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -693,6 +856,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = L436K29P42;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = /Users/northarion/projects/SkyKid/SkyKid/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -770,6 +934,15 @@
 			buildConfigurations = (
 				DAC85ABA2FD22E0D0096CC6F /* Debug */,
 				DAC85ABB2FD22E0D0096CC6F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E67F9D35134B9A7A22DA4553 /* Build configuration list for PBXNativeTarget "SkyKidTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ACBF5CADA1230BEE3EC8DDC6 /* Release */,
+				589A9FD4E5A12C5F16FE78B0 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

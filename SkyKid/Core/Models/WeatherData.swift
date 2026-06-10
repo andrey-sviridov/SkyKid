@@ -1,13 +1,28 @@
 import Foundation
 
+// MARK: - PrecipType §2.4
+
+enum PrecipType: String, Equatable, Sendable {
+    case none
+    case drizzle
+    case lightRain
+    case rain
+    case snow
+}
+
 struct WeatherData: Equatable {
     let temperature: Double
     let apparentTemperature: Double
     let humidity: Int
-    let windSpeed: Double
+    let windSpeed: Double        // m/s
     let windDirection: Int
     let precipitation: Double
     let weatherCode: Int
+    // New fields (§2): default values preserve backward compat at all call sites
+    let windGust: Double         // m/s; default 0.0
+    let uvIndex: Double          // 0–11+; default 0.0
+    let cloudCover: Double       // 0–100 %; default 50.0
+    let precipType: PrecipType   // default .none
 
     var windDirectionLabel: String {
         let directions = ["С", "ССВ", "СВ", "ВСВ", "В", "ВЮВ", "ЮВ", "ЮЮВ",
@@ -44,6 +59,34 @@ struct WeatherData: Equatable {
         case 95, 96, 99: return "cloud.bolt.rain.fill"
         default: return "cloud.fill"
         }
+    }
+}
+
+// MARK: - Backward-compatible init (existing call sites pass 7 params)
+
+extension WeatherData {
+    init(
+        temperature: Double,
+        apparentTemperature: Double,
+        humidity: Int,
+        windSpeed: Double,
+        windDirection: Int,
+        precipitation: Double,
+        weatherCode: Int
+    ) {
+        self.init(
+            temperature: temperature,
+            apparentTemperature: apparentTemperature,
+            humidity: humidity,
+            windSpeed: windSpeed,
+            windDirection: windDirection,
+            precipitation: precipitation,
+            weatherCode: weatherCode,
+            windGust: 0.0,
+            uvIndex: 0.0,
+            cloudCover: 50.0,
+            precipType: .none
+        )
     }
 }
 

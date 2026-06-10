@@ -108,7 +108,9 @@ struct ContentView: View {
     private var mapTab: some View {
         NavigationStack {
             if let coord = locationManager.location?.coordinate {
-                MapWeatherView(coordinate: coord)
+                // Нативный RadarMapView — нет WKWebView, нет зависания от CDN,
+                // нет JS-таймеров, которые мешали автоблокировке экрана.
+                RadarMapView(coordinate: coord, weather: weatherVM.weather)
             } else {
                 ProgressView("Определяем местоположение…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -155,10 +157,13 @@ struct ContentView: View {
     private var refreshButton: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
             Button {
+                // Принудительно перезагружаем погоду + просим свежую геопозицию
                 locationManager.startUpdating()
+                Task { await weatherVM.reload() }
             } label: {
                 Image(systemName: "arrow.clockwise")
             }
+            .disabled(weatherVM.isLoading)
         }
     }
 

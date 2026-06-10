@@ -240,7 +240,11 @@ final class WardrobeModel {
         let orderedIDs: [String]
         switch t {
         case 22...:
-            orderedIDs = []
+            // При 22–29°C нужно немного одежды; алгоритм остановится сам, когда достигнет «Идеально».
+            // Пустой список здесь давал баг: только подгузник при +22°C = «Прохладно».
+            orderedIDs = isNewborn
+                ? ["slip", "thin_socks", "scratch", "bib"]
+                : ["slip", "thin_socks"]
 
         case 15..<22:
             orderedIDs = ["slip", "thin_socks", "thin_hat",

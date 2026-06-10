@@ -91,10 +91,17 @@ struct ClothingCalculatorView: View {
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Сбросить") { model.resetAll() }
-                    .tint(.secondary)
-                    .disabled(model.selectedItems.isEmpty &&
-                              model.temperature == model.weatherTemperature)
+                let canReset = !(model.selectedItems.isEmpty &&
+                                 model.temperature == model.weatherTemperature)
+                Button {
+                    withAnimation(.spring(response: 0.3)) { model.resetAll() }
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                .tint(.blue)
+                .disabled(!canReset)
+                .opacity(canReset ? 1 : 0.35)
             }
         }
     }
@@ -166,7 +173,7 @@ struct WeatherControlsCard: View {
             }
         }
         .padding(18)
-        .background(.background, in: RoundedRectangle(cornerRadius: 18))
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
     }
 }
 
@@ -218,7 +225,7 @@ struct RiskMeterCard: View {
             }
         }
         .padding(18)
-        .background(.background, in: RoundedRectangle(cornerRadius: 18))
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
     }
 
     @ViewBuilder
@@ -430,7 +437,7 @@ struct ClothingConstructorSection: View {
                     }
                 }
                 .padding(16)
-                .background(.background, in: RoundedRectangle(cornerRadius: 16))
+                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
             }
         }
     }
@@ -487,7 +494,7 @@ struct GarmentCard: View {
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 120)
             .background(
-                isSelected ? Color.blue.opacity(0.07) : Color(.secondarySystemBackground),
+                isSelected ? Color.blue.opacity(0.07) : Color(.tertiarySystemGroupedBackground),
                 in: RoundedRectangle(cornerRadius: 14)
             )
             .overlay(

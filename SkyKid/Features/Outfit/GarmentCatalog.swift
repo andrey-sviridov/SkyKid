@@ -110,7 +110,8 @@ enum ThermalRisk: Equatable {
 struct GarmentItem: Identifiable, Hashable {
     let id: String
     let name: String
-    let heatValue: Double   // CLO-analogue index
+    let heatValue: Double   // CLO-analogue (WardrobeModel/ClothingCalculatorView use this)
+    let tog: Double         // TOG value (OutfitSolver uses this — §5.1)
     let layer: GarmentLayer
     let symbol: String
 
@@ -123,30 +124,31 @@ struct GarmentItem: Identifiable, Hashable {
 // Pre-computed lookup tables — O(1) access, no per-frame allocation.
 
 enum GarmentCatalog {
+    // heatValue = CLO-analogue (WardrobeModel); tog = §5.1 TOG reference (OutfitSolver)
     static let all: [GarmentItem] = [
         // ── Базовый слой ──────────────────────────────────────────────────────
-        .init(id: "diaper",       name: "Подгузник",             heatValue: 0.1,  layer: .base,      symbol: "figure.child"),
-        .init(id: "slip",         name: "Хлопковый слип / боди", heatValue: 1.5,  layer: .base,      symbol: "tshirt.fill"),
-        .init(id: "thermals",     name: "Термобельё",            heatValue: 2.0,  layer: .base,      symbol: "thermometer.medium"),
-        .init(id: "thin_socks",   name: "Носочки тонкие",        heatValue: 0.3,  layer: .base,      symbol: "oval.fill"),
-        .init(id: "warm_socks",   name: "Носочки тёплые",        heatValue: 0.6,  layer: .base,      symbol: "capsule.fill"),
-        .init(id: "scratch",      name: "Царапки",               heatValue: 0.2,  layer: .base,      symbol: "sparkles"),
+        .init(id: "diaper",       name: "Подгузник",             heatValue: 0.1,  tog: 0.00, layer: .base,      symbol: "figure.child"),
+        .init(id: "slip",         name: "Хлопковый слип / боди", heatValue: 1.5,  tog: 1.00, layer: .base,      symbol: "tshirt.fill"),
+        .init(id: "thermals",     name: "Термобельё",            heatValue: 2.0,  tog: 0.80, layer: .base,      symbol: "thermometer.medium"),
+        .init(id: "thin_socks",   name: "Носочки тонкие",        heatValue: 0.3,  tog: 0.15, layer: .base,      symbol: "oval.fill"),
+        .init(id: "warm_socks",   name: "Носочки тёплые",        heatValue: 0.6,  tog: 0.30, layer: .base,      symbol: "capsule.fill"),
+        .init(id: "scratch",      name: "Царапки",               heatValue: 0.2,  tog: 0.10, layer: .base,      symbol: "sparkles"),
         // ── Утеплитель ────────────────────────────────────────────────────────
-        .init(id: "fleece",       name: "Флисовый комбез",       heatValue: 3.5,  layer: .insulator, symbol: "wind"),
-        .init(id: "sweater",      name: "Свитер",                heatValue: 3.0,  layer: .insulator, symbol: "hexagon.fill"),
-        .init(id: "pants",        name: "Брюки хлопковые",       heatValue: 1.0,  layer: .insulator, symbol: "rectangle.fill"),
+        .init(id: "fleece",       name: "Флисовый комбез",       heatValue: 3.5,  tog: 1.75, layer: .insulator, symbol: "wind"),
+        .init(id: "sweater",      name: "Свитер",                heatValue: 3.0,  tog: 0.80, layer: .insulator, symbol: "hexagon.fill"),
+        .init(id: "pants",        name: "Брюки хлопковые",       heatValue: 1.0,  tog: 0.40, layer: .insulator, symbol: "rectangle.fill"),
         // ── Верхняя одежда ────────────────────────────────────────────────────
-        .init(id: "windbreaker",  name: "Ветровка",              heatValue: 1.5,  layer: .outer,     symbol: "tornado"),
-        .init(id: "demi",         name: "Демисезонный комбез",   heatValue: 6.0,  layer: .outer,     symbol: "cloud.fill"),
-        .init(id: "winter",       name: "Зимний комбез 250г",    heatValue: 10.0, layer: .outer,     symbol: "snowflake"),
-        .init(id: "thin_blanket", name: "Одеялко тонкое",        heatValue: 1.5,  layer: .outer,     symbol: "square.fill"),
-        .init(id: "warm_blanket", name: "Одеялко тёплое",        heatValue: 3.0,  layer: .outer,     symbol: "square.grid.2x2.fill"),
+        .init(id: "windbreaker",  name: "Ветровка",              heatValue: 1.5,  tog: 0.50, layer: .outer,     symbol: "tornado"),
+        .init(id: "demi",         name: "Демисезонный комбез",   heatValue: 6.0,  tog: 2.25, layer: .outer,     symbol: "cloud.fill"),
+        .init(id: "winter",       name: "Зимний комбез 250г",    heatValue: 10.0, tog: 3.50, layer: .outer,     symbol: "snowflake"),
+        .init(id: "thin_blanket", name: "Одеялко тонкое",        heatValue: 1.5,  tog: 0.80, layer: .outer,     symbol: "square.fill"),
+        .init(id: "warm_blanket", name: "Одеялко тёплое",        heatValue: 3.0,  tog: 1.50, layer: .outer,     symbol: "square.grid.2x2.fill"),
         // ── Аксессуары ────────────────────────────────────────────────────────
-        .init(id: "thin_hat",     name: "Тонкая шапочка",        heatValue: 0.8,  layer: .accessory, symbol: "moon.fill"),
-        .init(id: "warm_hat",     name: "Тёплая шапка",          heatValue: 2.0,  layer: .accessory, symbol: "moon.stars.fill"),
-        .init(id: "mittens",      name: "Варежки",               heatValue: 0.5,  layer: .accessory, symbol: "hand.raised.fill"),
-        .init(id: "booties",      name: "Пинетки",               heatValue: 1.0,  layer: .accessory, symbol: "diamond.fill"),
-        .init(id: "bib",          name: "Слюнявчик",             heatValue: 0.2,  layer: .accessory, symbol: "drop.fill"),
+        .init(id: "thin_hat",     name: "Тонкая шапочка",        heatValue: 0.8,  tog: 0.20, layer: .accessory, symbol: "moon.fill"),
+        .init(id: "warm_hat",     name: "Тёплая шапка",          heatValue: 2.0,  tog: 0.50, layer: .accessory, symbol: "moon.stars.fill"),
+        .init(id: "mittens",      name: "Варежки",               heatValue: 0.5,  tog: 0.30, layer: .accessory, symbol: "hand.raised.fill"),
+        .init(id: "booties",      name: "Пинетки",               heatValue: 1.0,  tog: 0.40, layer: .accessory, symbol: "diamond.fill"),
+        .init(id: "bib",          name: "Слюнявчик",             heatValue: 0.2,  tog: 0.10, layer: .accessory, symbol: "drop.fill"),
     ]
 
     static let byID: [String: GarmentItem] =

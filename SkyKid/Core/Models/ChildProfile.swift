@@ -1,6 +1,60 @@
 import Foundation
 import CoreLocation
 
+// MARK: - HealthCondition §4.5 (TOG pipeline — new spec)
+
+enum HealthCondition: String, Codable, CaseIterable, Identifiable, Hashable, Sendable {
+    case fever              // температура прямо сейчас
+    case coldNoFever        // ОРВИ без температуры
+    case anemia             // анемия
+    case atopicDermatitis   // атопический дерматит
+    case cardioRespiratory  // кардио/респираторные
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .fever:             return "Температура сейчас"
+        case .coldNoFever:       return "ОРВИ без температуры"
+        case .anemia:            return "Анемия"
+        case .atopicDermatitis:  return "Атопический дерматит"
+        case .cardioRespiratory: return "Кардио/дыхательные"
+        }
+    }
+}
+
+// MARK: - BabyActivityLevel §4.4 (TOG pipeline — new spec)
+
+enum BabyActivityLevel: String, Codable, CaseIterable, Sendable {
+    case sleeping           // спит в коляске (метаболизм снижен)
+    case calmAwake          // спокойно бодрствует
+    case activeInStroller   // активен в коляске (машет руками, 8+ мес)
+    case walkingCrawling    // сам ходит/ползает на улице
+
+    var label: String {
+        switch self {
+        case .sleeping:         return "Спит"
+        case .calmAwake:        return "Бодрствует"
+        case .activeInStroller: return "Активен в коляске"
+        case .walkingCrawling:  return "Ходит/ползает"
+        }
+    }
+}
+
+// MARK: - TempBand §8 (temperature band for personal TOG offset)
+
+enum TempBand: String, Codable, CaseIterable, Sendable {
+    case cold   // T_micro < 10
+    case mild   // 10 ≤ T_micro ≤ 22
+    case hot    // T_micro > 22
+
+    init(tMicro: Double) {
+        if tMicro < 10 { self = .cold }
+        else if tMicro <= 22 { self = .mild }
+        else { self = .hot }
+    }
+}
+
 // MARK: - HealthFeature
 
 enum HealthFeature: String, Codable, CaseIterable, Identifiable, Hashable {
@@ -211,6 +265,13 @@ struct ChildProfile: Equatable {
     var temperaturePreferenceOffset: Double = 0.0
     /// Тип коляски — влияет на тепловое сопротивление и безопасность.
     var strollerType: StrollerType = .open
+    // New fields for TOG pipeline (§4): backward compat via try? in init(from:)
+    /// Срок гестации в неделях: 40 = доношенный, < 37 = недоношенный.
+    var gestationalAgeWeeks: Int = 40
+    /// Состояния здоровья для TOG-расчёта (§4.5). Параллельно с healthFeatures.
+    var healthConditions: Set<HealthCondition> = []
+    /// Активность для TOG-расчёта (§4.4). Точнее, чем ActivityLevel.
+    var babyActivityLevel: BabyActivityLevel = .calmAwake
 
     /// Ребёнок использует коляску (до 3 лет).
     var usesStroller: Bool { ageGroup == .infant || ageGroup == .baby || ageGroup == .toddler }
@@ -244,6 +305,22 @@ struct ChildProfile: Equatable {
             return "\(y) \(yearWord(y)) \(m) \(monthWord(m))"
         }
     }
+
+    // MARK: TOG Pipeline Helpers
+
+    /// Хронологический возраст в полных неделях.
+    var chronologicalAgeWeeks: Int {
+        Int(max(0, Date().timeIntervalSince(birthday)) / 604_800)
+    }
+
+    /// Скорректированный возраст в неделях (§4.2): вычитает недели недоношенности.
+    /// Может быть отрицательным для глубоко недоношенных до достижения ПДР.
+    var correctedAgeWeeks: Int {
+        chronologicalAgeWeeks - (40 - gestationalAgeWeeks)
+    }
+
+    /// Хронологический возраст в полных месяцах.
+    var chronologicalAgeMonths: Int { ageYears * 12 + ageMonths }
 
     var ageGroup: AgeGroup {
         let totalMonths = ageYears * 12 + ageMonths
@@ -282,7 +359,9 @@ struct ChildProfile: Equatable {
 
 extension ChildProfile: Codable {
     enum CodingKeys: String, CodingKey {
-        case name, gender, birthday, activityLevel, walkType, healthFeatures, temperaturePreferenceOffset, strollerType
+        case name, gender, birthday, activityLevel, walkType, healthFeatures,
+             temperaturePreferenceOffset, strollerType,
+             gestationalAgeWeeks, healthConditions, babyActivityLevel
     }
 
     init(from decoder: Decoder) throws {
@@ -295,6 +374,9 @@ extension ChildProfile: Codable {
         healthFeatures              = (try? c.decode(Set<HealthFeature>.self,   forKey: .healthFeatures))              ?? []
         temperaturePreferenceOffset = (try? c.decode(Double.self,               forKey: .temperaturePreferenceOffset)) ?? 0.0
         strollerType                = (try? c.decode(StrollerType.self,         forKey: .strollerType))                ?? .open
+        gestationalAgeWeeks         = (try? c.decode(Int.self,                  forKey: .gestationalAgeWeeks))         ?? 40
+        healthConditions            = (try? c.decode(Set<HealthCondition>.self, forKey: .healthConditions))            ?? []
+        babyActivityLevel           = (try? c.decode(BabyActivityLevel.self,    forKey: .babyActivityLevel))           ?? .calmAwake
     }
 }
 
