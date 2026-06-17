@@ -8,6 +8,28 @@ enum PrecipType: String, Equatable, Sendable {
     case lightRain
     case rain
     case snow
+
+    // Все провайдеры приводят свои условия к WMO-кодам, поэтому
+    // тип осадков выводится из weatherCode единообразно.
+    init(wmoCode: Int) {
+        switch wmoCode {
+        case 51, 53, 55, 56, 57:             self = .drizzle
+        case 61, 80:                         self = .lightRain
+        case 63, 65, 66, 67, 81, 82,
+             95, 96, 99:                     self = .rain
+        case 71, 73, 75, 77, 85, 86:         self = .snow
+        default:                             self = .none
+        }
+    }
+}
+
+// MARK: - HourlyForecast (P1-3: walkWindow §6.1)
+
+struct HourlyForecast: Equatable, Sendable {
+    let time: Date
+    let temperature: Double
+    let apparentTemperature: Double
+    let precipProbability: Double  // 0–100 %
 }
 
 struct WeatherData: Equatable {
@@ -23,6 +45,8 @@ struct WeatherData: Equatable {
     let uvIndex: Double          // 0–11+; default 0.0
     let cloudCover: Double       // 0–100 %; default 50.0
     let precipType: PrecipType   // default .none
+    // Почасовой прогноз (P1-3): пустой у провайдеров без hourly — walkWindow тогда nil
+    var hourly: [HourlyForecast] = []
 
     var windDirectionLabel: String {
         let directions = ["С", "ССВ", "СВ", "ВСВ", "В", "ВЮВ", "ЮВ", "ЮЮВ",
@@ -85,10 +109,32 @@ extension WeatherData {
             windGust: 0.0,
             uvIndex: 0.0,
             cloudCover: 50.0,
-            precipType: .none
+            precipType: PrecipType(wmoCode: weatherCode)
         )
     }
 }
+
+// MARK: - Preview mocks
+
+#if DEBUG
+extension WeatherData {
+    static var mock: WeatherData {
+        WeatherData(temperature: 18, apparentTemperature: 16,
+                    humidity: 62, windSpeed: 4.5, windDirection: 270,
+                    precipitation: 0, weatherCode: 2)
+    }
+    static var mockRainy: WeatherData {
+        WeatherData(temperature: 12, apparentTemperature: 9,
+                    humidity: 88, windSpeed: 6.0, windDirection: 180,
+                    precipitation: 2.5, weatherCode: 61)
+    }
+    static var mockWinter: WeatherData {
+        WeatherData(temperature: -8, apparentTemperature: -12,
+                    humidity: 75, windSpeed: 5.0, windDirection: 0,
+                    precipitation: 0.5, weatherCode: 73)
+    }
+}
+#endif
 
 struct RadarFrame: Identifiable {
     let id   = UUID()

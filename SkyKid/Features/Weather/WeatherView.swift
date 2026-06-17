@@ -12,21 +12,13 @@ struct WeatherView: View {
     @State private var showProviderSheet = false
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // Полноэкранный градиент — вытекает под статус-бар и навигацию
-            LinearGradient(colors: weatherGradientColors, startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea()
-
-            ScrollView {
-                VStack(spacing: 0) {
-                    heroSection
-                    cardsSection
-                }
+        ScrollView {
+            VStack(spacing: 0) {
+                heroSection
+                cardsSection
             }
         }
-        // Прозрачный nav bar + белые иконки поверх градиента
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .skyKidBackground()
         .sheet(isPresented: $showProviderSheet) {
             ProviderPickerView(
                 current: currentProvider,
@@ -40,7 +32,7 @@ struct WeatherView: View {
         }
     }
 
-    // MARK: - Hero (белый текст на градиенте)
+    // MARK: - Hero
 
     private var heroSection: some View {
         VStack(spacing: 6) {
@@ -50,28 +42,27 @@ struct WeatherView: View {
                 Text(cityName)
                     .font(.subheadline)
             }
-            .foregroundStyle(.white.opacity(0.75))
+            .foregroundStyle(.secondary)
             .padding(.top, 12)
 
             Image(systemName: weather.conditionIcon)
                 .font(.system(size: 76))
                 .symbolRenderingMode(.multicolor)
-                .shadow(color: .black.opacity(0.25), radius: 10, y: 6)
+                .shadow(color: .black.opacity(0.18), radius: 10, y: 6)
                 .padding(.top, 10)
 
             Text("\(Int(weather.temperature.rounded()))°")
                 .font(.system(size: 96, weight: .thin, design: .rounded))
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
+                .foregroundStyle(.primary)
                 .contentTransition(.numericText())
 
             Text(weather.conditionDescription)
                 .font(.title3.weight(.medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
 
             Text("Ощущается как \(Int(weather.apparentTemperature.rounded()))°")
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyle(.secondary)
 
             // Attribution chip — не навязчивый, но доступный
             Button {
@@ -83,10 +74,10 @@ struct WeatherView: View {
                     Text(currentProvider.displayName)
                         .font(.system(size: 11, weight: .medium))
                 }
-                .foregroundStyle(.white.opacity(0.45))
+                .foregroundStyle(.secondary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(.white.opacity(0.10), in: Capsule())
+                .background(Color.primary.opacity(0.08), in: Capsule())
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
@@ -95,7 +86,7 @@ struct WeatherView: View {
         .padding(.horizontal, 24)
     }
 
-    // MARK: - Cards (системный фон, скруглённый верхний край)
+    // MARK: - Cards (стеклянные карточки на градиенте)
 
     private var cardsSection: some View {
         VStack(spacing: 16) {
@@ -110,8 +101,6 @@ struct WeatherView: View {
         .padding(.top, 28)
         .padding(.bottom, 32)
         .frame(maxWidth: .infinity)
-        .background(Color(.systemBackground))
-        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 30, topTrailingRadius: 30))
     }
 
     // MARK: - Stats grid
@@ -130,35 +119,6 @@ struct WeatherView: View {
         }
     }
 
-    // MARK: - Gradient
-
-    private var weatherGradientColors: [Color] {
-        let code = weather.weatherCode
-        let temp = weather.temperature
-
-        switch code {
-        case 71...77:  // Снег
-            return [Color(red: 0.38, green: 0.48, blue: 0.66), Color(red: 0.18, green: 0.26, blue: 0.46)]
-        case 95...99:  // Гроза
-            return [Color(red: 0.10, green: 0.07, blue: 0.24), Color(red: 0.24, green: 0.16, blue: 0.40)]
-        case 45, 48:   // Туман
-            return [Color(red: 0.26, green: 0.30, blue: 0.38), Color(red: 0.42, green: 0.46, blue: 0.54)]
-        case 51...82:  // Дождь/ливень
-            return [Color(red: 0.06, green: 0.13, blue: 0.34), Color(red: 0.16, green: 0.34, blue: 0.56)]
-        default:       // Ясно/облачно — по температуре
-            if temp < 0 {
-                return [Color(red: 0.03, green: 0.06, blue: 0.28), Color(red: 0.08, green: 0.26, blue: 0.55)]
-            } else if temp < 10 {
-                return [Color(red: 0.04, green: 0.20, blue: 0.44), Color(red: 0.06, green: 0.46, blue: 0.68)]
-            } else if temp < 20 {
-                return [Color(red: 0.00, green: 0.36, blue: 0.56), Color(red: 0.00, green: 0.58, blue: 0.50)]
-            } else if temp < 28 {
-                return [Color(red: 0.80, green: 0.36, blue: 0.06), Color(red: 1.00, green: 0.64, blue: 0.18)]
-            } else {
-                return [Color(red: 0.66, green: 0.10, blue: 0.04), Color(red: 0.98, green: 0.40, blue: 0.06)]
-            }
-        }
-    }
 }
 
 // MARK: - ChildPerceptionCard
@@ -209,7 +169,7 @@ struct ChildPerceptionCard: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Color(.systemFill))
+                        .fill(Color.primary.opacity(0.15))
                         .frame(height: 5)
                     Capsule()
                         .fill(comfortColor.gradient)
@@ -237,10 +197,11 @@ struct ChildPerceptionCard: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .padding(18)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     private var comfortColor: Color {
@@ -443,6 +404,29 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("☀️ Ясно · 18°") {
+    NavigationStack {
+        WeatherView(weather: .mock, cityName: "Москва", profile: .mock)
+    }
+}
+
+#Preview("🌧 Дождь") {
+    NavigationStack {
+        WeatherView(weather: .mockRainy, cityName: "Санкт-Петербург", profile: .mock)
+    }
+}
+
+#Preview("❄️ Зима") {
+    NavigationStack {
+        WeatherView(weather: .mockWinter, cityName: "Сургут")
+    }
+}
+#endif

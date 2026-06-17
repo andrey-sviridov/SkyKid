@@ -14,6 +14,8 @@ enum OutfitSolver {
         let gearSetup: GearSetup
         let weather: WeatherData
         let precipFlags: EffectiveTemperatureCalculator.PrecipFlags
+        /// Личный гардероб (P1-1): nil = весь каталог в наличии.
+        var ownedGarmentIDs: Set<String>? = nil
     }
 
     struct Output: Sendable {
@@ -41,7 +43,8 @@ enum OutfitSolver {
         let (layers, totalTOG, gap) = selectLayers(TOG_required: input.TOG_required,
                                                      T_micro: input.T_micro,
                                                      profile: input.profile,
-                                                     gearSetup: input.gearSetup)
+                                                     gearSetup: input.gearSetup,
+                                                     ownedIDs: input.ownedGarmentIDs)
 
         steps.append(CalcStep(label: "Подбор слоёв (§5.2)",
                                value: totalTOG, unit: "TOG",
@@ -62,26 +65,35 @@ enum OutfitSolver {
         TOG_required: Double,
         T_micro: Double,
         profile: ChildProfile,
-        gearSetup: GearSetup
+        gearSetup: GearSetup,
+        ownedIDs: Set<String>? = nil
     ) -> (layers: [RecommendedLayer], totalTOG: Double, gap: String?) {
 
         let isAtopic = profile.healthConditions.contains(.atopicDermatitis)
         let isCarSeat = gearSetup.transportMode == .carSeat
         let target = TOG_required
 
+        // P1-1: подгузник есть всегда — не даём гардеробу сломать скелет
+        let isOwned: (String) -> Bool = { id in
+            id == "diaper" || ownedIDs?.contains(id) ?? true
+        }
+
         // §5.2: Select skeleton template IDs based on TOG range
         // Then greedily adjust using remaining catalog items
         let skeletonIDs = skeletonTemplate(for: target, isAtopic: isAtopic)
-        let skeleton = skeletonIDs.compactMap { GarmentCatalog.byID[$0] }
+        let missingSkeleton = skeletonIDs.filter { !isOwned($0) }
+        let skeleton = skeletonIDs.filter(isOwned).compactMap { GarmentCatalog.byID[$0] }
 
         // Start with skeleton, then trim items that cause over-budget
         var selected = skeleton
         var achieved = selected.reduce(0) { $0 + $1.tog }
 
         // §6.2: round down when ambiguous — trim outermost excess first
-        // Remove last item if we overshoot and it brings us closer to target
+        // "diaper" and "slip" are minimum coverage — never remove them
+        let protectedIDs: Set<String> = ["diaper", "slip"]
         while achieved > target + OutfitConfig.Solver.togAccuracyTolerance,
-              let last = selected.last {
+              let last = selected.last,
+              !protectedIDs.contains(last.id) {
             if abs((achieved - last.tog) - target) < abs(achieved - target) {
                 selected.removeLast()
                 achieved -= last.tog
@@ -92,7 +104,9 @@ enum OutfitSolver {
 
         // Try to add remaining non-skeleton items to fill any remaining gap
         let used = Set(selected.map(\.id))
-        let extras = GarmentCatalog.all.filter { $0.layer != .accessory && !used.contains($0.id) }
+        let extras = GarmentCatalog.all.filter {
+            $0.layer != .accessory && !used.contains($0.id) && isOwned($0.id)
+        }
         for item in extras {
             guard selected.count < OutfitConfig.Solver.maxBodyLayers else { break }
             guard achieved < target - 0.1 else { break }
@@ -129,7 +143,12 @@ enum OutfitSolver {
 
         let gap: String?
         if abs(achieved - target) > OutfitConfig.Solver.togAccuracyTolerance {
-            gap = "Нужно ≈ \(String(format:"%.1f", target)) TOG, подобрано \(String(format:"%.1f", achieved)) TOG. Добавьте: \(suggestMissingGarment(target: target, achieved: achieved))"
+            let missingNames = missingSkeleton.compactMap { GarmentCatalog.byID[$0]?.name }
+            if missingNames.isEmpty {
+                gap = "Нужно ≈ \(String(format:"%.1f", target)) TOG, подобрано \(String(format:"%.1f", achieved)) TOG. Добавьте: \(suggestMissingGarment(target: target, achieved: achieved))"
+            } else {
+                gap = "В вашем гардеробе нет: \(missingNames.joined(separator: ", ").lowercased()). Без этого набирается \(String(format:"%.1f", achieved)) TOG из ≈ \(String(format:"%.1f", target))."
+            }
         } else {
             gap = nil
         }
@@ -142,8 +161,8 @@ enum OutfitSolver {
     private static func skeletonTemplate(for target: Double, isAtopic: Bool) -> [String] {
         switch target {
         case ..<0.8:
-            // 0.2–0.7: sleeveless bodysuit only
-            return ["diaper"]
+            // <0.8 TOG (hot): diaper + thin bodysuit — minimum body coverage
+            return ["diaper", "slip"]
 
         case 0.8..<1.8:
             // 0.8–1.7: LS bodysuit + cotton onesie + leggings (spec §5.1)

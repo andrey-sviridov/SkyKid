@@ -29,53 +29,44 @@ struct ClothingCalculatorView: View {
         ScrollView {
             VStack(spacing: 16) {
 
-
                 WeatherControlsCard(model: model)
 
-                RiskMeterCard(
-                    riskLevel:     model.riskLevel,
-                    meterProgress: model.meterProgress,
-                    currentHeat:   model.currentHeat,
-                    requiredHeat:  model.requiredHeat,
-                    deviation:     model.heatDeviation,
-                    riskLabel:     model.riskLabel,
-                    riskDetail:    model.riskDetail
-                )
+                if model.isExtremeHeat || model.isExtremeCold {
+                    TemperatureNoWalkCard(isHot: model.isExtremeHeat, temperature: model.temperature)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                } else {
+                    RiskMeterCard(
+                        riskLevel:     model.riskLevel,
+                        meterProgress: model.meterProgress,
+                        currentHeat:   model.currentHeat,
+                        requiredHeat:  model.requiredHeat,
+                        deviation:     model.heatDeviation,
+                        riskLabel:     model.riskLabel,
+                        riskDetail:    model.riskDetail
+                    )
 
-                if model.showHeatAlert {
-                    AlertCard(icon: "exclamationmark.triangle.fill", color: .red,
-                              title: "Не выходите в пиковые часы",
-                              message: "Только подгузник, прохладный душ, частое прикладывание к груди/воде.")
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                if model.showColdAlert {
-                    AlertCard(icon: "snowflake.circle.fill", color: .blue,
-                              title: "Экстремальный холод",
-                              message: "Ограничьте прогулку до 15-20 минут. Следите за открытыми участками кожи.")
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
+                    AutoSelectButton(
+                        tempLabel: model.autoSelectLabel,
+                        action: { model.autoSelect() }
+                    )
 
-                AutoSelectButton(
-                    tempLabel: model.autoSelectLabel,
-                    action: { model.autoSelect() }
-                )
+                    PediatricNoteCard()
 
-                PediatricNoteCard()
-
-                // ⚡ PERF: selectedItems — value type, не изменяется при сдвиге слайдера
-                ClothingConstructorSection(
-                    selectedItems: model.selectedItems,
-                    onToggle: { item in
-                        withAnimation(.spring(response: 0.26, dampingFraction: 0.65)) {
-                            model.toggle(item)
+                    // ⚡ PERF: selectedItems — value type, не изменяется при сдвиге слайдера
+                    ClothingConstructorSection(
+                        selectedItems: model.selectedItems,
+                        onToggle: { item in
+                            withAnimation(.spring(response: 0.26, dampingFraction: 0.65)) {
+                                model.toggle(item)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
-        .background(Color(.systemGroupedBackground))
+        .skyKidBackground()
         .navigationTitle("Конструктор одежды")
         .navigationBarTitleDisplayMode(.inline)
         .animation(.easeInOut(duration: 0.25), value: model.showHeatAlert)
@@ -172,8 +163,7 @@ struct WeatherControlsCard: View {
                     .animation(.easeInOut(duration: 0.2), value: model.ageGroup)
             }
         }
-        .padding(18)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+        .skyKidCard()
     }
 }
 
@@ -224,8 +214,7 @@ struct RiskMeterCard: View {
                 heatStat(value: deviation,    label: "Разница",          color: riskLevel.color, sign: true)
             }
         }
-        .padding(18)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
+        .skyKidCard()
     }
 
     @ViewBuilder
@@ -437,7 +426,9 @@ struct ClothingConstructorSection: View {
                     }
                 }
                 .padding(16)
-                .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(.primary.opacity(0.12), lineWidth: 1))
             }
         }
     }
@@ -456,7 +447,7 @@ struct GarmentCard: View {
             VStack(spacing: 8) {
                 ZStack(alignment: .topTrailing) {
                     Circle()
-                        .fill(isSelected ? Color.blue.opacity(0.13) : Color(.secondarySystemBackground))
+                        .fill(isSelected ? Color.blue.opacity(0.13) : Color.primary.opacity(0.08))
                         .frame(width: 54, height: 54)
 
                     Image(systemName: item.symbol)
@@ -487,14 +478,14 @@ struct GarmentCard: View {
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Text("+\(item.heatValue, specifier: "%.1f") CLO")
+                Text(String(format: "%.2g TOG", item.tog))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 120)
             .background(
-                isSelected ? Color.blue.opacity(0.07) : Color(.tertiarySystemGroupedBackground),
+                isSelected ? Color.blue.opacity(0.07) : Color.primary.opacity(0.05),
                 in: RoundedRectangle(cornerRadius: 14)
             )
             .overlay(
@@ -508,10 +499,63 @@ struct GarmentCard: View {
     }
 }
 
-// MARK: – Preview ─────────────────────────────────────────────────────────
+// MARK: – TemperatureNoWalkCard ───────────────────────────────────────────
 
-#Preview {
-    NavigationStack {
-        ClothingCalculatorView()
+struct TemperatureNoWalkCard: View {
+    let isHot: Bool
+    let temperature: Double
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                Image(systemName: isHot ? "thermometer.sun.fill" : "snowflake.circle.fill")
+                    .font(.system(size: 40, weight: .thin))
+                    .foregroundStyle(isHot ? .red : .blue)
+                    .symbolEffect(.pulse)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(isHot ? "Слишком жарко для прогулки" : "Слишком холодно для прогулки")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    Text(isHot
+                         ? "При \(Int(temperature.rounded()))° прогулка опасна для ребёнка."
+                         : "При \(Int(temperature.rounded()))° высок риск переохлаждения.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Divider()
+
+            Text(isHot
+                 ? "Если вышли вынужденно — лёгкое боди, тень, вода каждые 10 минут."
+                 : "Если нужно выйти — максимальное утепление, не дольше 15 минут.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(18)
+        .background((isHot ? Color.red : Color.blue).opacity(0.08),
+                    in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18)
+            .strokeBorder((isHot ? Color.red : Color.blue).opacity(0.25), lineWidth: 1))
     }
 }
+
+// MARK: – Previews ────────────────────────────────────────────────────────
+
+#if DEBUG
+#Preview("🎛 Весна · 12°") {
+    NavigationStack {
+        ClothingCalculatorView(profile: .mock, weather: .mock)
+    }
+}
+
+#Preview("🎛 Зима · −8°") {
+    NavigationStack {
+        ClothingCalculatorView(profile: .mockInfant, weather: .mockWinter)
+    }
+}
+#endif

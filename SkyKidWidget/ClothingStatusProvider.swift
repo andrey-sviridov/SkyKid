@@ -88,6 +88,22 @@ struct ClothingStatusProvider: TimelineProvider {
     }
 
     private func entry(from weather: CachedWeather, profile: ChildProfile?) -> ClothingStatusEntry {
+        // Prefer TOG cache (personalized, matches Outfit tab)
+        if let tog = AppGroup.loadTOGOutfit(),
+           Date().timeIntervalSince(tog.updatedAt) < 5_400 {
+            let rec = WidgetOutfitRecommendation(
+                temperature:         weather.temperature,
+                apparentTemperature: weather.apparentTemperature,
+                effectiveChildTemp:  tog.effectiveChildTemp,
+                cityName:            weather.cityName,
+                status:              WidgetClothingCalculator.status(for: tog.effectiveChildTemp),
+                outfitItems:         tog.layers.map(\.name),
+                ageLabel:            profile?.ageLabel ?? "малыша",
+                updatedAt:           tog.updatedAt
+            )
+            return ClothingStatusEntry(date: Date(), recommendation: rec, isPlaceholder: false)
+        }
+        // Fallback: CLO calculator
         let rec = WidgetClothingCalculator.recommend(weather: weather, profile: profile)
         return ClothingStatusEntry(date: Date(), recommendation: rec, isPlaceholder: false)
     }

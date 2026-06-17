@@ -22,18 +22,25 @@ struct GetOutfitRecommendationIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ShowsSnippetView {
         guard let profile = AppGroup.loadProfile() else {
-            throw SkyKidIntentError(
-                errorDescription: "Создайте профиль ребёнка в приложении SkyKid"
-            )
+            throw SkyKidIntentError(errorDescription: "Создайте профиль ребёнка в приложении SkyKid")
         }
         guard let cached = AppGroup.loadCachedWeather() else {
-            throw SkyKidIntentError(
-                errorDescription: "Откройте SkyKid и дождитесь загрузки погоды"
-            )
+            throw SkyKidIntentError(errorDescription: "Откройте SkyKid и дождитесь загрузки погоды")
         }
 
-        // Reconstruct WeatherData from flat cache snapshot.
-        // windDirection and humidity are not cached — default to 0.
+        // TOG-кеш: свежее 2 ч — используем персонализированный результат
+        if let tog = AppGroup.loadTOGOutfit(),
+           Date().timeIntervalSince(tog.updatedAt) < 7_200 {
+            return .result(view: OutfitSnippetView(
+                childName:     profile.name,
+                ageLabel:      profile.ageLabel,
+                cityName:      cached.cityName,
+                effectiveTemp: tog.effectiveChildTemp,
+                layers:        tog.layers
+            ))
+        }
+
+        // Fallback: CLO-движок на случай если TOG-кеш отсутствует
         let weather = WeatherData(
             temperature:         cached.temperature,
             apparentTemperature: cached.apparentTemperature,
@@ -43,19 +50,17 @@ struct GetOutfitRecommendationIntent: AppIntent {
             precipitation:       cached.precipitation,
             weatherCode:         cached.weatherCode
         )
-
         let bias   = BiasStore.shared.currentBias(for: profile, feelsLike: cached.apparentTemperature)
-        let outfit = ClothingRecommendationEngine.recommend(
-            weather:     weather,
-            profile:     profile,
-            learnedBias: bias
-        )
-
+        let outfit = ClothingRecommendationEngine.recommend(weather: weather, profile: profile, learnedBias: bias)
+        let cloLayers = outfit.allLayers.prefix(4).map {
+            CachedTOGOutfit.Layer(name: $0.name, systemImage: $0.systemImage, reason: $0.reason)
+        }
         return .result(view: OutfitSnippetView(
-            childName: profile.name,
-            ageLabel:  profile.ageLabel,
-            cityName:  cached.cityName,
-            outfit:    outfit
+            childName:     profile.name,
+            ageLabel:      profile.ageLabel,
+            cityName:      cached.cityName,
+            effectiveTemp: outfit.effectiveTemp,
+            layers:        Array(cloLayers)
         ))
     }
 }
@@ -67,7 +72,8 @@ struct OutfitSnippetView: View {
     let childName: String
     let ageLabel: String
     let cityName: String
-    let outfit: LayeredOutfit
+    let effectiveTemp: Double
+    let layers: [CachedTOGOutfit.Layer]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -78,7 +84,7 @@ struct OutfitSnippetView: View {
         .padding(16)
     }
 
-    // MARK: Header: имя + город · возраст · температура
+    // MARK: Header
 
     private var headerRow: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -92,9 +98,9 @@ struct OutfitSnippetView: View {
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 0) {
-                Text("\(Int(outfit.effectiveTemp.rounded()))°")
+                Text("\(Int(effectiveTemp.rounded()))°")
                     .font(.system(size: 40, weight: .thin, design: .rounded))
-                    .foregroundStyle(tempColor(outfit.effectiveTemp))
+                    .foregroundStyle(tempColor(effectiveTemp))
                     .contentTransition(.numericText())
                 Text("для ребёнка")
                     .font(.caption2)
@@ -107,7 +113,7 @@ struct OutfitSnippetView: View {
 
     private var layersList: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(outfit.allLayers.prefix(4)) { layer in
+            ForEach(Array(layers.prefix(4)), id: \.name) { layer in
                 HStack(spacing: 10) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 7)

@@ -21,6 +21,27 @@ enum HealthCondition: String, Codable, CaseIterable, Identifiable, Hashable, Sen
         case .cardioRespiratory: return "Кардио/дыхательные"
         }
     }
+
+    /// Что условие меняет в расчёте — см. TOGCalculator.healthDelta (§4.5).
+    var note: String {
+        switch self {
+        case .fever:             return "−0.5 TOG, не перегревать"
+        case .coldNoFever:       return "предупреждение на прогулке"
+        case .anemia:            return "+0.3 TOG — мёрзнет быстрее"
+        case .atopicDermatitis:  return "фильтр тканей в гардеробе"
+        case .cardioRespiratory: return "строже пороги «не гулять»"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .fever:             return "thermometer.high"
+        case .coldNoFever:       return "facemask.fill"
+        case .anemia:            return "drop.fill"
+        case .atopicDermatitis:  return "allergens"
+        case .cardioRespiratory: return "lungs.fill"
+        }
+    }
 }
 
 // MARK: - BabyActivityLevel §4.4 (TOG pipeline — new spec)
@@ -37,6 +58,15 @@ enum BabyActivityLevel: String, Codable, CaseIterable, Sendable {
         case .calmAwake:        return "Бодрствует"
         case .activeInStroller: return "Активен в коляске"
         case .walkingCrawling:  return "Ходит/ползает"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .sleeping:         return "moon.zzz.fill"
+        case .calmAwake:        return "face.smiling"
+        case .activeInStroller: return "figure.wave"
+        case .walkingCrawling:  return "figure.walk"
         }
     }
 }
@@ -611,6 +641,35 @@ enum AppGroup {
             updatedAt:           updatedAt
         )
     }
+
+    // MARK: TOG Outfit Cache
+    // Записывается OutfitRecommendationService после каждого расчёта.
+    // Читается виджетом и Siri вместо CLO-движка — даёт персонализированный результат.
+
+    private static let togOutfitKey = "cached_tog_outfit_v1"
+
+    static func saveTOGOutfit(_ outfit: CachedTOGOutfit) {
+        guard let data = try? JSONEncoder().encode(outfit) else { return }
+        defaults.set(data, forKey: togOutfitKey)
+    }
+
+    static func loadTOGOutfit() -> CachedTOGOutfit? {
+        guard let data = defaults.data(forKey: togOutfitKey) else { return nil }
+        return try? JSONDecoder().decode(CachedTOGOutfit.self, from: data)
+    }
+}
+
+// MARK: - TOG Outfit Cache (SkyKid + SkyKidWidget targets)
+
+struct CachedTOGOutfit: Codable, Sendable {
+    struct Layer: Codable, Sendable {
+        let name: String
+        let systemImage: String
+        let reason: String
+    }
+    let layers: [Layer]
+    let effectiveChildTemp: Double
+    let updatedAt: Date
 }
 
 // MARK: - Снимок кешированных данных о погоде
@@ -624,4 +683,25 @@ struct CachedWeather: Sendable {
     let cityName: String
     let updatedAt: Date
 }
+
+// MARK: - Preview mocks
+
+#if DEBUG
+extension ChildProfile {
+    static var mock: ChildProfile {
+        ChildProfile(
+            name: "Ваня",
+            gender: .boy,
+            birthday: Calendar.current.date(byAdding: .year, value: -2, to: Date()) ?? Date()
+        )
+    }
+    static var mockInfant: ChildProfile {
+        ChildProfile(
+            name: "Соня",
+            gender: .girl,
+            birthday: Calendar.current.date(byAdding: .month, value: -4, to: Date()) ?? Date()
+        )
+    }
+}
+#endif
 

@@ -48,15 +48,17 @@ enum SafetyRulesEngine {
                 message: "Слишком холодно для прогулки (T_eff = \(String(format:"%.0f", input.T_eff))°C). Рекомендованный минимум: \(Int(coldBelow))°C.",
                 systemImage: "snowflake.circle.fill"
             ))
-            walkWindow = nextSaferWindow()
+            walkWindow = nextSaferWindow(hourly: input.weather.hourly,
+                                         coldBelow: coldBelow, hotAbove: hotAbove)
         } else if input.T_hi > hotAbove {
             warnings.append(SafetyWarning(
                 code: .noWalkRecommended,
                 severity: .danger,
-                message: "Слишком жарко (T_hi = \(String(format:"%.0f", input.T_hi))°C). Рекомендуйте прогулку до 11:00 или после 16:00.",
+                message: "Слишком жарко для прогулки — \(String(format:"%.0f", input.T_hi))°C с учётом ощущений. Выходите до 11:00 или после 16:00.",
                 systemImage: "sun.max.trianglebadge.exclamationmark"
             ))
-            walkWindow = nextSaferWindow()
+            walkWindow = nextSaferWindow(hourly: input.weather.hourly,
+                                         coldBelow: coldBelow, hotAbove: hotAbove)
         }
 
         // §6.1 Strong wind
@@ -198,10 +200,35 @@ enum SafetyRulesEngine {
         return (table.last?.coldBelow ?? -15, table.last?.hotAbove ?? 33)
     }
 
-    // MARK: - Walk window hint (no hourly forecast available — use static recommendation)
+    // MARK: - §6.1 Walk window (P1-3)
+    // Ищет ближайшие 2 последовательных часа в пределах суток, где ощущаемая
+    // температура внутри безопасных порогов и вероятность осадков < 50 %.
+    // apparent_temperature — приближение T_eff (полный §2 по часам не считаем).
 
-    private static func nextSaferWindow() -> DateInterval? {
-        // ASSUMPTION: Without hourly forecast, return nil (no window to show)
+    private static func nextSaferWindow(
+        hourly: [HourlyForecast],
+        coldBelow: Double,
+        hotAbove: Double
+    ) -> DateInterval? {
+        let now = Date()
+        let horizon = now.addingTimeInterval(24 * 3_600)
+        let candidates = hourly
+            .filter { $0.time >= now && $0.time <= horizon }
+            .sorted { $0.time < $1.time }
+
+        func isSafe(_ h: HourlyForecast) -> Bool {
+            h.apparentTemperature > coldBelow
+                && h.apparentTemperature < hotAbove
+                && h.precipProbability < 50
+        }
+
+        for i in 0..<max(0, candidates.count - 1) {
+            let a = candidates[i], b = candidates[i + 1]
+            guard b.time.timeIntervalSince(a.time) <= 3_600 + 1 else { continue }
+            if isSafe(a) && isSafe(b) {
+                return DateInterval(start: a.time, duration: 2 * 3_600)
+            }
+        }
         return nil
     }
 }

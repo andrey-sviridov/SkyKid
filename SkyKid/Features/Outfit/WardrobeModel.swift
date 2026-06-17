@@ -121,7 +121,7 @@ final class WardrobeModel {
     }
 
     var riskDetail: String {
-        if isExtremeHeat { return "Не выходите на улицу в пиковые часы. Только подгузник, прохладный душ, частое прикладывание к груди/воде." }
+        if isExtremeHeat { return "Слишком жарко для прогулки. Оставайтесь дома — прохладный душ, частое прикладывание к груди/воде." }
         if isExtremeCold { return "Ограничьте прогулку до 15-20 минут. Следите за открытыми участками кожи." }
         switch riskLevel {
         case .dangerouslyCold:
@@ -139,7 +139,7 @@ final class WardrobeModel {
         case .hot:
             return "Слишком тепло. Срочно снимите лишние слои."
         case .criticalOverheat where tempZone == .hot:
-            return "Опасно для жизни! Ребёнок перегреется за минуты. Оставьте только подгузник!"
+            return "Слишком жарко! Снимите всю лишнюю одежду — минимум: боди и подгузник."
         case .criticalOverheat:
             return "Риск теплового удара — немедленно снимите лишнюю одежду!"
         }
@@ -163,7 +163,7 @@ final class WardrobeModel {
     var showColdAlert: Bool { isExtremeCold }
 
     var autoSelectLabel: String {
-        if isExtremeHeat { return "Только подгузник при \(Int(temperature.rounded()))°C" }
+        if isExtremeHeat { return "Минимум одежды при \(Int(temperature.rounded()))°C" }
         return "\(Int(temperature.rounded()))°C · \(ageGroup.rawValue)"
     }
 
@@ -215,18 +215,18 @@ final class WardrobeModel {
 
     // ── Автоподбор: жадный поиск к «Идеально» ─────────────────────────────
     func autoSelect() {
-        // Rule 1: extreme heat — only a diaper
-        if isExtremeHeat {
-            var result: Set<GarmentItem> = []
-            if let diaper = GarmentCatalog.byID["diaper"] { result.insert(diaper) }
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) { selectedItems = result }
-            return
-        }
-
         var result: Set<GarmentItem> = []
 
         func add(_ id: String) { if let g = GarmentCatalog.byID[id] { result.insert(g) } }
+        // Diaper + slip are the minimum regardless of temperature
         add("diaper")
+        add("slip")
+
+        // Rule 1: extreme heat — only minimum base layer
+        if isExtremeHeat {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) { selectedItems = result }
+            return
+        }
 
         guard computeRisk(for: result) != .optimal else {
             withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) { selectedItems = result }

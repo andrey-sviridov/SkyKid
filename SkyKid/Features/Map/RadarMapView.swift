@@ -107,7 +107,7 @@ struct RadarMapView: View {
 
             Divider()
         }
-        .background(Color(.secondarySystemBackground))
+        .background(.regularMaterial)
     }
 
     private func layerChip(label: String, icon: String, layer: RainViewerService.Layer) -> some View {
@@ -120,7 +120,7 @@ struct RadarMapView: View {
                 .foregroundStyle(active ? .white : Color.primary.opacity(0.75))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(active ? AnyShapeStyle(Color.blue) : AnyShapeStyle(Color(.tertiarySystemBackground)),
+                .background(active ? AnyShapeStyle(Color.blue) : AnyShapeStyle(Color.primary.opacity(0.08)),
                             in: Capsule())
         }
         .buttonStyle(.plain)

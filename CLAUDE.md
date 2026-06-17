@@ -31,47 +31,73 @@ Bundle ID: `com.skykid.app` · iOS 17.0 · Swift 6.0 · App Group: `group.com.sk
 SkyKid/
 ├── App/
 │   ├── SkyKidApp.swift              @main → ContentView
-│   └── ContentView.swift            Роутер: онбординг → геолокация → TabView(5 вкладок)
-│                                    ProfileSummaryView, PermissionView, DeniedView
+│   ├── ContentView.swift            Роутер: онбординг → геолокация → TabView(5 вкладок)
+│   │                                ProfileSummaryView (+ переход «Мой гардероб»),
+│   │                                PermissionView, DeniedView
+│   └── SkyKidIntents.swift          AppIntents (Siri): рекомендация из кеша AppGroup
 │
 ├── Features/
 │   ├── Weather/
 │   │   ├── WeatherView.swift        Вкладка «Погода»: header, ChildPerceptionCard, statsGrid, StatCard
 │   │   └── WeatherViewModel.swift   @MainActor @Observable; init(service: any WeatherService)
+│   │                                cityName: CLGeocoder reverse-geocode (кэш 1 км)
 │   │
 │   ├── Map/
 │   │   ├── RadarMapView.swift       Вкладка «Осадки»: MKMapView + радар + плеер
 │   │   ├── RadarMapViewModel.swift  @MainActor @Observable; frames[], playTask
-│   │   └── RainViewerOverlay.swift  MKTileOverlay + renderer (opacity 0.6)
+│   │   ├── RainViewerOverlay.swift  MKTileOverlay + renderer (opacity 0.6)
+│   │   └── WeatherTileOverlay.swift Тайлы осадков/спутника
 │   │
-│   ├── Outfit/
-│   │   ├── OutfitView.swift         Вкладка «Одежда»: список OutfitItem
-│   │   ├── OutfitAdvisor.swift      OCP: protocol OutfitRule → 6 правил → [OutfitItem]
+│   ├── Outfit/                      ── TOG-пайплайн §2→§6 (вкладка «Одежда») ──
+│   │   ├── OutfitView.swift         UI: hero, warnings, walkWindow, слои, фидбек
+│   │   ├── OutfitConfig.swift       §2–§6 константы
+│   │   ├── GearModels.swift         TransportMode, RainCoverState, GearSetup
+│   │   ├── OutfitOutputModels.swift OutfitRecommendation, CalcStep, SafetyWarning
+│   │   ├── EffectiveTemperatureCalculator.swift  §2 (ветер, влажность, осадки, солнце)
+│   │   ├── MicroclimateCalculator.swift          §3 (T_micro в коляске/слинге)
+│   │   ├── TOGCalculator.swift                   §4 (возраст, недоношенность, здоровье)
+│   │   ├── OutfitSolver.swift                    §5 (скелет-шаблоны + личный гардероб)
+│   │   ├── SafetyRulesEngine.swift               §6 (предупреждения, walkWindow)
+│   │   ├── OutfitRecommendationService.swift     оркестратор §2→§6
+│   │   │
+│   │   │                            ── Старый CLO-движок (вкладка «Конструктор») ──
 │   │   ├── GarmentCatalog.swift     GarmentLayer, WardrobeAgeGroup, ThermalRisk, GarmentItem,
-│   │   │                            enum GarmentCatalog { all, byID, byLayer }
+│   │   │                            enum GarmentCatalog { all, byID, byLayer } (общий для обоих)
 │   │   ├── WardrobeModel.swift      @MainActor @Observable; CLO-логика, riskLevel, autoSelect()
+│   │   ├── ClothingRecommendationEngine.swift  старые правила рекомендаций
 │   │   └── ClothingCalculatorView.swift  Вкладка «Конструктор» — только SwiftUI views
 │   │                                     WeatherControlsCard, RiskMeterCard, RiskMeterBar,
 │   │                                     AlertCard, AutoSelectButton, GarmentCard, …
 │   │
 │   └── Profile/
-│       ├── ChildProfileSetupView.swift  Онбординг + редактирование профиля
+│       ├── ChildProfileSetupView.swift  Онбординг + редактирование (вкл. TOG-карточку:
+│       │                                недоношенность, здоровье §4.5, активность §4.4)
+│       ├── MyWardrobeView.swift         «Мой гардероб» — чек-лист GarmentCatalog (P1-1)
 │       └── ChildWeatherPerception.swift summary, ageContextNote, effectiveFeelsLike,
 │                                        comfortScore/Label/Color, moodEmoji
 │
 ├── Core/
 │   ├── Network/
 │   │   ├── WeatherServiceProtocol.swift  protocol WeatherService: Sendable
-│   │   ├── OpenMeteoService.swift        struct: WeatherService; instance fetch(coordinate:)
+│   │   ├── WeatherServiceSettings.swift  WeatherProvider enum, ключи, makeService
+│   │   ├── OpenMeteoService.swift        основной: current + hourly (walkWindow)
+│   │   ├── WeatherKitService.swift       заглушка → OpenMeteo (нет entitlement)
+│   │   ├── OpenWeatherMapService.swift   по API-ключу
+│   │   ├── WeatherAPIService.swift       по API-ключу
+│   │   ├── YandexWeatherService.swift    по API-ключу
 │   │   └── RainViewerService.swift       fetchFrames() → [RadarFrame]
 │   ├── Location/
 │   │   └── LocationManager.swift         @Observable CLLocationManager
 │   └── Models/
-│       ├── WeatherData.swift             WeatherData + RadarFrame
-│       ├── ChildProfile.swift            ChildProfile, ChildGender, AgeGroup, RussianCase,
+│       ├── WeatherData.swift             WeatherData, PrecipType(wmoCode:), HourlyForecast, RadarFrame
+│       ├── ChildProfile.swift            ChildProfile, ChildGender, AgeGroup, HealthCondition,
+│       │                                 BabyActivityLevel, TempBand, RussianCase,
 │       │                                 AppGroup (enum), CachedWeather
 │       │                                 ⚠️ Target Membership: SkyKid + SkyKidWidget
-│       └── ChildProfileStore.swift       final class singleton; только таргет SkyKid
+│       ├── ChildProfileStore.swift       final class singleton; только таргет SkyKid
+│       ├── UserWardrobeStore.swift       @Observable singleton; user_wardrobe в AppGroup (P1-1)
+│       ├── BiasStore.swift               °C-обучение (старый движок)
+│       └── PersonalOffsetStore.swift     §8 TOG-обучение (новый движок)
 │
 └── Info.plist
 

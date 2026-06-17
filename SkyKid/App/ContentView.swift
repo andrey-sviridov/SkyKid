@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreLocation
 import AppIntents
+import UIKit
 
 struct ContentView: View {
     @State private var locationManager = LocationManager()
@@ -36,6 +37,7 @@ struct ContentView: View {
                 }
             }
         }
+        .task { UIApplication.shared.isIdleTimerDisabled = false }
         .onChange(of: locationManager.location) { old, new in
             guard let new else { return }
             // Не перегружаем погоду, если позиция почти не изменилась (< 5 км).
@@ -65,22 +67,15 @@ struct ContentView: View {
         NavigationStack {
             Group {
                 if weatherVM.isLoading || weatherVM.weather == nil {
-                    ZStack {
-                        LinearGradient(
-                            colors: [Color(red: 0.04, green: 0.20, blue: 0.44),
-                                     Color(red: 0.06, green: 0.46, blue: 0.68)],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                        .ignoresSafeArea()
-                        VStack(spacing: 14) {
-                            ProgressView()
-                                .tint(.white)
-                                .scaleEffect(1.2)
-                            Text("Загружаем погоду…")
-                                .font(.subheadline)
-                                .foregroundStyle(.white.opacity(0.75))
-                        }
+                    VStack(spacing: 14) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Загружаем погоду…")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .skyKidBackground()
                 } else if let w = weatherVM.weather {
                     WeatherView(
                         weather:          w,
@@ -168,7 +163,7 @@ struct ContentView: View {
     }
 
     private var cityName: String {
-        "Моё местоположение"
+        weatherVM.cityName
     }
 }
 
@@ -177,6 +172,7 @@ struct ContentView: View {
 struct ProfileSummaryView: View {
     @Binding var profile: ChildProfile?
     @State private var showEdit = false
+    @State private var notificationsOn = NotificationService.shared.isEnabled
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
 
     var body: some View {
@@ -185,6 +181,8 @@ struct ProfileSummaryView: View {
                 VStack(spacing: 20) {
                     avatarHeader(p)
                     infoCards(p)
+                    wardrobeCard
+                    notificationsCard
                     themeCard
                     siriCard
                     editButton
@@ -193,8 +191,9 @@ struct ProfileSummaryView: View {
                 .padding(.vertical, 16)
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .skyKidBackground()
         .navigationTitle("Профиль")
+        .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showEdit) {
             ChildProfileSetupView(profile: $profile)
         }
@@ -235,7 +234,8 @@ struct ProfileSummaryView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
         .padding(.horizontal, 16)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 22))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Info cards
@@ -321,7 +321,7 @@ struct ProfileSummaryView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 13)
-        .background(Color(.secondarySystemBackground))
+        .background(.regularMaterial)
         .clipShape(UnevenRoundedRectangle(
             topLeadingRadius:     isFirst ? 18 : 5,
             bottomLeadingRadius:  isLast  ? 18 : 5,
@@ -329,6 +329,89 @@ struct ProfileSummaryView: View {
             topTrailingRadius:    isFirst ? 18 : 5
         ))
         .padding(.vertical, 0.5)
+    }
+
+    // MARK: - Wardrobe card (P1-1)
+
+    private var wardrobeCard: some View {
+        NavigationLink {
+            MyWardrobeView()
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 9)
+                        .fill(Color.indigo.opacity(0.13))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "hanger")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.indigo)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Мой гардероб")
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                    Text(wardrobeSummary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var wardrobeSummary: String {
+        let total = GarmentCatalog.all.count - 1  // без подгузника
+        let owned = GarmentCatalog.all.filter {
+            $0.id != "diaper" && UserWardrobeStore.shared.isOwned($0.id)
+        }.count
+        return owned == total
+            ? "Все предметы каталога в наличии"
+            : "В наличии \(owned) из \(total) предметов"
+    }
+
+    // MARK: - Notifications card (P2-3)
+
+    private var notificationsCard: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(Color.orange.opacity(0.13))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "bell.badge.fill")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.orange)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Уведомления")
+                    .font(.body)
+                Text("Проветрить дождевик · время для прогулки")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Toggle("", isOn: $notificationsOn)
+                .labelsHidden()
+                .tint(.orange)
+                .onChange(of: notificationsOn) { _, on in
+                    Task {
+                        let actual = await NotificationService.shared.setEnabled(on)
+                        // система могла отказать в разрешении — синхронизируем тумблер
+                        if actual != notificationsOn { notificationsOn = actual }
+                    }
+                }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 13)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Theme card
@@ -347,7 +430,8 @@ struct ProfileSummaryView: View {
             }
         }
         .padding(16)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     private func themeOption(label: String, icon: String, tag: String) -> some View {
@@ -358,7 +442,7 @@ struct ProfileSummaryView: View {
             VStack(spacing: 8) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(selected ? Color.blue.opacity(0.14) : Color(.tertiarySystemBackground))
+                        .fill(selected ? Color.blue.opacity(0.14) : Color.primary.opacity(0.07))
                         .frame(height: 48)
                     Image(systemName: icon)
                         .font(.system(size: 20, weight: .medium))
@@ -408,7 +492,8 @@ struct ProfileSummaryView: View {
             }
         }
         .padding(16)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Edit button
@@ -423,7 +508,8 @@ struct ProfileSummaryView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
@@ -476,3 +562,13 @@ struct DeniedView: View {
         .padding(32)
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("👤 Профиль") {
+    NavigationStack {
+        ProfileSummaryView(profile: .constant(.mock))
+    }
+}
+#endif

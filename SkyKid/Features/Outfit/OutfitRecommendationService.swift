@@ -51,7 +51,8 @@ final class OutfitRecommendationService {
             profile: profile,
             gearSetup: gearSetup,
             weather: weather,
-            precipFlags: effOutput.precipFlags
+            precipFlags: effOutput.precipFlags,
+            ownedGarmentIDs: UserWardrobeStore.shared.ownedIDs
         ))
 
         // §6 Safety Rules

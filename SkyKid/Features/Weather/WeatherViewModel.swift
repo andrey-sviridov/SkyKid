@@ -15,9 +15,12 @@ final class WeatherViewModel {
     var weather: WeatherData?
     var isLoading = false
     var error: String?
+    private(set) var cityName: String = "Моё местоположение"
 
     private var lastCoordinate: CLLocationCoordinate2D?
-    private var lastCityName: String = "Моё местоположение"
+    // CLGeocoder ограничивает частоту запросов — геокодируем повторно
+    // только если позиция сместилась заметно (> 1 км).
+    private var geocodedLocation: CLLocation?
 
     init(service: any WeatherService) {
         self.service = service
@@ -25,12 +28,12 @@ final class WeatherViewModel {
         self.currentProvider = WeatherProvider(rawValue: raw) ?? .openMeteo
     }
 
-    func load(coordinate: CLLocationCoordinate2D, cityName: String = "Моё местоположение") async {
+    func load(coordinate: CLLocationCoordinate2D) async {
         lastCoordinate = coordinate
-        lastCityName   = cityName
         AppGroup.saveLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         isLoading = true
         error = nil
+        await resolveCityName(for: coordinate)
         do {
             let data = try await service.fetch(coordinate: coordinate)
             weather = data
@@ -42,6 +45,22 @@ final class WeatherViewModel {
                 precipitation: data.precipitation,
                 cityName:      cityName
             )
+            // Кешируем TOG-рекомендацию для виджета и Siri до reloadAllTimelines().
+            if let profile = AppGroup.loadProfile() {
+                let gear = GearSetup.from(profile: profile)
+                let rec  = OutfitRecommendationService.shared.recommend(
+                    weather: data, profile: profile, gearSetup: gear
+                )
+                let effectiveTemp = rec.explanation.first(where: { $0.unit == "°C" })?.value
+                    ?? data.apparentTemperature
+                AppGroup.saveTOGOutfit(CachedTOGOutfit(
+                    layers: rec.allDisplayLayers.map {
+                        CachedTOGOutfit.Layer(name: $0.name, systemImage: $0.systemImage, reason: $0.reason)
+                    },
+                    effectiveChildTemp: effectiveTemp,
+                    updatedAt: Date()
+                ))
+            }
             WidgetCenter.shared.reloadAllTimelines()
         } catch {
             self.error = "Не удалось загрузить погоду"
@@ -53,7 +72,23 @@ final class WeatherViewModel {
     /// игнорируя дистанционный guard в ContentView. Вызывается кнопкой обновления.
     func reload() async {
         guard let coordinate = lastCoordinate else { return }
-        await load(coordinate: coordinate, cityName: lastCityName)
+        await load(coordinate: coordinate)
+    }
+
+    // P1-2: обратное геокодирование — реальное название города вместо заглушки.
+    private func resolveCityName(for coordinate: CLLocationCoordinate2D) async {
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        if let prev = geocodedLocation, location.distance(from: prev) < 1_000 { return }
+        do {
+            let placemarks = try await CLGeocoder().reverseGeocodeLocation(location)
+            if let locality = placemarks.first?.locality {
+                cityName = locality
+                geocodedLocation = location
+            }
+        } catch {
+            // оставляем прежнее название; geocodedLocation не обновляем —
+            // следующая загрузка попробует снова
+        }
     }
 
     /// Переключает провайдера, сохраняет API-ключ (если нужен) и перезагружает погоду.
@@ -70,7 +105,7 @@ final class WeatherViewModel {
         service = WeatherProvider.makeService(for: provider) ?? OpenMeteoService()
         currentProvider = provider
         if let coordinate = lastCoordinate {
-            Task { await load(coordinate: coordinate, cityName: lastCityName) }
+            Task { await load(coordinate: coordinate) }
         }
     }
 }

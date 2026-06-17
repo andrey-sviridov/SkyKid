@@ -15,6 +15,11 @@ struct ChildProfileSetupView: View {
     // Preferences
     @State private var tempOffset: Double = 0
     @State private var healthFeatures: Set<HealthFeature> = []
+    // TOG pipeline (§4)
+    @State private var bornEarly = false
+    @State private var gestationalAgeWeeks = 36
+    @State private var healthConditions: Set<HealthCondition> = []
+    @State private var babyActivityLevel: BabyActivityLevel = .calmAwake
 
     @State private var nameError = false
     @FocusState private var nameFocused: Bool
@@ -28,7 +33,10 @@ struct ChildProfileSetupView: View {
                     if !isEditing { welcomeHeader }
                     formCard
                     behaviourCard
-                    if isInfantOrBaby { strollerCard }
+                    if isInfantOrBaby {
+                        strollerCard
+                        togCard
+                    }
                     preferencesCard
                     previewCard
                     saveButton
@@ -37,7 +45,7 @@ struct ChildProfileSetupView: View {
                 .padding(.bottom, 32)
             }
             .scrollDismissesKeyboard(.immediately)
-            .background(Color(.systemGroupedBackground))
+            .skyKidBackground()
             .navigationTitle(isEditing ? "Данные ребёнка" : "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -58,6 +66,10 @@ struct ChildProfileSetupView: View {
                 strollerType   = p.strollerType
                 tempOffset     = p.temperaturePreferenceOffset
                 healthFeatures = p.healthFeatures
+                bornEarly      = p.gestationalAgeWeeks < 40
+                if bornEarly { gestationalAgeWeeks = p.gestationalAgeWeeks }
+                healthConditions  = p.healthConditions
+                babyActivityLevel = p.babyActivityLevel
             }
         }
     }
@@ -80,6 +92,7 @@ struct ChildProfileSetupView: View {
             VStack(spacing: 8) {
                 Text("Расскажите о малыше")
                     .font(.title2.weight(.bold))
+                    .foregroundStyle(.primary)
                 Text("Чтобы SkyKid мог точнее объяснить,\nкак ребёнок ощущает погоду")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -146,7 +159,8 @@ struct ChildProfileSetupView: View {
             }
             .padding(16)
         }
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Behaviour card (активность + тип прогулки)
@@ -183,7 +197,8 @@ struct ChildProfileSetupView: View {
             }
             .padding(16)
         }
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Preferences card (температура + здоровье)
@@ -241,7 +256,8 @@ struct ChildProfileSetupView: View {
             }
             .padding(16)
         }
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Preview card
@@ -271,7 +287,8 @@ struct ChildProfileSetupView: View {
                 .opacity(name.isEmpty ? 0 : 1)
         }
         .padding(16)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
         .animation(.spring(response: 0.3), value: name.isEmpty)
     }
 
@@ -328,8 +345,85 @@ struct ChildProfileSetupView: View {
             }
             .padding(16)
         }
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
         .animation(.spring(response: 0.3), value: strollerType)
+    }
+
+    // MARK: - TOG card (§4: недоношенность, здоровье, активность малыша)
+
+    private var togCard: some View {
+        VStack(spacing: 0) {
+            // Недоношенность
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Недоношенность", systemImage: "heart.text.square.fill")
+                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+
+                Toggle("Родился раньше срока", isOn: $bornEarly.animation(.spring(response: 0.28)))
+                    .font(.subheadline)
+                    .tint(.pink)
+
+                if bornEarly {
+                    Stepper(value: $gestationalAgeWeeks, in: 28...39) {
+                        HStack(spacing: 6) {
+                            Text("Срок гестации:")
+                                .font(.subheadline)
+                            Text("\(gestationalAgeWeeks) нед.")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.pink)
+                        }
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .padding(16)
+
+            Divider().padding(.leading, 16)
+
+            // Состояния здоровья (§4.5)
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Здоровье сейчас", systemImage: "stethoscope")
+                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+
+                VStack(spacing: 0) {
+                    ForEach(Array(HealthCondition.allCases.enumerated()), id: \.element.id) { idx, condition in
+                        HealthConditionRow(
+                            condition: condition,
+                            isSelected: healthConditions.contains(condition),
+                            isLast: idx == HealthCondition.allCases.count - 1
+                        ) {
+                            withAnimation(.spring(response: 0.28)) {
+                                if healthConditions.contains(condition) {
+                                    healthConditions.remove(condition)
+                                } else {
+                                    healthConditions.insert(condition)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(16)
+
+            Divider().padding(.leading, 16)
+
+            // Активность малыша (§4.4)
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Активность малыша", systemImage: "figure.and.child.holdinghands")
+                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    ForEach(BabyActivityLevel.allCases, id: \.self) { level in
+                        BabyActivityButton(level: level, isSelected: babyActivityLevel == level) {
+                            withAnimation(.spring(response: 0.28)) { babyActivityLevel = level }
+                        }
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Helpers
@@ -376,6 +470,9 @@ struct ChildProfileSetupView: View {
         p.strollerType                = strollerType
         p.temperaturePreferenceOffset = tempOffset
         p.healthFeatures              = healthFeatures
+        p.gestationalAgeWeeks         = bornEarly ? gestationalAgeWeeks : 40
+        p.healthConditions            = healthConditions
+        p.babyActivityLevel           = babyActivityLevel
         ChildProfileStore.shared.profile = p
         profile = p
         if isEditing { dismiss() }
@@ -397,7 +494,7 @@ struct GenderButton: View {
                 Text(gender.label).font(.body.weight(isSelected ? .semibold : .regular))
             }
             .padding(.horizontal, 22).padding(.vertical, 11)
-            .background(isSelected ? accent.opacity(0.14) : Color(.tertiarySystemBackground),
+            .background(isSelected ? accent.opacity(0.14) : Color.primary.opacity(0.08),
                         in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(isSelected ? accent : Color.clear, lineWidth: 1.5))
@@ -424,7 +521,7 @@ struct ActivityButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(isSelected ? Color.blue.opacity(0.13) : Color(.tertiarySystemBackground),
+            .background(isSelected ? Color.blue.opacity(0.13) : Color.primary.opacity(0.08),
                         in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14)
                 .strokeBorder(isSelected ? Color.blue : Color.clear, lineWidth: 1.5))
@@ -456,7 +553,7 @@ struct WalkTypeButton: View {
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 12).padding(.vertical, 10)
-            .background(isSelected ? Color.teal.opacity(0.13) : Color(.tertiarySystemBackground),
+            .background(isSelected ? Color.teal.opacity(0.13) : Color.primary.opacity(0.08),
                         in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(isSelected ? Color.teal : Color.clear, lineWidth: 1.5))
@@ -488,7 +585,7 @@ struct HealthFeatureRow: View {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isSelected ? accent.opacity(0.15) : Color(.tertiarySystemBackground))
+                        .fill(isSelected ? accent.opacity(0.15) : Color.primary.opacity(0.08))
                         .frame(width: 34, height: 34)
                     Image(systemName: feature.icon)
                         .font(.system(size: 14, weight: .medium))
@@ -504,7 +601,7 @@ struct HealthFeatureRow: View {
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
-                    .foregroundStyle(isSelected ? accent : Color(.tertiarySystemFill))
+                    .foregroundStyle(isSelected ? accent : Color.secondary.opacity(0.5))
             }
             .padding(.vertical, 10)
             .contentShape(Rectangle())
@@ -514,6 +611,86 @@ struct HealthFeatureRow: View {
         if !isLast {
             Divider().padding(.leading, 46)
         }
+    }
+}
+
+// MARK: - HealthConditionRow
+
+struct HealthConditionRow: View {
+    let condition: HealthCondition
+    let isSelected: Bool
+    let isLast: Bool
+    let action: () -> Void
+
+    private var accent: Color {
+        switch condition {
+        case .fever:             return .red
+        case .coldNoFever:       return .teal
+        case .anemia:            return .purple
+        case .atopicDermatitis:  return .orange
+        case .cardioRespiratory: return .blue
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? accent.opacity(0.15) : Color.primary.opacity(0.08))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: condition.icon)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(isSelected ? accent : .secondary)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(condition.label)
+                        .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                        .foregroundStyle(.primary)
+                    Text(condition.note)
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(isSelected ? accent : Color.secondary.opacity(0.5))
+            }
+            .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+
+        if !isLast {
+            Divider().padding(.leading, 46)
+        }
+    }
+}
+
+// MARK: - BabyActivityButton
+
+struct BabyActivityButton: View {
+    let level: BabyActivityLevel
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: level.icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .frame(width: 18)
+                Text(level.label)
+                    .font(.caption.weight(isSelected ? .semibold : .regular))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 12)
+            .background(isSelected ? Color.indigo.opacity(0.13) : Color.primary.opacity(0.08),
+                        in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(isSelected ? Color.indigo : Color.clear, lineWidth: 1.5))
+            .foregroundStyle(isSelected ? .indigo : .primary)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -537,7 +714,7 @@ struct StrollerTypeButton: View {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isSelected ? accent.opacity(0.15) : Color(.tertiarySystemBackground))
+                        .fill(isSelected ? accent.opacity(0.15) : Color.primary.opacity(0.08))
                         .frame(width: 36, height: 36)
                     Image(systemName: type.icon)
                         .font(.system(size: 16, weight: .medium))
@@ -559,7 +736,7 @@ struct StrollerTypeButton: View {
                 }
             }
             .padding(.horizontal, 12).padding(.vertical, 10)
-            .background(isSelected ? accent.opacity(0.08) : Color(.tertiarySystemBackground),
+            .background(isSelected ? accent.opacity(0.08) : Color.primary.opacity(0.08),
                         in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(isSelected ? accent.opacity(0.5) : Color.clear, lineWidth: 1.5))
@@ -567,3 +744,15 @@ struct StrollerTypeButton: View {
         .buttonStyle(.plain)
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("📝 Онбординг") {
+    ChildProfileSetupView(profile: .constant(nil))
+}
+
+#Preview("✏️ Редактирование") {
+    ChildProfileSetupView(profile: .constant(.mock))
+}
+#endif

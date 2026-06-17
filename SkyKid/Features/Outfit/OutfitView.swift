@@ -47,16 +47,15 @@ struct OutfitView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            backgroundGradient
-                .ignoresSafeArea()
-                .animation(.easeInOut(duration: 0.9), value: gradientKey)
-
             if let profile, profile.strollerType.isSafetyAlarm,
                profile.ageGroup == .infant || profile.ageGroup == .baby {
                 // Source: Алгоритм одевания младенца, стр. 5-6
                 // Накрытая коляска → парниковый эффект + ребризинг CO₂ → риск СВСМ.
                 // Алерт только для детей до 12 мес — СВСМ-риск специфичен для этого возраста.
                 strollerSafetyAlertView(profile: profile)
+            } else if let profile, let rec = recommendation,
+                      let noWalkWarning = temperatureNoWalkWarning(in: rec) {
+                noWalkScreen(rec: rec, profile: profile, warning: noWalkWarning)
             } else if let profile, let rec = recommendation, let outfit = syntheticOutfit {
                 ScrollView {
                     VStack(spacing: 14) {
@@ -64,6 +63,9 @@ struct OutfitView: View {
                         perceptionNote(profile: profile, outfit: outfit)
                         if !rec.warnings.filter({ $0.severity == .danger || $0.severity == .caution }).isEmpty {
                             safetyWarningsBanner(rec.warnings)
+                        }
+                        if let window = rec.walkWindow {
+                            walkWindowCard(window)
                         }
                         conditionsBadges
                         layersSection(layers: displayLayers)
@@ -79,13 +81,20 @@ struct OutfitView: View {
                     systemImage: "person.badge.plus",
                     description: Text("Профиль поможет рассчитать одежду точнее")
                 )
-                .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .skyKidBackground()
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .task(id: weather) {
+            // P2-3: уведомления синхронизируются раз на обновление погоды,
+            // не в computed property (он вызывается каждый рендер)
+            guard let profile, let rec = recommendation else { return }
+            await NotificationService.shared.sync(
+                recommendation: rec,
+                gearSetup: GearSetup.from(profile: profile)
+            )
+        }
         .toolbar {
             ToolbarItem(placement: .principal) {
                 HStack(spacing: 7) {
@@ -94,7 +103,7 @@ struct OutfitView: View {
                     Text(profile.map { "Гардероб · \($0.name)" } ?? "Что надеть")
                         .font(.system(.headline, design: .rounded).weight(.semibold))
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
             }
         }
     }
@@ -107,15 +116,15 @@ struct OutfitView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 64))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.red)
                         .symbolEffect(.pulse)
                         .padding(.top, 32)
                     Text("ОПАСНО")
                         .font(.system(size: 32, weight: .black))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.red)
                     Text("Накрытая коляска опасна для жизни")
                         .font(.title3.weight(.bold))
-                        .foregroundStyle(.white.opacity(0.9))
+                        .foregroundStyle(.primary)
                         .multilineTextAlignment(.center)
                 }
 
@@ -133,7 +142,7 @@ struct OutfitView: View {
 
                 Text("Снимите накидку прямо сейчас. Для защиты от солнца используйте только сетчатый тент с вентиляцией.")
                     .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 40)
             }
@@ -154,34 +163,74 @@ struct OutfitView: View {
         }
     }
 
-    // MARK: - Background gradient
+    // MARK: - Temperature no-walk screen
 
-    // Round to nearest 4°C to avoid re-triggering gradient on every decimal change
-    private var gradientKey: Int { Int((effectiveTemp / 4).rounded()) }
-
-    private var backgroundGradient: LinearGradient {
-        let (c1, c2): (Color, Color)
-        switch effectiveTemp {
-        case ..<(-10):
-            c1 = Color(red: 0.05, green: 0.05, blue: 0.22)
-            c2 = Color(red: 0.10, green: 0.16, blue: 0.36)
-        case -10..<0:
-            c1 = Color(red: 0.04, green: 0.12, blue: 0.32)
-            c2 = Color(red: 0.08, green: 0.28, blue: 0.52)
-        case 0..<8:
-            c1 = Color(red: 0.06, green: 0.24, blue: 0.48)
-            c2 = Color(red: 0.10, green: 0.46, blue: 0.64)
-        case 8..<16:
-            c1 = Color(red: 0.00, green: 0.36, blue: 0.52)
-            c2 = Color(red: 0.04, green: 0.54, blue: 0.44)
-        case 16..<22:
-            c1 = Color(red: 0.54, green: 0.34, blue: 0.06)
-            c2 = Color(red: 0.82, green: 0.56, blue: 0.16)
-        default:
-            c1 = Color(red: 0.66, green: 0.20, blue: 0.04)
-            c2 = Color(red: 0.96, green: 0.46, blue: 0.14)
+    private func temperatureNoWalkWarning(in rec: OutfitRecommendation) -> SafetyWarning? {
+        rec.warnings.first {
+            $0.code == .noWalkRecommended && $0.severity == .danger &&
+            ($0.systemImage == "sun.max.trianglebadge.exclamationmark" ||
+             $0.systemImage == "snowflake.circle.fill")
         }
-        return LinearGradient(colors: [c1, c2], startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
+    private func noWalkScreen(rec: OutfitRecommendation, profile: ChildProfile, warning: SafetyWarning) -> some View {
+        let isHot = warning.systemImage == "sun.max.trianglebadge.exclamationmark"
+        let accent: Color = isHot ? .red : .blue
+        let tip = isHot
+            ? "Если вышли вынужденно — лёгкое боди, тень, вода каждые 10 минут."
+            : "Если нужно выйти — максимальное утепление, не дольше 15 минут, закройте кожу."
+
+        return ScrollView {
+            VStack(spacing: 20) {
+                // Icon + temperature
+                VStack(spacing: 10) {
+                    Image(systemName: warning.systemImage)
+                        .font(.system(size: 64, weight: .thin))
+                        .foregroundStyle(accent)
+                        .symbolEffect(.pulse)
+                        .padding(.top, 36)
+
+                    Text("\(Int(weather.apparentTemperature.rounded()))°")
+                        .font(.system(size: 64, weight: .thin, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .contentTransition(.numericText())
+
+                    Text("Прогулка не рекомендуется")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.center)
+
+                    Text(warning.message)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 8)
+                }
+
+                // Next safe walk window
+                if let window = rec.walkWindow {
+                    walkWindowCard(window)
+                }
+
+                // Force-majeure tip
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "info.circle")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(tip)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(accent.opacity(0.25), lineWidth: 1))
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
+        }
     }
 
     // MARK: - Hero card
@@ -200,12 +249,12 @@ struct OutfitView: View {
                 VStack(spacing: 1) {
                     Text("\(Int(outfit.effectiveTemp.rounded()))°")
                         .font(.system(size: 54, weight: .thin, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                         .contentTransition(.numericText())
                         .animation(.spring(response: 0.4, dampingFraction: 0.75), value: outfit.effectiveTemp)
                     Text("для \(profile.ageLabel)")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.65))
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -213,28 +262,27 @@ struct OutfitView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(outfitTitle)
                         .font(.title3.weight(.bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                     Text("На улице \(Int(weather.temperature.rounded()))° · ощущается \(Int(weather.apparentTemperature.rounded()))°")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.70))
+                        .foregroundStyle(.secondary)
                     let delta = Int((outfit.effectiveTemp - weather.apparentTemperature).rounded())
                     if delta != 0 {
                         Text("С учётом профиля: \(delta > 0 ? "+" : "")\(delta)°")
                             .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.50))
+                            .foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
                 Image(systemName: outfitIcon)
                     .font(.system(size: 34, weight: .light))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.secondary)
                     .symbolRenderingMode(.hierarchical)
-                    .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
             }
         }
         .padding(20)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(.white.opacity(0.18), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Perception note
@@ -251,18 +299,40 @@ struct OutfitView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(p.summary)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(p.ageContextNote)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.12), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
+    }
+
+    // MARK: - Walk window card (P1-3)
+
+    private func walkWindowCard(_ window: DateInterval) -> some View {
+        let fmt = Date.FormatStyle.dateTime.hour(.twoDigits(amPM: .omitted)).minute()
+        let isTomorrow = !Calendar.current.isDateInToday(window.start)
+        let prefix = isTomorrow ? "завтра " : ""
+        return HStack(spacing: 12) {
+            Image(systemName: "clock.badge.checkmark")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.green)
+                .frame(width: 24)
+            Text("Лучшее время для прогулки: \(prefix)\(window.start.formatted(fmt))–\(window.end.formatted(fmt))")
+                .font(.caption)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.green.opacity(0.4), lineWidth: 1))
     }
 
     // MARK: - Condition badges
@@ -332,7 +402,7 @@ struct OutfitView: View {
         if layers.isEmpty {
             Text("Лёгкое и удобное — больше ничего не нужно")
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.8))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.vertical, 16)
         } else {
@@ -340,11 +410,11 @@ struct OutfitView: View {
                 HStack {
                     Label("Что надеть", systemImage: "hanger")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.65))
+                        .foregroundStyle(.secondary)
                     Spacer()
                     Text("\(layers.count) \(itemsWord(layers.count))")
                         .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, 4)
                 .padding(.bottom, 8)
@@ -413,7 +483,7 @@ struct OutfitView: View {
                 bottomTrailingRadius: radius.1,
                 topTrailingRadius:    radius.0
             )
-            .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+            .strokeBorder(.primary.opacity(0.10), lineWidth: 1)
         )
         .padding(.vertical, 0.5)
     }
@@ -425,7 +495,7 @@ struct OutfitView: View {
             HStack {
                 Label("Оцените одежду", systemImage: "hand.thumbsup")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.65))
+                    .foregroundStyle(.secondary)
                 Spacer()
             }
             .padding(.horizontal, 4)
@@ -471,7 +541,7 @@ struct OutfitView: View {
                     .foregroundStyle(color)
                 Text(label)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.primary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
@@ -551,3 +621,25 @@ struct OutfitView: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("🧥 Весна · 2 года") {
+    NavigationStack {
+        OutfitView(weather: .mock, profile: .mock)
+    }
+}
+
+#Preview("❄️ Зима · 4 мес") {
+    NavigationStack {
+        OutfitView(weather: .mockWinter, profile: .mockInfant)
+    }
+}
+
+#Preview("Нет профиля") {
+    NavigationStack {
+        OutfitView(weather: .mock)
+    }
+}
+#endif
