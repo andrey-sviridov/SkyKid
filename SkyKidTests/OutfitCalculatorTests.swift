@@ -89,7 +89,6 @@ final class OutfitCalculatorTests: XCTestCase {
     func test_TC2_coldWindy_newborn() {
         // V=20 km/h → 5.56 m/s; Vgust=28 km/h → 7.78 m/s
         let weather = makeWeather(T: 0, V: 5.56, Vgust: 7.78, RH: 75)
-        let profile = makeProfile(ageMonths: 0, gestWeeks: 40, activity: .sleeping)
         // 2 weeks old: set birthday to 2 weeks ago
         let birthday2w = Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date())!
         var p2w = ChildProfile(name: "Тест", gender: .boy, birthday: birthday2w)
@@ -109,8 +108,10 @@ final class OutfitCalculatorTests: XCTestCase {
         // humidity penalty. Using ±1.0 tolerance to account for spec approximation.
         XCTAssertTrue(rec.targetTOG >= 5.5 && rec.targetTOG <= 8.0,
                       "TC-2: targetTOG in cold range, got \(rec.targetTOG)")
-        let hasHeavyLayer = rec.layers.contains { $0.id == "winter" || $0.id == "demi" }
-        XCTAssertTrue(hasHeavyLayer, "TC-2: winter or demi all-in-one expected")
+        let hasHeavyLayer = rec.layers.contains {
+            GarmentCatalog.byID[$0.id]?.layer == .outerwear && $0.tog >= 2.0
+        }
+        XCTAssertTrue(hasHeavyLayer, "TC-2: warm outerwear all-in-one expected")
         let hasHat = rec.accessories.contains { $0.id == "warm_hat" || $0.id == "thin_hat" }
         XCTAssertTrue(hasHat, "TC-2: hat expected")
         let hasMittens = rec.accessories.contains { $0.id == "mittens" }
@@ -283,7 +284,7 @@ final class OutfitCalculatorTests: XCTestCase {
     func test_BC7_personalOffset_clampedAt1() {
         let store = PersonalOffsetStore()
         let birthday = Calendar.current.date(byAdding: .month, value: -3, to: Date())!
-        var profile = ChildProfile(name: "OfsTest\(UUID().uuidString.prefix(6))", gender: .girl, birthday: birthday)
+        let profile = ChildProfile(name: "OfsTest\(UUID().uuidString.prefix(6))", gender: .girl, birthday: birthday)
         let tMicro = 5.0  // cold band
         for _ in 0..<10 {
             store.record(.tooCold, for: profile, tMicro: tMicro)
@@ -314,7 +315,200 @@ final class OutfitCalculatorTests: XCTestCase {
                              "BC-8: prematurity should add TOG_required")
     }
 
-    // MARK: BaseTOG interpolation
+    // MARK: §5.6 Double-insulation overheat guard
+
+    // OG-1: heavy winter suit (≥3.0 TOG) + fur footmuff convert in pram → overheat warning.
+    // Жизненный сценарий: «бабушка укутала» — комбез + конверт = двойное утепление.
+    func test_OG1_heavySuit_plusConvert_emitsOverheat() {
+        let weather = makeWeather(T: -15)
+        // 2-week newborn → high TOG demand pushes solver to the winter suit (3.5 TOG)
+        let birthday2w = Calendar.current.date(byAdding: .weekOfYear, value: -2, to: Date())!
+        var profile = ChildProfile(name: "Тест", gender: .boy, birthday: birthday2w)
+        profile.babyActivityLevel = .sleeping
+        let gear = GearSetup(
+            transportMode: .pramBassinette,
+            hoodUp: true,
+            rainCover: .notPresent,
+            strollerConvertTOG: 4.0,   // меховой конверт-гир
+            blanketTOG: nil,
+            walkType: .regular,
+            parentWearingCarrier: false
+        )
+
+        let rec = OutfitRecommendationService.shared.recommend(weather: weather, profile: profile, gearSetup: gear)
+
+        let hasHeavySuit = rec.layers.contains { $0.tog >= OutfitConfig.Solver.heavyOuterTOGThreshold }
+        XCTAssertTrue(hasHeavySuit, "OG-1: solver should pick a heavy suit (≥3.0 TOG) at −15°C newborn")
+        let hasOverheat = rec.warnings.contains { $0.code == .overheatPriority }
+        XCTAssertTrue(hasOverheat, "OG-1: heavy suit + fur footmuff must trigger overheatPriority warning")
+    }
+
+    // OG-2: BVA — convert just below the heavy threshold, no winter suit → NO overheat warning.
+    // Граничный случай: демисезон (2.25 < 3.0 TOG) не считается «тяжёлым» слоем.
+    func test_OG2_noHeavySuit_noConvert_noOverheat() {
+        let weather = makeWeather(T: 5, V: 1)
+        let profile = makeProfile(ageMonths: 4, activity: .calmAwake)
+        let gear = GearSetup(
+            transportMode: .pramBassinette,
+            hoodUp: true,
+            rainCover: .notPresent,
+            strollerConvertTOG: 1.0,   // лёгкий плед, не конверт
+            blanketTOG: nil,
+            walkType: .regular,
+            parentWearingCarrier: false
+        )
+
+        let rec = OutfitRecommendationService.shared.recommend(weather: weather, profile: profile, gearSetup: gear)
+
+        let hasHeavySuit = rec.layers.contains { $0.tog >= OutfitConfig.Solver.heavyOuterTOGThreshold }
+        XCTAssertFalse(hasHeavySuit, "OG-2: at +5°C the solver should pick demi (2.25), not a heavy suit")
+        let hasOverheat = rec.warnings.contains { $0.code == .overheatPriority }
+        XCTAssertFalse(hasOverheat, "OG-2: no heavy suit → no double-insulation warning")
+    }
+
+    // MARK: - Shared wardrobe auto-selection
+
+    func test_autoSelector_warmInfant_doesNotUseNonThermalBib() {
+        let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
+        let selected = WardrobeAutoSelector.selectItems(
+            temperature: 22,
+            ageGroup: profile.wardrobeAgeGroup
+        )
+        let selectedIDs = Set(selected.map(\.id))
+        let heat = selected.reduce(0.0) { $0 + $1.heatValue }
+        let requiredHeat = (26.0 - 22.0) * 0.5
+
+        XCTAssertFalse(selectedIDs.contains("bib"), "Bib is functional, not thermal, and must not be auto-selected")
+        XCTAssertEqual(GarmentCatalog.byID["bib"]!.heatValue, 0, accuracy: 0.001,
+                       "Bib must not contribute to thermal risk")
+        XCTAssertEqual(heat, requiredHeat, accuracy: 0.25,
+                       "Warm infant auto-selection should be thermally close to target")
+    }
+
+    func test_displayOutfit_usesWardrobeAutoSelector() {
+        let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
+        let gear = makeGear(transport: .pramBassinette, hood: true)
+
+        for temperature in [20.0, 30.0] {
+            let weather = makeWeather(T: temperature)
+            let rec = OutfitRecommendationService.shared.recommend(
+                weather: weather,
+                profile: profile,
+                gearSetup: gear
+            )
+            let expectedIDs = WardrobeAutoSelector
+                .selectItems(temperature: temperature, ageGroup: profile.wardrobeAgeGroup)
+                .filter { $0.layer != .accessory }
+                .map(\.id)
+
+            XCTAssertEqual(Set(rec.layers.map(\.id)), Set(expectedIDs),
+                           "Displayed outfit must come from WardrobeAutoSelector at \(temperature)°C")
+        }
+    }
+
+    func test_catalogInfantDisplay_usesCanonicalBodyItemsOnly() {
+        let items = GarmentCatalog.displayItems(for: .infant).values.flatMap { $0 }
+        let itemIDs = Set(items.map(\.id))
+        let bodyNames = items
+            .filter { $0.name.lowercased().contains("боди") }
+            .map(\.name)
+
+        XCTAssertTrue(itemIDs.contains("bodi_short"), "Infant catalog must expose canonical short-sleeve body")
+        XCTAssertTrue(itemIDs.contains("bodi_long"), "Infant catalog must expose canonical long-sleeve body")
+        XCTAssertFalse(itemIDs.contains("bodi_st_kr"), "Old 3-6 short-sleeve body duplicate must stay hidden")
+        XCTAssertFalse(itemIDs.contains("bodi_kr"), "Old 6-12 short-sleeve body duplicate must stay hidden")
+        XCTAssertEqual(bodyNames.sorted(), ["Боди, длинный рукав", "Боди, короткий рукав"],
+                       "Infant catalog should not show visually identical body duplicates")
+    }
+
+    func test_autoSelector_infantUsesCanonicalBodyIDs() {
+        let selected = WardrobeAutoSelector.selectItems(temperature: 12, ageGroup: .infant)
+        let selectedIDs = Set(selected.map(\.id))
+
+        XCTAssertFalse(selectedIDs.contains("bodi_st_kr"))
+        XCTAssertFalse(selectedIDs.contains("bodi_kr"))
+        XCTAssertTrue(selectedIDs.contains("bodi_short") || selectedIDs.contains("bodi_long"))
+    }
+
+    // MARK: Hot-weather (regression)
+
+    // HW-1: при +33°C solver ВСЕГДА даёт полный каталог (ownedIDs = nil).
+    // targetTOG должен быть минимальным; тяжёлые слои не рекомендуются.
+    func test_HW1_extremeHeat_minimalLayers() {
+        let weather = makeWeather(T: 33, RH: 50, cloud: 50)
+        let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
+        let gear = makeGear(transport: .pramBassinette, hood: true)
+
+        let rec = OutfitRecommendationService.shared.recommend(weather: weather, profile: profile, gearSetup: gear)
+
+        XCTAssertLessThan(rec.targetTOG, 0.8, "HW-1: targetTOG must be minimal at +33°C, got \(rec.targetTOG)")
+        let hasWarmLayer = rec.layers.contains { $0.id == "winter" || $0.id == "demi" || $0.id == "fleece" }
+        XCTAssertFalse(hasWarmLayer, "HW-1: no insulating layers at +33°C")
+    }
+
+    // MARK: - Wardrobe self-heal migration
+
+    // WM-1: устаревшая схема (старый каталог) → гардероб сбрасывается в полный.
+    // Это и есть фикс «всегда 2 предмета»: стэйл-ID больше не схлопывают подбор.
+    func test_WM1_staleSchema_reseedsToFullCatalog() {
+        let all: Set<String> = ["diaper", "slip", "winter"]
+        let result = UserWardrobeStore.migratedOwnedIDs(
+            saved: ["diaper"], seen: nil, storedVersion: 0, allIDs: all)
+        XCTAssertEqual(result, all, "WM-1: устаревшая схема должна вернуть полный каталог")
+    }
+
+    // WM-2: текущая схема → мёртвые ID отбрасываются, выбор пользователя сохраняется.
+    func test_WM2_currentSchema_dropsStaleKeepsSaved() {
+        let all: Set<String> = ["diaper", "slip", "winter"]
+        let result = UserWardrobeStore.migratedOwnedIDs(
+            saved: ["diaper", "slip", "DEAD_ID"], seen: all,
+            storedVersion: UserWardrobeStore.currentSchemaVersion, allIDs: all)
+        XCTAssertEqual(result, ["diaper", "slip"], "WM-2: мёртвый ID убран, slip сохранён")
+    }
+
+    func test_WM2_currentSchema_mapsLegacyBodyIDsToCanonical() {
+        let all: Set<String> = ["diaper", "bodi_short", "bodi_long"]
+        let result = UserWardrobeStore.migratedOwnedIDs(
+            saved: ["diaper", "bodi_st_kr", "bodi_dr"], seen: all,
+            storedVersion: UserWardrobeStore.currentSchemaVersion, allIDs: all)
+        XCTAssertEqual(result, ["diaper", "bodi_short", "bodi_long"],
+                       "WM-2: старые ID боди должны мигрировать в единые позиции")
+    }
+
+    // WM-3: новый предмет каталога (нет в snapshot seen) → авто-владение;
+    // ранее снятый предмет остаётся снятым.
+    func test_WM3_currentSchema_autoOwnsNewItems() {
+        let all: Set<String> = ["diaper", "slip", "winter", "fleece_overall"]
+        let result = UserWardrobeStore.migratedOwnedIDs(
+            saved: ["diaper", "slip"], seen: ["diaper", "slip", "winter"],
+            storedVersion: UserWardrobeStore.currentSchemaVersion, allIDs: all)
+        XCTAssertTrue(result.contains("fleece_overall"), "WM-3: новый предмет авто-добавлен")
+        XCTAssertFalse(result.contains("winter"), "WM-3: снятый предмет остаётся снятым")
+    }
+
+    // MARK: - Underdressed wardrobe gap (cold-safety)
+
+    // UD-1: пустой гардероб в мороз → пробел гардероба + значительный недобор TOG,
+    // который оркестратор поднимает до .danger.
+    func test_UD1_restrictedWardrobe_coldUnderdressed() {
+        let weather = makeWeather(T: -8)
+        let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
+        let gear = makeGear(transport: .pramBassinette, hood: true)
+        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather, gearSetup: gear))
+
+        let out = OutfitSolver.solve(.init(
+            TOG_required: 6.0, T_micro: -8, T_hi: -8, uvIndex: 0,
+            carrierUnderJacket: false, profile: profile, gearSetup: gear,
+            weather: weather, precipFlags: effOut.precipFlags,
+            ownedGarmentIDs: ["thin_hat"]   // только аксессуар, нет тела → скелет почти пуст
+        ))
+
+        XCTAssertNotNil(out.wardrobeGap, "UD-1: при пустом гардеробе должен сообщаться пробел")
+        XCTAssertLessThan(out.totalTOG, 6.0 - OutfitConfig.Solver.togAccuracyTolerance,
+                          "UD-1: набранный TOG значительно ниже нужного — ребёнок недоодет")
+    }
+
+    // BaseTOG interpolation
 
     func test_baseTOG_interpolation() {
         // At anchor: T=21 → TOG=1.0

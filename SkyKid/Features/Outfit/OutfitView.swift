@@ -33,7 +33,7 @@ struct OutfitView: View {
 
     // Synthesized LayeredOutfit for hero card and perception note
     private var syntheticOutfit: LayeredOutfit? {
-        guard let profile else { return nil }
+        guard profile != nil else { return nil }
         return LayeredOutfit(
             effectiveTemp: effectiveTemp,
             baseLayer: displayLayers.first,
@@ -92,6 +92,7 @@ struct OutfitView: View {
             guard let profile, let rec = recommendation else { return }
             await NotificationService.shared.sync(
                 recommendation: rec,
+                weather: weather,
                 gearSetup: GearSetup.from(profile: profile)
             )
         }
@@ -227,6 +228,24 @@ struct OutfitView: View {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14)
                     .strokeBorder(accent.opacity(0.25), lineWidth: 1))
+
+                // Stroller ventilation tip (hot weather only)
+                if isHot {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "wind")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                        Text("В коляске: откройте верхний капор и сетчатые боковины — движение воздуха снижает температуру внутри на 3–5°.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Color.blue.opacity(0.25), lineWidth: 1))
+                }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 40)

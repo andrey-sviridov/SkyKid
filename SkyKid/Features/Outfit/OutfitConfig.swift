@@ -126,6 +126,13 @@ enum OutfitConfig {
         static let maxBodyLayers: Int = 4
         static let togAccuracyTolerance: Double = 0.4
         static let carSeatMaxHarnessLayerTOG: Double = 1.5
+        // §5.5 Мокрая одежда: хлопок теряет ~70%, флис ~40%, в среднем ~35%
+        static let wetClothingRetentionFactor: Double = 0.65
+        // TOG конверта, при котором снимается обязательный защитный слой (slip)
+        static let footmuffSlipProtectionThreshold: Double = 2.0
+        // §5.6 «Тяжёлый» комбез: с этого TOG второй слой верхней одежды
+        // (или меховой конверт-гир) трактуется как двойное утепление → перегрев.
+        static let heavyOuterTOGThreshold: Double = 3.0
     }
 
     // MARK: §6 — Safety Rules
@@ -142,6 +149,8 @@ enum OutfitConfig {
         static let pretermCardioRespMaxCorrMonths: Int = 3
 
         static let strongWindKmh: Double = 40.0
+        // §6.7 Длинная прогулка + пограничная температура
+        static let longWalkBorderlineTempMargin: Double = 5.0  // °C ниже порога → зона риска
 
         // §6.3 Rain Cover
         static let rainCoverVentilationAbove: Double = 15.0    // T_micro threshold

@@ -15,23 +15,25 @@
 		48EE3988618308CA1F261E03 /* OutfitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */; };
 		4A6EE286E4B4E015FB160AFB /* MicroclimateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D2D238BD9B3BE6CCE1A80 /* MicroclimateCalculator.swift */; };
 		8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */; };
+		AWLG /* WalkLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLG /* WalkLog.swift */; };
+		AWLS /* WalkLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLS /* WalkLogStore.swift */; };
+		AWHV /* WalkHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWHV /* WalkHistoryView.swift */; };
 		A001 /* SkyKidApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* SkyKidApp.swift */; };
 		A002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F002 /* ContentView.swift */; };
 		A0TH /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0TH /* Theme.swift */; };
 		A003 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003 /* WeatherView.swift */; };
 		A004 /* WeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F004 /* WeatherViewModel.swift */; };
-		A005 /* RadarMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F005 /* RadarMapView.swift */; };
-		A006 /* RadarMapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006 /* RadarMapViewModel.swift */; };
-		A007 /* RainViewerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F007 /* RainViewerOverlay.swift */; };
+
 		A008 /* OutfitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* OutfitView.swift */; };
 		A010 /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
-		A011 /* RainViewerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F011 /* RainViewerService.swift */; };
+
 		A012 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F012 /* LocationManager.swift */; };
 		A013 /* WeatherData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F013 /* WeatherData.swift */; };
 		A014 /* ChildProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* ChildProfile.swift */; };
 		A015 /* ChildProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* ChildProfileSetupView.swift */; };
 		A0WV /* MyWardrobeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0WV /* MyWardrobeView.swift */; };
 		A016 /* ChildWeatherPerception.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* ChildWeatherPerception.swift */; };
+		A0PS /* ProfileSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0PS /* ProfileSummaryView.swift */; };
 		A017 /* ClothingCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* ClothingCalculatorView.swift */; };
 		A018 /* ChildProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F018 /* ChildProfileStore.swift */; };
 		A0NS /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0NS /* NotificationService.swift */; };
@@ -50,7 +52,7 @@
 		A031 /* WeatherServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* WeatherServiceProtocol.swift */; };
 		A032 /* SkyKidIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F029 /* SkyKidIntents.swift */; };
 		A033 /* YandexWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* YandexWeatherService.swift */; };
-		A036 /* WeatherTileOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F033 /* WeatherTileOverlay.swift */; };
+
 		AA91445FBD0D9886F63DC858 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECE8061C83759412BE23B087 /* Foundation.framework */; };
 		D350AE15738B6C3E14C484C1 /* OutfitSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AF5BBA29EAF6086B51119 /* OutfitSolver.swift */; };
 		DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */; };
@@ -141,18 +143,18 @@
 		F0TH /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		F003 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
 		F004 /* WeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModel.swift; sourceTree = "<group>"; };
-		F005 /* RadarMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapView.swift; sourceTree = "<group>"; };
-		F006 /* RadarMapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarMapViewModel.swift; sourceTree = "<group>"; };
-		F007 /* RainViewerOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerOverlay.swift; sourceTree = "<group>"; };
+
+
 		F008 /* OutfitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitView.swift; sourceTree = "<group>"; };
 		F010 /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
-		F011 /* RainViewerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RainViewerService.swift; sourceTree = "<group>"; };
+
 		F012 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		F013 /* WeatherData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherData.swift; sourceTree = "<group>"; };
 		F014 /* ChildProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfile.swift; sourceTree = "<group>"; };
 		F015 /* ChildProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileSetupView.swift; sourceTree = "<group>"; };
 		F0WV /* MyWardrobeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyWardrobeView.swift; sourceTree = "<group>"; };
 		F016 /* ChildWeatherPerception.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildWeatherPerception.swift; sourceTree = "<group>"; };
+		F0PS /* ProfileSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSummaryView.swift; sourceTree = "<group>"; };
 		F017 /* ClothingCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingCalculatorView.swift; sourceTree = "<group>"; };
 		F018 /* ChildProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileStore.swift; sourceTree = "<group>"; };
 		F0NS /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
@@ -169,8 +171,11 @@
 		F028 /* WeatherKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherKitService.swift; sourceTree = "<group>"; };
 		F029 /* SkyKidIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidIntents.swift; sourceTree = "<group>"; };
 		F030 /* YandexWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YandexWeatherService.swift; sourceTree = "<group>"; };
-		F033 /* WeatherTileOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTileOverlay.swift; sourceTree = "<group>"; };
+
 		F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PersonalOffsetStore.swift; path = PersonalOffsetStore.swift; sourceTree = "<group>"; };
+		FWLG /* WalkLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLog.swift; sourceTree = "<group>"; };
+		FWLS /* WalkLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogStore.swift; sourceTree = "<group>"; };
+		FWHV /* WalkHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryView.swift; sourceTree = "<group>"; };
 		FC48EEA4B450C53B8FEFB3B3 /* SkyKidTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyKidTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* SkyKid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyKid.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -255,6 +260,7 @@
 				LOCGROUP /* Location */,
 				NOTIFGROUP /* Notifications */,
 				MODGROUP /* Models */,
+				STORGROUP /* Storage */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -300,8 +306,8 @@
 			isa = PBXGroup;
 			children = (
 				WEATHERGROUP /* Weather */,
-				MAPGROUP /* Map */,
 				OUTFITGROUP /* Outfit */,
+				HISTGROUP /* History */,
 				PROFILEGROUP /* Profile */,
 			);
 			path = Features;
@@ -323,17 +329,7 @@
 			path = Location;
 			sourceTree = "<group>";
 		};
-		MAPGROUP /* Map */ = {
-			isa = PBXGroup;
-			children = (
-				F005 /* RadarMapView.swift */,
-				F006 /* RadarMapViewModel.swift */,
-				F007 /* RainViewerOverlay.swift */,
-				F033 /* WeatherTileOverlay.swift */,
-			);
-			path = Map;
-			sourceTree = "<group>";
-		};
+
 		MODGROUP /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -343,8 +339,25 @@
 				F0WD /* UserWardrobeStore.swift */,
 				F023 /* BiasStore.swift */,
 				F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */,
+				FWLG /* WalkLog.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		STORGROUP /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				FWLS /* WalkLogStore.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		HISTGROUP /* History */ = {
+			isa = PBXGroup;
+			children = (
+				FWHV /* WalkHistoryView.swift */,
+			);
+			path = History;
 			sourceTree = "<group>";
 		};
 		NETGROUP /* Network */ = {
@@ -352,7 +365,6 @@
 			children = (
 				F019 /* WeatherServiceProtocol.swift */,
 				F010 /* OpenMeteoService.swift */,
-				F011 /* RainViewerService.swift */,
 				F024 /* OpenWeatherMapService.swift */,
 				F025 /* WeatherServiceSettings.swift */,
 				F026 /* WeatherAPIService.swift */,
@@ -399,6 +411,7 @@
 				F015 /* ChildProfileSetupView.swift */,
 				F0WV /* MyWardrobeView.swift */,
 				F016 /* ChildWeatherPerception.swift */,
+				F0PS /* ProfileSummaryView.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -594,19 +607,15 @@
 				A0TH /* Theme.swift in Sources */,
 				A003 /* WeatherView.swift in Sources */,
 				A004 /* WeatherViewModel.swift in Sources */,
-				A005 /* RadarMapView.swift in Sources */,
-				A006 /* RadarMapViewModel.swift in Sources */,
-				A007 /* RainViewerOverlay.swift in Sources */,
-				A036 /* WeatherTileOverlay.swift in Sources */,
 				A008 /* OutfitView.swift in Sources */,
 				A010 /* OpenMeteoService.swift in Sources */,
-				A011 /* RainViewerService.swift in Sources */,
 				A012 /* LocationManager.swift in Sources */,
 				A013 /* WeatherData.swift in Sources */,
 				A014 /* ChildProfile.swift in Sources */,
 				A015 /* ChildProfileSetupView.swift in Sources */,
 				A0WV /* MyWardrobeView.swift in Sources */,
 				A016 /* ChildWeatherPerception.swift in Sources */,
+				A0PS /* ProfileSummaryView.swift in Sources */,
 				A017 /* ClothingCalculatorView.swift in Sources */,
 				A018 /* ChildProfileStore.swift in Sources */,
 				A0NS /* NotificationService.swift in Sources */,
@@ -632,6 +641,9 @@
 				DEC402649260087CE142BCC6 /* SafetyRulesEngine.swift in Sources */,
 				24C4F50274A10C38308ED2B8 /* OutfitRecommendationService.swift in Sources */,
 				8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */,
+				AWLG /* WalkLog.swift in Sources */,
+				AWLS /* WalkLogStore.swift in Sources */,
+				AWHV /* WalkHistoryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

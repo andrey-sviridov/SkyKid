@@ -61,6 +61,19 @@ enum SafetyRulesEngine {
                                          coldBelow: coldBelow, hotAbove: hotAbove)
         }
 
+        // §6.7 Длинная прогулка + пограничная температура
+        let isLongExposure = input.gearSetup.walkType == .long || input.gearSetup.walkType == .park
+        let margin = OutfitConfig.Safety.longWalkBorderlineTempMargin
+        let borderlineCold = input.T_eff >= coldBelow && input.T_eff < coldBelow + margin
+        if isLongExposure && borderlineCold && !warnings.contains(where: { $0.code == .noWalkRecommended }) {
+            warnings.append(SafetyWarning(
+                code: .longWalkBorderlineTemp,
+                severity: .caution,
+                message: "Длинная прогулка при T_eff \(String(format:"%.0f", input.T_eff))°C: за 40–60 мин ребёнок может переохладиться. Планируйте прогрев или оденьте с запасом.",
+                systemImage: "timer"
+            ))
+        }
+
         // §6.1 Strong wind
         if input.V_calc > OutfitConfig.Safety.strongWindKmh {
             warnings.append(SafetyWarning(
@@ -98,12 +111,16 @@ enum SafetyRulesEngine {
             }
         }
 
-        // §2.4 Rain cover needed
+        // §2.4 / §5.5 Rain cover — эскалируем при холоде, т.к. мокрая одежда теряет ~35% TOG
         if input.precipFlags.needsRainCover && input.gearSetup.rainCover != .present_on {
+            let isCold = input.T_micro < 15
+            let isFreezing = input.T_micro < 5
             warnings.append(SafetyWarning(
                 code: .needsRainCover,
-                severity: .caution,
-                message: "Идут осадки — установите дождевик.",
+                severity: isFreezing ? .danger : .caution,
+                message: isCold
+                    ? "Мокрая одежда теряет до 35% теплоизоляции при \(Int(input.T_micro.rounded()))°C — установите дождевик немедленно."
+                    : "Идут осадки — установите дождевик.",
                 systemImage: "cloud.rain.fill"
             ))
         }

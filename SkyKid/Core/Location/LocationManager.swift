@@ -19,13 +19,20 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         manager.requestWhenInUseAuthorization()
     }
 
-    func startUpdating() {
-        manager.startUpdatingLocation()
+    func requestOnce() {
+        // requestLocation() — однократный запрос: автоматически останавливается
+        // после первого фикса или по таймауту. В отличие от startUpdatingLocation()
+        // не удерживает экран активным пока ждёт GPS.
+        manager.requestLocation()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.last
-        manager.stopUpdatingLocation()
+        // requestLocation() сам останавливается — stopUpdatingLocation() не нужен.
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        // Тихо игнорируем: геолокация опциональная, погода загрузится по кешу.
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -33,15 +40,14 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         guard authorizationStatus == .authorizedWhenInUse
            || authorizationStatus == .authorizedAlways else { return }
 
-        // Используем кешированную позицию iOS сразу — погода начнёт грузиться
-        // ещё до получения нового GPS-фикса. Для последующих запусков это
-        // убирает задержку 3–8 секунд и заменяет её на ~0 мс.
+        // Кешированная позиция iOS — мгновенно, без ожидания GPS.
         if let cached = manager.location {
             location = cached
+            // Если кеш свежее 5 минут — не запускаем железо заново.
+            if cached.timestamp.timeIntervalSinceNow > -300 { return }
         }
 
-        // Параллельно запускаем обновление для свежей позиции.
-        // Когда придёт — onChange сработает повторно и обновит погоду в фоне.
-        startUpdating()
+        // Запрашиваем свежий фикс только если кеш устарел или отсутствует.
+        requestOnce()
     }
 }

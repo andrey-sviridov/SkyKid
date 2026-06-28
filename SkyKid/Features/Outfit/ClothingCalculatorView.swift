@@ -13,7 +13,7 @@ import SwiftUI
 
 struct ClothingCalculatorView: View {
     var profile: ChildProfile?
-    var weather: WeatherData?          // feelsLike used as initial temperature
+    var weather: WeatherData?
     @State private var model: WardrobeModel
 
     init(profile: ChildProfile? = nil, weather: WeatherData? = nil) {
@@ -25,8 +25,17 @@ struct ClothingCalculatorView: View {
         ))
     }
 
+    private var togRecommendation: OutfitRecommendation? {
+        guard let profile, let weather else { return nil }
+        return OutfitRecommendationService.shared.recommend(
+            weather: weather,
+            profile: profile,
+            gearSetup: GearSetup.from(profile: profile)
+        )
+    }
+
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
 
                 WeatherControlsCard(model: model)
@@ -52,9 +61,12 @@ struct ClothingCalculatorView: View {
 
                     PediatricNoteCard()
 
-                    // ⚡ PERF: selectedItems — value type, не изменяется при сдвиге слайдера
+                    PinnedItemsCard(model: model)
+
                     ClothingConstructorSection(
+                        ageGroup: model.ageGroup,
                         selectedItems: model.selectedItems,
+                        pinnedIDs: model.pinnedItemIDs,
                         onToggle: { item in
                             withAnimation(.spring(response: 0.26, dampingFraction: 0.65)) {
                                 model.toggle(item)
@@ -65,7 +77,9 @@ struct ClothingCalculatorView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .skyKidBackground()
         .navigationTitle("Конструктор одежды")
         .navigationBarTitleDisplayMode(.inline)
@@ -75,10 +89,16 @@ struct ClothingCalculatorView: View {
             if let profile {
                 model.ageGroup = profile.wardrobeAgeGroup
             }
+            if let rec = togRecommendation {
+                model.syncWithTOG(rec)
+            }
         }
         .onChange(of: weather?.apparentTemperature) { _, newTemp in
-            guard let t = newTemp else { return }
-            model.weatherTemperature = t
+            if let rec = togRecommendation {
+                model.syncWithTOG(rec)
+            } else if let t = newTemp {
+                model.weatherTemperature = t
+            }
         }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -384,118 +404,326 @@ struct PediatricNoteCard: View {
 }
 
 // MARK: – ClothingConstructorSection ─────────────────────────────────────
-// ⚡ PERF: `selectedItems` — value type (Set<GarmentItem>).
-// SwiftUI сравнивает через Equatable; при сдвиге слайдера body не вычисляется.
 
-struct ClothingConstructorSection: View {
-    let selectedItems: Set<GarmentItem>
-    let onToggle: (GarmentItem) -> Void
+// MARK: – PinnedItemsCard ─────────────────────────────────────────────────
 
-    private let columns = [GridItem(.flexible(), spacing: 10),
-                           GridItem(.flexible(), spacing: 10)]
+struct PinnedItemsCard: View {
+    @Bindable var model: WardrobeModel
+    @State private var showEdit = false
+
+    private var pinnedItems: [GarmentItem] {
+        GarmentCatalog.all
+            .filter { model.pinnedItemIDs.contains($0.id) }
+            .sorted { $0.name < $1.name }
+    }
 
     var body: some View {
-        VStack(spacing: 12) {
-            ForEach(GarmentLayer.allCases) { layer in
-                let items = GarmentCatalog.byLayer[layer] ?? []
-                let selCount = items.filter { selectedItems.contains($0) }.count
-
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 6) {
-                        Image(systemName: layer.icon).font(.caption)
-                        Text(layer.rawValue).font(.subheadline.weight(.semibold))
-                        Spacer()
-                        if selCount > 0 {
-                            Text("\(selCount) выбрано")
-                                .font(.caption)
-                                .foregroundStyle(.blue)
-                                .padding(.horizontal, 8).padding(.vertical, 3)
-                                .background(Color.blue.opacity(0.1), in: Capsule())
-                        }
-                    }
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "pin.fill")
+                    .font(.caption)
+                    .foregroundStyle(.purple)
+                Text("Надевается всегда")
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
+                Spacer()
+                Button("Изменить") { showEdit = true }
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.purple)
+            }
 
-                    LazyVGrid(columns: columns, spacing: 10) {
+            if pinnedItems.isEmpty {
+                Text("Нет закреплённых вещей")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            } else {
+                FlowLayout(spacing: 8) {
+                    ForEach(pinnedItems) { item in
+                        HStack(spacing: 5) {
+                            Image(systemName: "pin.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.purple)
+                            Text(item.name)
+                                .font(.caption.weight(.medium))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.purple.opacity(0.10), in: Capsule())
+                        .overlay(Capsule().strokeBorder(Color.purple.opacity(0.22), lineWidth: 1))
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .strokeBorder(Color.purple.opacity(0.22), lineWidth: 1))
+        .sheet(isPresented: $showEdit) {
+            EditPinnedItemsSheet(model: model)
+        }
+    }
+}
+
+// MARK: – FlowLayout ──────────────────────────────────────────────────────
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 0
+        var x: CGFloat = 0; var y: CGFloat = 0; var rowH: CGFloat = 0; var maxH: CGFloat = 0
+        for sv in subviews {
+            let sz = sv.sizeThatFits(.unspecified)
+            if x + sz.width > width && x > 0 { y += rowH + spacing; x = 0; rowH = 0 }
+            rowH = max(rowH, sz.height); x += sz.width + spacing; maxH = max(maxH, y + rowH)
+        }
+        return CGSize(width: width, height: maxH)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX; var y = bounds.minY; var rowH: CGFloat = 0
+        for sv in subviews {
+            let sz = sv.sizeThatFits(.unspecified)
+            if x + sz.width > bounds.maxX && x > bounds.minX { y += rowH + spacing; x = bounds.minX; rowH = 0 }
+            sv.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(sz))
+            rowH = max(rowH, sz.height); x += sz.width + spacing
+        }
+    }
+}
+
+// MARK: – EditPinnedItemsSheet ────────────────────────────────────────────
+
+struct EditPinnedItemsSheet: View {
+    @Bindable var model: WardrobeModel
+    @Environment(\.dismiss) private var dismiss
+
+    private var itemsByLayer: [(GarmentLayer, [GarmentItem])] {
+        let relevant = GarmentCatalog.all.filter {
+            $0.catalogAgeGroup == nil || $0.catalogAgeGroup?.matches(model.ageGroup) == true
+        }.sorted { $0.name < $1.name }
+        return GarmentLayer.allCases.compactMap { layer in
+            let items = relevant.filter { $0.layer == layer }
+            return items.isEmpty ? nil : (layer, items)
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("Выбранные вещи всегда включаются в расчёт и не снимаются при сбросе.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .listRowBackground(Color.clear)
+                }
+                ForEach(itemsByLayer, id: \.0) { layer, items in
+                    Section(layer.rawValue) {
                         ForEach(items) { item in
-                            GarmentCard(
-                                item: item,
-                                isSelected: selectedItems.contains(item),
-                                onTap: { onToggle(item) }
-                            )
+                            let pinned = model.isPinned(item)
+                            Button {
+                                withAnimation {
+                                    if pinned { model.unpin(item) } else { model.pin(item) }
+                                }
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: item.symbol)
+                                        .frame(width: 26)
+                                        .foregroundStyle(pinned ? .purple : .secondary)
+                                    Text(item.name)
+                                        .foregroundStyle(.primary)
+                                    Spacer()
+                                    if pinned {
+                                        Image(systemName: "pin.fill")
+                                            .foregroundStyle(.purple)
+                                            .transition(.scale.combined(with: .opacity))
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
-                .padding(16)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+            }
+            .navigationTitle("Вещи по умолчанию")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Готово") { dismiss() }
+                }
             }
         }
     }
 }
 
-// MARK: – GarmentCard ─────────────────────────────────────────────────────
-// ⚡ PERF: только `isSelected: Bool` и `item: GarmentItem` (value types).
+// MARK: – ClothingConstructorSection ─────────────────────────────────────
 
-struct GarmentCard: View {
-    let item: GarmentItem
-    let isSelected: Bool
-    let onTap: () -> Void
+struct ClothingConstructorSection: View {
+    let ageGroup: WardrobeAgeGroup
+    let selectedItems: Set<GarmentItem>
+    var pinnedIDs: Set<String> = []
+    let onToggle: (GarmentItem) -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 8) {
-                ZStack(alignment: .topTrailing) {
-                    Circle()
-                        .fill(isSelected ? Color.blue.opacity(0.13) : Color.primary.opacity(0.08))
-                        .frame(width: 54, height: 54)
+        let itemsByLayer = GarmentCatalog.displayItems(for: ageGroup)
+        let allSelected = selectedItems.sorted { $0.name < $1.name }
 
-                    Image(systemName: item.symbol)
-                        .font(.system(size: 22))
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(isSelected ? .blue : .secondary)
-                        .frame(width: 54, height: 54)
-
-                    if isSelected {
-                        Circle()
-                            .fill(.blue)
-                            .frame(width: 19, height: 19)
-                            .overlay(
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundStyle(.white)
-                            )
-                            .offset(x: 4, y: -4)
-                            .transition(.scale(scale: 0.4).combined(with: .opacity))
-                    }
-                }
-
-                Text(item.name)
-                    .font(.caption)
-                    .fontWeight(isSelected ? .semibold : .regular)
-                    .foregroundStyle(isSelected ? .blue : .primary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(String(format: "%.2g TOG", item.tog))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+        VStack(spacing: 12) {
+            if !allSelected.isEmpty {
+                autoSelectedSection(items: allSelected)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 120)
-            .background(
-                isSelected ? Color.blue.opacity(0.07) : Color.primary.opacity(0.05),
-                in: RoundedRectangle(cornerRadius: 14)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(isSelected ? Color.blue.opacity(0.4) : Color.clear, lineWidth: 1.5)
-            )
-            .scaleEffect(isSelected ? 1.0 : 0.97)
+            ForEach(GarmentLayer.allCases) { layer in
+                let items = itemsByLayer[layer] ?? []
+                if !items.isEmpty {
+                    layerSection(layer: layer, items: items)
+                }
+            }
         }
-        .buttonStyle(.plain)
-        .animation(.spring(response: 0.24, dampingFraction: 0.68), value: isSelected)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: allSelected.map(\.id))
+    }
+
+    private func autoSelectedSection(items: [GarmentItem]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "wand.and.stars").font(.caption)
+                Text("Подобрано автоматически").font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("\(items.count) вещей")
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Color.blue.opacity(0.1), in: Capsule())
+            }
+            .foregroundStyle(.secondary)
+
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
+                    GarmentListRow(
+                        item: item,
+                        isSelected: true,
+                        isPinned: pinnedIDs.contains(item.id),
+                        isLast: idx == items.count - 1,
+                        onTap: { onToggle(item) }
+                    )
+                }
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .strokeBorder(Color.blue.opacity(0.22), lineWidth: 1))
+    }
+
+    private func layerSection(layer: GarmentLayer, items: [GarmentItem]) -> some View {
+        let selCount = items.filter { selectedItems.contains($0) }.count
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: layer.icon).font(.caption)
+                Text(layer.rawValue).font(.subheadline.weight(.semibold))
+                Spacer()
+                if selCount > 0 {
+                    Text("\(selCount) выбрано")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Color.blue.opacity(0.1), in: Capsule())
+                }
+            }
+            .foregroundStyle(.secondary)
+
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
+                    GarmentListRow(
+                        item: item,
+                        isSelected: selectedItems.contains(item),
+                        isPinned: pinnedIDs.contains(item.id),
+                        isLast: idx == items.count - 1,
+                        onTap: { onToggle(item) }
+                    )
+                }
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+}
+
+// MARK: – GarmentListRow ──────────────────────────────────────────────────
+
+struct GarmentListRow: View {
+    let item: GarmentItem
+    let isSelected: Bool
+    var isPinned: Bool = false
+    let isLast: Bool
+    let onTap: () -> Void
+
+    private var effectiveColor: Color { isPinned ? .purple : .blue }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button(action: { if !isPinned { onTap() } }) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(isSelected
+                                  ? effectiveColor.opacity(0.13)
+                                  : Color.primary.opacity(0.07))
+                        Image(systemName: item.symbol)
+                            .font(.system(size: 17))
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(isSelected ? effectiveColor : .secondary)
+                    }
+                    .frame(width: 40, height: 40)
+
+                    Text(item.name)
+                        .font(.subheadline)
+                        .fontWeight(isSelected ? .semibold : .regular)
+                        .foregroundStyle(isSelected ? effectiveColor : .primary)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    VStack(alignment: .center, spacing: 3) {
+                        if isPinned {
+                            Image(systemName: "pin.fill")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(.purple)
+                                .transition(.scale(scale: 0.4).combined(with: .opacity))
+                        } else if isSelected {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(.blue)
+                                .transition(.scale(scale: 0.4).combined(with: .opacity))
+                        } else {
+                            Circle()
+                                .strokeBorder(Color.secondary.opacity(0.4), lineWidth: 1.5)
+                                .frame(width: 20, height: 20)
+                        }
+                        Text(String(format: "%.2g", item.tog))
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .monospacedDigit()
+                    }
+                    .frame(width: 48)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 11)
+                .frame(maxWidth: .infinity)
+                .background(
+                    isSelected
+                        ? effectiveColor.opacity(0.04)
+                        : Color.clear
+                )
+            }
+            .buttonStyle(.plain)
+            .animation(.spring(response: 0.22, dampingFraction: 0.68), value: isSelected)
+            .animation(.spring(response: 0.22, dampingFraction: 0.68), value: isPinned)
+
+            if !isLast {
+                Divider().padding(.leading, 66)
+            }
+        }
     }
 }
 

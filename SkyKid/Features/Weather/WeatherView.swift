@@ -5,7 +5,6 @@ import SwiftUI
 struct WeatherView: View {
     let weather: WeatherData
     let cityName: String
-    var profile: ChildProfile?
     var currentProvider: WeatherProvider = .openMeteo
     var onProviderChange: ((WeatherProvider, String?) -> Void)?
 
@@ -90,10 +89,8 @@ struct WeatherView: View {
 
     private var cardsSection: some View {
         VStack(spacing: 16) {
-            if let profile {
-                ChildPerceptionCard(
-                    perception: ChildWeatherPerception(profile: profile, weather: weather)
-                )
+            if !weather.hourly.isEmpty {
+                HourlyForecastCard(hourly: weather.hourly)
             }
             statsGrid
         }
@@ -121,100 +118,89 @@ struct WeatherView: View {
 
 }
 
-// MARK: - ChildPerceptionCard
+// MARK: - HourlyForecastCard
 
-struct ChildPerceptionCard: View {
-    let perception: ChildWeatherPerception
+struct HourlyForecastCard: View {
+    let hourly: [HourlyForecast]
+
+    private var next24: [HourlyForecast] {
+        let now = Date()
+        return Array(
+            hourly
+                .filter { $0.time >= now.addingTimeInterval(-1800) }
+                .prefix(24)
+        )
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Почасовой прогноз", systemImage: "clock")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
 
-            HStack(alignment: .top, spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(comfortColor.opacity(0.14))
-                        .frame(width: 56, height: 56)
-                    Image(systemName: comfortIcon)
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(comfortColor)
-                        .symbolRenderingMode(.hierarchical)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(perception.profile.name)
-                        .font(.headline)
-                        .lineLimit(1)
-                    Text(perception.profile.ageLabel)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                    Label(perception.comfortLabel, systemImage: comfortIcon)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(comfortColor)
-                }
-
-                Spacer(minLength: 8)
-
-                VStack(spacing: 1) {
-                    Text("\(Int(perception.effectiveFeelsLike.rounded()))°")
-                        .font(.system(size: 34, weight: .semibold, design: .rounded))
-                        .foregroundStyle(comfortColor)
-                    Text("для малыша")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // Прогресс-бар комфорта
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.primary.opacity(0.15))
-                        .frame(height: 5)
-                    Capsule()
-                        .fill(comfortColor.gradient)
-                        .frame(width: geo.size.width * CGFloat(perception.comfortScore) / 100, height: 5)
-                        .animation(.spring(response: 0.5), value: perception.comfortScore)
-                }
-            }
-            .frame(height: 5)
-
-            // Текст-резюме
-            Text(perception.summary)
-                .font(.subheadline)
-                .fixedSize(horizontal: false, vertical: true)
-
-            // Возрастная подсказка
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "lightbulb.fill")
+            if next24.isEmpty {
+                Text("Нет данных о прогнозе")
                     .font(.caption)
-                    .foregroundStyle(.yellow)
-                    .padding(.top, 1)
-                Text(perception.ageContextNote)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .center, spacing: 8) {
+                        ForEach(next24, id: \.time) { item in
+                            hourCell(item: item)
+                        }
+                    }
+                    .padding(.horizontal, 4)
+                }
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
         .padding(18)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
         .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
-    private var comfortColor: Color {
-        let c = perception.comfortColor
-        return Color(red: c.0, green: c.1, blue: c.2)
+    private func hourCell(item: HourlyForecast) -> some View {
+        VStack(spacing: 6) {
+            Text(item.time, format: .dateTime.hour(.defaultDigits(amPM: .omitted)))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+
+            Image(systemName: wmoIcon(item.weatherCode))
+                .font(.system(size: 22))
+                .symbolRenderingMode(.multicolor)
+                .frame(height: 30)
+
+            Text("\(Int(item.temperature.rounded()))°")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(tempColorFor(item.temperature))
+        }
+        .frame(width: 44)
     }
 
-    private var comfortIcon: String {
-        switch perception.comfortScore {
-        case 80...100: return "checkmark.circle.fill"
-        case 55..<80:  return "minus.circle.fill"
-        case 30..<55:  return "thermometer.low"
-        default:       return "exclamationmark.circle.fill"
+    private func wmoIcon(_ code: Int) -> String {
+        switch code {
+        case 0:              return "sun.max.fill"
+        case 1:              return "cloud.sun.fill"
+        case 2, 3:           return "cloud.fill"
+        case 45, 48:         return "cloud.fog.fill"
+        case 51, 53, 55:     return "cloud.drizzle.fill"
+        case 61, 63, 65:     return "cloud.rain.fill"
+        case 71, 73, 75, 77: return "snowflake"
+        case 80, 81, 82:     return "cloud.heavyrain.fill"
+        case 95, 96, 99:     return "cloud.bolt.rain.fill"
+        default:             return "cloud.fill"
+        }
+    }
+
+    private func tempColorFor(_ t: Double) -> Color {
+        switch t {
+        case ..<0:    return .blue
+        case 0..<12:  return Color(red: 0.2, green: 0.55, blue: 1.0)
+        case 12..<22: return .green
+        case 22..<28: return .orange
+        default:      return .red
         }
     }
 }
@@ -414,13 +400,13 @@ struct StatCard: View {
 #if DEBUG
 #Preview("☀️ Ясно · 18°") {
     NavigationStack {
-        WeatherView(weather: .mock, cityName: "Москва", profile: .mock)
+        WeatherView(weather: .mock, cityName: "Москва")
     }
 }
 
 #Preview("🌧 Дождь") {
     NavigationStack {
-        WeatherView(weather: .mockRainy, cityName: "Санкт-Петербург", profile: .mock)
+        WeatherView(weather: .mockRainy, cityName: "Санкт-Петербург")
     }
 }
 

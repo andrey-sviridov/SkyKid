@@ -1,0 +1,820 @@
+import SwiftUI
+
+// MARK: - WalkHistoryView (History tab)
+
+struct WalkHistoryView: View {
+    var weather: WeatherData?
+    var profile: ChildProfile?
+
+    @State private var store = WalkLogStore.shared
+    @State private var showLog = false
+    @State private var editingLog: WalkLog? = nil
+    @State private var selectedLog: WalkLog? = nil
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            List {
+                if store.totalCount > 0 {
+                    StatsHeaderCard(store: store)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 0, trailing: 16))
+                }
+
+                if store.logs.isEmpty {
+                    EmptyHistoryCard()
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 0, trailing: 16))
+                } else {
+                    ForEach(store.logs) { log in
+                        Button { selectedLog = log } label: {
+                            WalkLogRow(log: log)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
+                                    store.delete(at: IndexSet(integer: idx))
+                                }
+                            } label: {
+                                Label("Удалить", systemImage: "trash")
+                            }
+                            Button { editingLog = log } label: {
+                                Label("Изменить", systemImage: "pencil")
+                            }
+                            .tint(.blue)
+                        }
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .skyKidBackground()
+            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
+            .navigationDestination(item: $selectedLog) { log in
+                WalkLogDetailView(log: log, store: store)
+            }
+
+            Button { showLog = true } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 56, height: 56)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.08, green: 0.32, blue: 0.96),
+                                     Color(red: 0.44, green: 0.14, blue: 0.86)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        ),
+                        in: Circle()
+                    )
+                    .shadow(color: .blue.opacity(0.35), radius: 10, y: 4)
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 24)
+        }
+        .navigationTitle("Журнал прогулок")
+        .navigationBarTitleDisplayMode(.large)
+        .sheet(isPresented: $showLog) {
+            LogWalkSheet(weather: weather, profile: profile)
+        }
+        .sheet(item: $editingLog) { log in
+            LogWalkSheet(weather: weather, profile: profile, editingLog: log)
+        }
+    }
+}
+
+// MARK: - StatsHeaderCard
+
+private struct StatsHeaderCard: View {
+    let store: WalkLogStore
+
+    var body: some View {
+        HStack(spacing: 0) {
+            statCell(
+                value: "\(store.recentCount)",
+                label: "За 7 дней",
+                icon: "figure.walk",
+                color: .blue
+            )
+            Divider().frame(height: 46)
+            statCell(
+                value: avgDuration,
+                label: "Средняя\nдлительность",
+                icon: "clock",
+                color: .teal
+            )
+            Divider().frame(height: 46)
+            statCell(
+                value: learningStatus,
+                label: "Обучение",
+                icon: "brain",
+                color: .purple
+            )
+        }
+        .padding(.vertical, 14)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+
+    private func statCell(value: String, label: String, icon: String, color: Color) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundStyle(color)
+            Text(value)
+                .font(.system(.title3, design: .rounded).weight(.bold))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var avgDuration: String {
+        guard !store.logs.isEmpty else { return "—" }
+        let avg = store.logs.map(\.durationMinutes).reduce(0, +) / store.logs.count
+        return avg >= 60 ? "\(avg / 60)ч \(avg % 60)м" : "\(avg) мин"
+    }
+
+    private var learningStatus: String {
+        let n = store.totalCount
+        if n == 0 { return "0" }
+        if n < 5 { return "🌱" }
+        if n < 15 { return "📈" }
+        return "✅"
+    }
+}
+
+// MARK: - EmptyHistoryCard
+
+private struct EmptyHistoryCard: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "figure.walk.motion")
+                .font(.system(size: 48, weight: .thin))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.blue)
+
+            VStack(spacing: 6) {
+                Text("Нет записей о прогулках")
+                    .font(.headline)
+                Text("Нажмите + чтобы записать свою первую прогулку. На основе ваших оценок приложение будет точнее подбирать одежду.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(32)
+        .frame(maxWidth: .infinity)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+}
+
+// MARK: - WalkLogRow
+
+private struct WalkLogRow: View {
+    let log: WalkLog
+
+    private var comfortColor: Color {
+        switch log.comfortLevel {
+        case .cold:        return .blue
+        case .comfortable: return .green
+        case .warm:        return .orange
+        case .sweating:    return .red
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            // Comfort badge
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(comfortColor.opacity(0.14))
+                    .frame(width: 44, height: 44)
+                Image(systemName: log.comfortLevel.icon)
+                    .font(.system(size: 19))
+                    .foregroundStyle(comfortColor)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(log.date, format: .dateTime.day().month(.abbreviated).hour().minute())
+                        .font(.subheadline.weight(.semibold))
+                    Spacer()
+                    durationBadge
+                }
+
+                HStack(spacing: 10) {
+                    Label("\(Int(log.weatherTemperature.rounded()))°C", systemImage: "thermometer.medium")
+                    Label(log.comfortLevel.label, systemImage: log.comfortLevel.icon)
+                        .foregroundStyle(comfortColor)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+                if !log.outfitItemIDs.isEmpty {
+                    let names = log.outfitItemIDs.compactMap { GarmentCatalog.byID[$0]?.name }
+                    if !names.isEmpty {
+                        Text(names.joined(separator: ", "))
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(2)
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
+    }
+
+    private var durationBadge: some View {
+        let d = log.durationMinutes
+        let text = d >= 60 ? "\(d / 60)ч \(d % 60 > 0 ? "\(d % 60)м" : "")" : "\(d) мин"
+        return Text(text)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color.primary.opacity(0.07), in: Capsule())
+    }
+}
+
+// MARK: - LogWalkSheet
+
+struct LogWalkSheet: View {
+    var weather: WeatherData?
+    var profile: ChildProfile?
+    var editingLog: WalkLog? = nil
+
+    @State private var store = WalkLogStore.shared
+    @State private var walkDate: Date = .now
+    @State private var durationMinutes: Int = 30
+    @State private var comfortLevel: BabyComfortLevel = .comfortable
+    @State private var selectedOutfitIDs: Set<String> = []
+    @State private var walkTemperature: Double = 12
+    @Environment(\.dismiss) private var dismiss
+
+    private var isEditing: Bool { editingLog != nil }
+
+    private var suggestedIDs: [String] {
+        guard let w = weather, let p = profile else { return [] }
+        let rec = OutfitRecommendationService.shared.recommend(
+            weather: w, profile: p, gearSetup: GearSetup.from(profile: p))
+        return (rec.layers + rec.accessories).map(\.id)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 20) {
+                    WalkDateTimeCard(date: $walkDate)
+                    WalkTemperatureCard(temperature: $walkTemperature)
+                    DurationPickerCard(durationMinutes: $durationMinutes)
+                    ComfortLevelCard(selected: $comfortLevel)
+                    OutfitSummaryCard(
+                        selectedIDs: $selectedOutfitIDs,
+                        suggestedIDs: suggestedIDs,
+                        profile: profile,
+                        startInManual: isEditing
+                    )
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+            }
+            .skyKidBackground()
+            .navigationTitle(isEditing ? "Редактировать прогулку" : "Записать прогулку")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Сохранить") { saveAndDismiss() }
+                        .fontWeight(.semibold)
+                }
+            }
+            .onAppear {
+                if let log = editingLog {
+                    walkDate           = log.date
+                    walkTemperature    = log.weatherTemperature
+                    durationMinutes    = log.durationMinutes
+                    comfortLevel       = log.comfortLevel
+                    selectedOutfitIDs  = Set(log.outfitItemIDs)
+                } else {
+                    walkTemperature   = weather?.apparentTemperature ?? weather?.temperature ?? 12
+                    selectedOutfitIDs = Set(suggestedIDs)
+                }
+            }
+        }
+    }
+
+    private func saveAndDismiss() {
+        if var existing = editingLog {
+            existing.date               = walkDate
+            existing.weatherTemperature = walkTemperature
+            existing.apparentTemperature = walkTemperature
+            existing.durationMinutes    = durationMinutes
+            existing.comfortLevel       = comfortLevel
+            existing.outfitItemIDs      = Array(selectedOutfitIDs)
+            store.update(existing)
+        } else {
+            let log = WalkLog(
+                date: walkDate,
+                durationMinutes: durationMinutes,
+                outfitItemIDs: Array(selectedOutfitIDs),
+                comfortLevel: comfortLevel,
+                weatherTemperature: walkTemperature,
+                apparentTemperature: walkTemperature
+            )
+            store.add(log, profile: profile)
+        }
+        dismiss()
+    }
+}
+
+// MARK: - WalkDateTimeCard
+
+private struct WalkDateTimeCard: View {
+    @Binding var date: Date
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Дата и время прогулки", systemImage: "calendar.clock")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            Text("Если записываете позже — выберите фактическое время.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+
+            DatePicker(
+                "",
+                selection: $date,
+                in: ...Date.now,
+                displayedComponents: [.date, .hourAndMinute]
+            )
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+}
+
+// MARK: - WalkTemperatureCard
+
+private struct WalkTemperatureCard: View {
+    @Binding var temperature: Double
+
+    private var tempColor: Color {
+        switch temperature {
+        case ...0:    return .blue
+        case 0..<15:  return Color(red: 0.2, green: 0.55, blue: 1.0)
+        case 15..<22: return .green
+        case 22..<28: return .orange
+        default:      return .red
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Температура на прогулке", systemImage: "thermometer.medium")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            Text("Введите температуру того момента — если записываете позже.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+
+            HStack(spacing: 20) {
+                stepButton(icon: "minus", action: { temperature = max(-30, temperature - 1) })
+
+                Spacer()
+
+                Text("\(Int(temperature.rounded()))°C")
+                    .font(.system(size: 44, weight: .thin, design: .rounded))
+                    .foregroundStyle(tempColor)
+                    .contentTransition(.numericText())
+                    .animation(.spring(response: 0.25), value: temperature)
+                    .frame(minWidth: 100)
+
+                Spacer()
+
+                stepButton(icon: "plus", action: { temperature = min(45, temperature + 1) })
+            }
+
+            Slider(value: $temperature, in: -30...45, step: 1)
+                .tint(tempColor)
+                .transaction { t in t.animation = nil }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+
+    private func stepButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: { withAnimation { action() } }) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.primary.opacity(0.08))
+                    .frame(width: 44, height: 44)
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .medium))
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - WeatherContextCard (kept for possible reuse)
+
+private struct WeatherContextCard: View {
+    let weather: WeatherData
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "thermometer.medium")
+                .font(.title2)
+                .foregroundStyle(.blue)
+                .frame(width: 32)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Погода во время прогулки")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("\(Int(weather.temperature.rounded()))° · ощущается \(Int(weather.apparentTemperature.rounded()))°C")
+                    .font(.subheadline.weight(.medium))
+            }
+            Spacer()
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+}
+
+// MARK: - DurationPickerCard
+
+private struct DurationPickerCard: View {
+    @Binding var durationMinutes: Int
+    private let options = [15, 30, 45, 60, 90, 120]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Длительность прогулки", systemImage: "clock")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(options, id: \.self) { mins in
+                        let selected = durationMinutes == mins
+                        Button { durationMinutes = mins } label: {
+                            Text(durationLabel(mins))
+                                .font(.subheadline.weight(selected ? .semibold : .regular))
+                                .foregroundStyle(selected ? .white : .primary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(
+                                    selected
+                                        ? Color.blue
+                                        : Color.primary.opacity(0.08),
+                                    in: Capsule()
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .animation(.spring(response: 0.25), value: selected)
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+
+    private func durationLabel(_ mins: Int) -> String {
+        mins >= 60 ? "\(mins / 60) ч \(mins % 60 > 0 ? "\(mins % 60) мин" : "")" : "\(mins) мин"
+    }
+}
+
+// MARK: - ComfortLevelCard
+
+private struct ComfortLevelCard: View {
+    @Binding var selected: BabyComfortLevel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Label("Как чувствовал себя малыш?", systemImage: "hand.raised.circle.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Text("Приложите ладонь к затылку/шее ребёнка — это самый точный способ проверить температуру тела.")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+
+            HStack(spacing: 10) {
+                ForEach(BabyComfortLevel.allCases) { level in
+                    let isSelected = selected == level
+                    let color: Color = {
+                        switch level {
+                        case .cold:        return .blue
+                        case .comfortable: return .green
+                        case .warm:        return .orange
+                        case .sweating:    return .red
+                        }
+                    }()
+                    Button { withAnimation(.spring(response: 0.25)) { selected = level } } label: {
+                        VStack(spacing: 6) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(isSelected ? color.opacity(0.18) : Color.primary.opacity(0.07))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .strokeBorder(isSelected ? color : Color.clear, lineWidth: 1.5)
+                                    )
+                                    .frame(height: 52)
+                                Image(systemName: level.icon)
+                                    .font(.system(size: 22))
+                                    .foregroundStyle(isSelected ? color : .secondary)
+                            }
+                            Text(level.label)
+                                .font(.caption2.weight(isSelected ? .semibold : .regular))
+                                .foregroundStyle(isSelected ? color : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+}
+
+// MARK: - OutfitSummaryCard
+
+private struct OutfitSummaryCard: View {
+    @Binding var selectedIDs: Set<String>
+    let suggestedIDs: [String]
+    let profile: ChildProfile?
+    var startInManual: Bool = false
+
+    @State private var mode: PickMode = .auto
+    @State private var wardrobeStore = UserWardrobeStore.shared
+
+    private enum PickMode: String, CaseIterable {
+        case auto   = "Рекомендация"
+        case manual = "Гардероб"
+    }
+
+    private var autoItems: [GarmentItem] {
+        suggestedIDs.compactMap { GarmentCatalog.byID[$0] }
+    }
+
+    private var manualItems: [GarmentItem] {
+        let ageGroup = profile?.wardrobeAgeGroup
+        return GarmentCatalog.catalogItems.filter { item in
+            wardrobeStore.isOwned(item.id) &&
+            (ageGroup == nil || item.catalogAgeGroup?.matches(ageGroup!) == true)
+        }
+    }
+
+    private var displayItems: [GarmentItem] {
+        mode == .auto ? autoItems : manualItems
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Во что был одет", systemImage: "hanger")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("Необязательно")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+
+            Picker("", selection: $mode) {
+                ForEach(PickMode.allCases, id: \.self) { m in
+                    Text(m.rawValue).tag(m)
+                }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: mode) { _, newMode in
+                if newMode == .auto {
+                    selectedIDs = Set(suggestedIDs)
+                }
+            }
+
+            if displayItems.isEmpty {
+                Text(mode == .auto
+                     ? "Нет данных о погоде или профиле ребёнка"
+                     : "В гардеробе нет вещей для этого возраста")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            } else {
+                FlowLayout(spacing: 8) {
+                    ForEach(displayItems) { item in
+                        let on = selectedIDs.contains(item.id)
+                        Button {
+                            withAnimation(.spring(response: 0.2)) {
+                                if on { selectedIDs.remove(item.id) } else { selectedIDs.insert(item.id) }
+                            }
+                        } label: {
+                            Text(item.name)
+                                .font(.caption.weight(on ? .semibold : .regular))
+                                .foregroundStyle(on ? .white : .primary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(
+                                    on ? Color.blue : Color.primary.opacity(0.09),
+                                    in: Capsule()
+                                )
+                                .overlay(Capsule().strokeBorder(on ? Color.clear : Color.primary.opacity(0.18), lineWidth: 1))
+                                .scaleEffect(on ? 1.04 : 1.0)
+                        }
+                        .buttonStyle(.plain)
+                        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: on)
+                        .sensoryFeedback(.selection, trigger: on)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+        .onAppear {
+            if startInManual { mode = .manual }
+        }
+    }
+}
+
+// MARK: - WalkLogDetailView
+
+private struct WalkLogDetailView: View {
+    let log: WalkLog
+    let store: WalkLogStore
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var comfortColor: Color {
+        switch log.comfortLevel {
+        case .cold:        return .blue
+        case .comfortable: return .green
+        case .warm:        return .orange
+        case .sweating:    return .red
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                comfortHero
+                infoCard
+                if !log.outfitItemIDs.isEmpty { outfitCard }
+                deleteButton
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+        }
+        .skyKidBackground()
+        .navigationTitle("Прогулка")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: Sections
+
+    private var comfortHero: some View {
+        VStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(comfortColor.opacity(0.15))
+                    .frame(width: 72, height: 72)
+                Image(systemName: log.comfortLevel.icon)
+                    .font(.system(size: 32))
+                    .foregroundStyle(comfortColor)
+            }
+            Text(log.comfortLevel.label)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(comfortColor)
+            Text("Самочувствие малыша")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(20)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(comfortColor.opacity(0.3), lineWidth: 1))
+    }
+
+    private var infoCard: some View {
+        VStack(spacing: 0) {
+            infoRow(icon: "calendar",          label: "Дата",
+                    value: log.date.formatted(.dateTime.day().month(.wide).year()))
+            Divider().padding(.leading, 52)
+            infoRow(icon: "clock",             label: "Время",
+                    value: log.date.formatted(.dateTime.hour().minute()))
+            Divider().padding(.leading, 52)
+            infoRow(icon: "timer",             label: "Длительность", value: durationString)
+            Divider().padding(.leading, 52)
+            infoRow(icon: "thermometer.medium", label: "Температура",
+                    value: "\(Int(log.weatherTemperature.rounded()))°C")
+        }
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
+    }
+
+    private func infoRow(icon: String, label: String, value: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+                .frame(width: 20)
+                .padding(.leading, 16)
+            Text(label)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+                .font(.subheadline.weight(.medium))
+                .padding(.trailing, 16)
+        }
+        .padding(.vertical, 13)
+    }
+
+    private var outfitCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Одежда", systemImage: "hanger")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            let items = log.outfitItemIDs.compactMap { GarmentCatalog.byID[$0] }
+            FlowLayout(spacing: 8) {
+                ForEach(items) { item in
+                    Text(item.name)
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.10), in: Capsule())
+                        .overlay(Capsule().strokeBorder(Color.blue.opacity(0.25), lineWidth: 1))
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
+    }
+
+    private var deleteButton: some View {
+        Button(role: .destructive) {
+            if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
+                store.delete(at: IndexSet(integer: idx))
+            }
+            dismiss()
+        } label: {
+            Label("Удалить прогулку", systemImage: "trash")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.red.opacity(0.2), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var durationString: String {
+        let d = log.durationMinutes
+        if d >= 60 { return d % 60 == 0 ? "\(d / 60) ч" : "\(d / 60) ч \(d % 60) мин" }
+        return "\(d) мин"
+    }
+}
+
+// MARK: - Previews
+
+#if DEBUG
+#Preview("История") {
+    NavigationStack {
+        WalkHistoryView(weather: .mock, profile: .mock)
+    }
+}
+#endif

@@ -58,6 +58,8 @@ struct SafetyWarning: Sendable {
         case wardrobeGap
         case overheatPriority
         case feverShortWalk
+        case wetClothingTOGLoss      // мокрая одежда теряет TOG
+        case longWalkBorderlineTemp  // длинная прогулка + граничная температура
     }
 
     let code: Code

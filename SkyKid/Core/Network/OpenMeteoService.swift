@@ -18,7 +18,7 @@ struct OpenMeteoService: WeatherService {
                 "wind_gusts_10m", "uv_index", "cloud_cover"
             ].joined(separator: ",")),
             .init(name: "hourly",          value: [
-                "temperature_2m", "apparent_temperature", "precipitation_probability"
+                "temperature_2m", "apparent_temperature", "precipitation_probability", "weather_code"
             ].joined(separator: ",")),
             .init(name: "forecast_days",   value: "2"),
             // unixtime: hourly.time приходит числом UTC — не парсим локальный ISO
@@ -50,14 +50,15 @@ struct OpenMeteoService: WeatherService {
 
     private static func hourlyForecasts(from h: OMHourly?) -> [HourlyForecast] {
         guard let h else { return [] }
-        return h.time.indices.compactMap { i in
+        return h.time.indices.compactMap { (i: Int) -> HourlyForecast? in
             guard let t = h.temperature_2m[safe: i] ?? nil,
                   let at = h.apparent_temperature[safe: i] ?? nil else { return nil }
             return HourlyForecast(
                 time: Date(timeIntervalSince1970: TimeInterval(h.time[i])),
                 temperature: t,
                 apparentTemperature: at,
-                precipProbability: h.precipitation_probability?[safe: i].flatMap { $0 } ?? 0
+                precipProbability: h.precipitation_probability?[safe: i].flatMap { $0 } ?? 0,
+                weatherCode: h.weather_code?[safe: i].flatMap { $0 } ?? 0
             )
         }
     }
@@ -82,6 +83,7 @@ private struct OMHourly: Decodable {
     let temperature_2m: [Double?]
     let apparent_temperature: [Double?]
     let precipitation_probability: [Double?]?
+    let weather_code: [Int?]?
 }
 
 private struct OMCurrent: Decodable {

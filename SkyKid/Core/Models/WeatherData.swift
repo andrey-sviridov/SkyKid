@@ -30,6 +30,16 @@ struct HourlyForecast: Equatable, Sendable {
     let temperature: Double
     let apparentTemperature: Double
     let precipProbability: Double  // 0–100 %
+    let weatherCode: Int           // WMO code
+
+    init(time: Date, temperature: Double, apparentTemperature: Double,
+         precipProbability: Double, weatherCode: Int = 0) {
+        self.time = time
+        self.temperature = temperature
+        self.apparentTemperature = apparentTemperature
+        self.precipProbability = precipProbability
+        self.weatherCode = weatherCode
+    }
 }
 
 struct WeatherData: Equatable {
@@ -136,9 +146,3 @@ extension WeatherData {
 }
 #endif
 
-struct RadarFrame: Identifiable {
-    let id   = UUID()
-    let time: Date
-    let path: String
-    let host: String  // из API-ответа, не хардкодить
-}

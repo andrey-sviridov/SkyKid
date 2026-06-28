@@ -23,6 +23,7 @@ enum OutfitSolver {
         let accessories: [RecommendedLayer]
         let totalTOG: Double
         let wardrobeGap: String?      // nil = TOG achieved within tolerance
+        let overheatWarning: SafetyWarning?  // §5.6 двойное утепление верхним слоем
         let steps: [CalcStep]
     }
 
@@ -32,31 +33,125 @@ enum OutfitSolver {
         let accessories = resolveAccessories(input: input)
 
         if input.carrierUnderJacket {
-            // Torso is warm under parent's jacket — only accessories for head/feet
             steps.append(CalcStep(label: "Слинг под курткой (§5)",
                                    value: 0, unit: "TOG",
                                    note: "Утепление корпуса не требуется"))
             return Output(layers: [], accessories: accessories,
-                          totalTOG: 0, wardrobeGap: nil, steps: steps)
+                          totalTOG: 0, wardrobeGap: nil,
+                          overheatWarning: nil, steps: steps)
         }
 
-        let (layers, totalTOG, gap) = selectLayers(TOG_required: input.TOG_required,
-                                                     T_micro: input.T_micro,
-                                                     profile: input.profile,
-                                                     gearSetup: input.gearSetup,
-                                                     ownedIDs: input.ownedGarmentIDs)
+        // §5.0 Gear TOG: конверт + плед снижают потребность в одежде
+        // Работает только для коляски (не слинг, не автокресло).
+        let supportsGearLayers = input.gearSetup.transportMode == .pramBassinette
+                              || input.gearSetup.transportMode == .pushchairSeat
+        let gearTOG = supportsGearLayers
+            ? (input.gearSetup.strollerConvertTOG ?? 0) + (input.gearSetup.blanketTOG ?? 0)
+            : 0
 
-        steps.append(CalcStep(label: "Подбор слоёв (§5.2)",
-                               value: totalTOG, unit: "TOG",
-                               note: "цель: \(String(format:"%.1f", input.TOG_required)) TOG"))
-        if let gap {
+        if gearTOG > 0 {
+            steps.append(CalcStep(label: "Конверт / плед (§5.0)", value: gearTOG, unit: "TOG",
+                                   note: "Вычтено из потребности в одежде"))
+        }
+
+        let clothingTarget = max(OutfitConfig.TOG.minTOG, input.TOG_required - gearTOG)
+
+        // При мощном конверте снимаем защиту со слипа — ребёнок тёплый без доп. слоя
+        let protectionLevel: FootmuffProtection = gearTOG >= OutfitConfig.Solver.footmuffSlipProtectionThreshold
+            ? .diaperOnly
+            : .diaperAndSlip
+
+        let (rawLayers, _, clothingGap) = selectLayers(
+            TOG_required: clothingTarget,
+            T_micro: input.T_micro,
+            profile: input.profile,
+            gearSetup: input.gearSetup,
+            protection: protectionLevel,
+            ownedIDs: input.ownedGarmentIDs
+        )
+
+        // §5.6 Защита от двойного утепления: тяжёлый комбез + второй верхний
+        // слой/меховой конверт → снимаем лишнее и/или предупреждаем о перегреве.
+        let (layers, overheatWarning) = overheatGuard(
+            layers: rawLayers,
+            gearSetup: input.gearSetup,
+            supportsGearLayers: supportsGearLayers
+        )
+        let clothingTOG = layers.reduce(0) { $0 + $1.tog }
+
+        steps.append(CalcStep(label: "Подбор слоёв (§5.2)", value: clothingTOG, unit: "TOG",
+                               note: "цель одежда: \(String(format:"%.1f", clothingTarget)) TOG"))
+        if overheatWarning != nil {
+            steps.append(CalcStep(label: "Двойное утепление (§5.6)", value: clothingTOG + gearTOG, unit: "TOG",
+                                   note: "Перегрев: снят лишний верхний слой / нужно убрать конверт"))
+        }
+        if let g = clothingGap {
             steps.append(CalcStep(label: "Нехватка гардероба (§5.2)",
-                                   value: input.TOG_required - totalTOG, unit: "TOG",
-                                   note: gap))
+                                   value: clothingTarget - clothingTOG, unit: "TOG", note: g))
+        }
+
+        // §5.5 Мокрая одежда: осадки без дождевика → потеря ~35% TOG
+        let isWet = input.precipFlags.needsRainCover
+        let moistureFactor = isWet ? OutfitConfig.Solver.wetClothingRetentionFactor : 1.0
+        let dryTotalTOG   = clothingTOG + gearTOG
+        let effectiveTOG  = dryTotalTOG * moistureFactor
+
+        var gap = clothingGap
+        if isWet {
+            steps.append(CalcStep(label: "Мокрая одежда (§5.5)", value: effectiveTOG, unit: "TOG",
+                                   note: String(format: "×%.2g от осадков: %.1f → %.1f TOG",
+                                                moistureFactor, dryTotalTOG, effectiveTOG)))
+            if effectiveTOG < input.TOG_required - OutfitConfig.Solver.togAccuracyTolerance {
+                let lossMsg = "Мокрая одежда теряет ~35% тепла. Эффективный TOG: \(String(format:"%.1f", effectiveTOG)) из \(String(format:"%.1f", input.TOG_required)). Установите дождевик."
+                gap = gap.map { "\($0) \(lossMsg)" } ?? lossMsg
+            }
         }
 
         return Output(layers: layers, accessories: accessories,
-                      totalTOG: totalTOG, wardrobeGap: gap, steps: steps)
+                      totalTOG: dryTotalTOG, wardrobeGap: gap,
+                      overheatWarning: overheatWarning, steps: steps)
+    }
+
+    // MARK: - §5.6 Double-insulation guard
+
+    /// Не даём сложить два тяжёлых верхних слоя: зимний комбез (≥ heavyOuterTOGThreshold)
+    /// + ещё один слой верхней одежды или меховой конверт-гир = перегрев в коляске.
+    /// Если в одежде два слоя Outerwear — снимаем более лёгкий (оставляем тёплый).
+    /// Конверт-гир снять нельзя — только предупреждаем.
+    private static func overheatGuard(
+        layers: [RecommendedLayer],
+        gearSetup: GearSetup,
+        supportsGearLayers: Bool
+    ) -> (layers: [RecommendedLayer], warning: SafetyWarning?) {
+
+        let outerwear = layers.filter { GarmentCatalog.byID[$0.id]?.layer == .outerwear }
+        let hasHeavySuit = outerwear.contains { $0.tog >= OutfitConfig.Solver.heavyOuterTOGThreshold }
+        guard hasHeavySuit else { return (layers, nil) }
+
+        // Второй источник утепления: ещё один слой верхней одежды ИЛИ конверт-гир (§5.0)
+        let gearConvertTOG = supportsGearLayers ? (gearSetup.strollerConvertTOG ?? 0) : 0
+        let outerSources = outerwear.count + (gearConvertTOG > 0 ? 1 : 0)
+        guard outerSources >= 2 else { return (layers, nil) }
+
+        // Принудительное ограничение: снимаем самый лёгкий из слоёв верхней одежды
+        var capped = layers
+        if outerwear.count >= 2, let lightest = outerwear.min(by: { $0.tog < $1.tog }) {
+            capped.removeAll { $0.id == lightest.id }
+        }
+
+        let warning = SafetyWarning(
+            code: .overheatPriority,
+            severity: .danger,
+            message: "Перегрев: тёплый зимний комбез вместе с меховым конвертом или вторым верхним слоем — это двойное утепление. Оставьте что-то одно, иначе малыш вспотеет и переохладится на ветру.",
+            systemImage: "thermometer.sun.fill"
+        )
+        return (capped, warning)
+    }
+
+    // Уровень защиты минимальных слоёв (снижается при тёплом конверте)
+    private enum FootmuffProtection {
+        case diaperAndSlip  // стандарт: подгузник + слип защищены
+        case diaperOnly     // конверт заменяет слип → только подгузник
     }
 
     // MARK: - §5.2 Layer solver (skeleton-template approach)
@@ -66,21 +161,25 @@ enum OutfitSolver {
         T_micro: Double,
         profile: ChildProfile,
         gearSetup: GearSetup,
+        protection: FootmuffProtection = .diaperAndSlip,
         ownedIDs: Set<String>? = nil
     ) -> (layers: [RecommendedLayer], totalTOG: Double, gap: String?) {
 
         let isAtopic = profile.healthConditions.contains(.atopicDermatitis)
         let isCarSeat = gearSetup.transportMode == .carSeat
+        let isStroller = gearSetup.transportMode == .pramBassinette
+                      || gearSetup.transportMode == .pushchairSeat
         let target = TOG_required
 
-        // P1-1: подгузник есть всегда — не даём гардеробу сломать скелет
+        // P1-1: подгузник есть всегда — не даём гардеробу сломать скелет.
+        // Остальное: nil = весь каталог; не-nil = только переданный набор.
         let isOwned: (String) -> Bool = { id in
             id == "diaper" || ownedIDs?.contains(id) ?? true
         }
 
         // §5.2: Select skeleton template IDs based on TOG range
         // Then greedily adjust using remaining catalog items
-        let skeletonIDs = skeletonTemplate(for: target, isAtopic: isAtopic)
+        let skeletonIDs = skeletonTemplate(for: target, isStroller: isStroller)
         let missingSkeleton = skeletonIDs.filter { !isOwned($0) }
         let skeleton = skeletonIDs.filter(isOwned).compactMap { GarmentCatalog.byID[$0] }
 
@@ -88,9 +187,11 @@ enum OutfitSolver {
         var selected = skeleton
         var achieved = selected.reduce(0) { $0 + $1.tog }
 
-        // §6.2: round down when ambiguous — trim outermost excess first
-        // "diaper" and "slip" are minimum coverage — never remove them
-        let protectedIDs: Set<String> = ["diaper", "slip"]
+        // §6.2: round down when ambiguous — trim outermost excess first.
+        // При мощном конверте снимаем защиту слипа — он уже заменён конвертом.
+        let protectedIDs: Set<String> = protection == .diaperOnly
+            ? ["diaper"]
+            : ["diaper", "slip", "thermals"]
         while achieved > target + OutfitConfig.Solver.togAccuracyTolerance,
               let last = selected.last,
               !protectedIDs.contains(last.id) {
@@ -102,23 +203,27 @@ enum OutfitSolver {
             }
         }
 
-        // Try to add remaining non-skeleton items to fill any remaining gap
+        // Try to add remaining body items to fill any remaining gap.
+        // «Виртуальный манекен»: каждый слой занимает анатомические слоты;
+        // нельзя надеть два боди (baseTop) или слип + боди (baseFull vs baseTop).
+        // Аксессуары и одежда для сна (sleepwear) в подбор лука не входят.
         let used = Set(selected.map(\.id))
+        var occupiedSlots: Set<BodySlot> = Set(selected.flatMap { slots(of: $0) })
+        // Сортируем по TOG убыванию: жадный алгоритм заполняет бюджет тяжёлыми
+        // вещами первыми — лёгкое боди не блокирует слот нужного свитера/флиса.
         let extras = GarmentCatalog.all.filter {
-            $0.layer != .accessory && !used.contains($0.id) && isOwned($0.id)
-        }
+            $0.layer.occupiesBody && !used.contains($0.id) && isOwned($0.id)
+        }.sorted { $0.tog > $1.tog }
         for item in extras {
             guard selected.count < OutfitConfig.Solver.maxBodyLayers else { break }
             guard achieved < target - 0.1 else { break }
 
-            let hasHeavyOuter = selected.contains { $0.id == "demi" || $0.id == "winter" }
-            if (item.id == "demi" || item.id == "winter") && hasHeavyOuter { continue }
+            // Слот-конфликт: анатомический слот уже занят несовместимым слоем
+            let candidateSlots = slots(of: item)
+            if !candidateSlots.isDisjoint(with: occupiedSlots) { continue }
 
-            let hasSocks = selected.contains { $0.id == "thin_socks" || $0.id == "warm_socks" }
-            if (item.id == "thin_socks" || item.id == "warm_socks") && hasSocks { continue }
-
-            if isCarSeat && item.layer != .outer {
-                let underHarnessTOG = selected.filter { $0.layer != .outer }.reduce(0) { $0 + $1.tog }
+            if isCarSeat && item.layer != .outerwear {
+                let underHarnessTOG = selected.filter { $0.layer != .outerwear }.reduce(0) { $0 + $1.tog }
                 if underHarnessTOG + item.tog > OutfitConfig.Solver.carSeatMaxHarnessLayerTOG { continue }
             }
 
@@ -128,6 +233,7 @@ enum OutfitSolver {
             if newAchieved <= target + OutfitConfig.Solver.togAccuracyTolerance {
                 selected.append(item)
                 achieved = newAchieved
+                occupiedSlots.formUnion(candidateSlots)
             }
         }
 
@@ -157,39 +263,39 @@ enum OutfitSolver {
     }
 
     // MARK: - §5.1 Skeleton templates (ordered innermost → outermost)
+    // Каждый шаблон слот-валиден: один base-full, один mid-full, один outer.
+    // Одеяла/конверты — это гир (§5.0), а не слой одежды, поэтому в шаблонах нет.
 
-    private static func skeletonTemplate(for target: Double, isAtopic: Bool) -> [String] {
+    private static func skeletonTemplate(for target: Double, isStroller: Bool) -> [String] {
         switch target {
         case ..<0.8:
-            // <0.8 TOG (hot): diaper + thin bodysuit — minimum body coverage
             return ["diaper", "slip"]
 
         case 0.8..<1.8:
-            // 0.8–1.7: LS bodysuit + cotton onesie + leggings (spec §5.1)
-            // Pants prevent extras-loop from picking thermals at mild temps (e.g. +19°C)
-            return ["diaper", "slip", "pants"]
+            // 0.8–1.7: слип (baseFull); пешком/автокресло добавляем штаны (midBottom),
+            // в коляске тепло догоняет плед-гир (§5.0)
+            return isStroller
+                ? ["diaper", "slip"]
+                : ["diaper", "slip", "pants"]
 
         case 1.8..<3.1:
-            // 1.8–3.0: LS bodysuit + onesie + mid-season all-in-one
-            if isAtopic {
-                return ["diaper", "slip", "demi"]
-            }
+            // 1.8–3.0: слип (baseFull) + демисезонный комбез (outer)
             return ["diaper", "slip", "demi"]
 
         case 3.1..<5.1:
-            // 3.1–5.0: LS bodysuit + fleece onesie + winter all-in-one/footmuff
-            if isAtopic {
-                return ["diaper", "slip", "fleece", "winter"]
-            }
+            // 3.1–5.0: слип (baseFull) + флис (midFull) + зимний комбез (outer)
             return ["diaper", "slip", "fleece", "winter"]
 
         default:
-            // 5.1+: LS bodysuit + thermal + fleece onesie + winter all-in-one + blanket
-            if isAtopic {
-                return ["diaper", "slip", "thermals", "fleece", "winter", "warm_blanket"]
-            }
-            return ["diaper", "slip", "thermals", "fleece", "winter", "warm_blanket"]
+            // 5.1+: термобельё (baseFull) + флис (midFull) + зимний комбез (outer)
+            return ["diaper", "thermals", "fleece", "winter"]
         }
+    }
+
+    /// Слоты предмета. Подгузник — нательное бельё, не занимает слотов
+    /// (иначе нельзя было бы надеть боди/слип поверх).
+    private static func slots(of item: GarmentItem) -> Set<BodySlot> {
+        item.id == "diaper" ? [] : item.layer.bodySlots
     }
 
     // MARK: - §5.3 Accessories (rule-based, independent of TOG budget)
@@ -237,7 +343,7 @@ enum OutfitSolver {
     private static func layerReason(item: GarmentItem, T_micro: Double) -> String {
         switch item.id {
         case "diaper":       return "Базовый слой"
-        case "slip":         return "Первый слой утепления (1.0 TOG)"
+        case "slip":         return "Базовый слой (боди/слип)"
         case "thermals":     return T_micro < -5 ? "Термобельё — первый слой при морозе" : "Тёплое термобельё — базовый утепляющий слой"
         case "thin_socks":   return "Носочки"
         case "warm_socks":   return "Тёплые носочки"
@@ -259,8 +365,8 @@ enum OutfitSolver {
         switch gap {
         case 3.0...: return "зимний комбез (3.5 TOG)"
         case 2.0..<3.0: return "демисезонный комбез (2.25 TOG)"
-        case 1.5..<2.0: return "флисовый комбез (1.75 TOG)"
-        case 0.8..<1.5: return "хлопковый слип (1.0 TOG)"
+        case 1.5..<2.0: return "флисовый комбез (1.2 TOG)"
+        case 0.8..<1.5: return "хлопковый слип (0.6 TOG)"
         default: return "лёгкий свитер (0.8 TOG)"
         }
     }

@@ -42,22 +42,27 @@ private struct SkyKidBackgroundModifier: ViewModifier {
     }
 }
 
-// MARK: - Card modifier (матовое стекло)
+// MARK: - Card modifier (стеклянный эффект)
 
 private struct SkyKidCardModifier: ViewModifier {
     var cornerRadius: CGFloat
     var padding: CGFloat?
+    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
-        content
+        let shape = RoundedRectangle(cornerRadius: cornerRadius)
+        let tintOpacity: Double = colorScheme == .dark ? 0.05 : 0.42
+        let strokeOpacity: Double = colorScheme == .dark ? 0.14 : 0.65
+
+        return content
             .padding(padding ?? 18)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    // .primary адаптируется: в светлой теме — тёмная граница,
-                    // в тёмной — светлая. Обе читаемы на соответствующем фоне.
-                    .strokeBorder(.primary.opacity(0.12), lineWidth: 1)
+            .background(
+                ZStack {
+                    shape.fill(.ultraThinMaterial)
+                    shape.fill(Color.white.opacity(tintOpacity))
+                }
             )
+            .overlay(shape.strokeBorder(Color.white.opacity(strokeOpacity), lineWidth: 1))
     }
 }
 
