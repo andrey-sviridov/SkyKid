@@ -75,17 +75,18 @@ struct WardrobeItemRow: View {
     let isLast: Bool
     let action: () -> Void
 
+    @State private var isPreviewPresented = false
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(isOwned ? Color.green.opacity(0.13) : Color.primary.opacity(0.08))
-                        .frame(width: 34, height: 34)
-                    Image(systemName: item.symbol)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(isOwned ? .green : .secondary)
-                }
+                GarmentIconView(
+                    item: item,
+                    isSelected: isOwned,
+                    accentColor: .green,
+                    size: 34,
+                    shape: .roundedRectangle(8)
+                )
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .font(.subheadline.weight(isOwned ? .regular : .light))
@@ -102,6 +103,12 @@ struct WardrobeItemRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
+            isPreviewPresented = true
+        })
+        .sheet(isPresented: $isPreviewPresented) {
+            GarmentIconPreviewSheet(item: item)
+        }
 
         if !isLast {
             Divider().padding(.leading, 46)

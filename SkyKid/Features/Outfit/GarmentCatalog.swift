@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - GarmentLayer (анатомическая топология слоёв)
 
@@ -167,8 +170,103 @@ struct GarmentItem: Identifiable, Hashable {
     var catalogAgeGroup: CatalogAgeGroup? = nil   // nil = legacy OutfitSolver item
     var features: [String] = []
 
+    var imageAssetName: String { "garment_\(id)" }
+
     static func == (l: Self, r: Self) -> Bool { l.id == r.id }
     func hash(into h: inout Hasher) { h.combine(id) }
+}
+
+// MARK: - GarmentIconView
+
+struct GarmentIconView: View {
+    enum ContainerShape {
+        case circle
+        case roundedRectangle(CGFloat)
+    }
+
+    let item: GarmentItem
+    var isSelected: Bool = false
+    var accentColor: Color = .blue
+    var size: CGFloat = 40
+    var shape: ContainerShape = .circle
+
+    var body: some View {
+        ZStack {
+            background
+            icon
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel(item.name)
+    }
+
+    @ViewBuilder
+    private var background: some View {
+        let fillColor = isSelected ? accentColor.opacity(0.13) : Color.primary.opacity(0.07)
+        switch shape {
+        case .circle:
+            Circle().fill(fillColor)
+        case .roundedRectangle(let radius):
+            RoundedRectangle(cornerRadius: radius).fill(fillColor)
+        }
+    }
+
+    @ViewBuilder
+    private var icon: some View {
+        #if canImport(UIKit)
+        if let image = UIImage(named: item.imageAssetName) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .padding(size * 0.14)
+        } else {
+            symbolIcon
+        }
+        #else
+        symbolIcon
+        #endif
+    }
+
+    private var symbolIcon: some View {
+        Image(systemName: item.symbol)
+            .font(.system(size: max(12, size * 0.42), weight: .medium))
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(isSelected ? accentColor : .secondary)
+    }
+}
+
+struct GarmentIconPreviewSheet: View {
+    let item: GarmentItem
+
+    var body: some View {
+        VStack(spacing: 18) {
+            GarmentIconView(item: item, isSelected: true, accentColor: .blue, size: 150)
+                .padding(.top, 18)
+
+            VStack(spacing: 6) {
+                Text(item.name)
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                Text(String(format: "%.2g TOG", item.tog))
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            if !item.features.isEmpty {
+                FlowLayout(spacing: 8) {
+                    ForEach(item.features, id: \.self) { feature in
+                        Text(feature)
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.blue.opacity(0.10), in: Capsule())
+                    }
+                }
+            }
+        }
+        .padding(24)
+        .presentationDetents([.height(360), .medium])
+    }
 }
 
 // MARK: - GarmentCatalog

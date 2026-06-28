@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "garment_noski_thin.png",
+      "idiom": "universal",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

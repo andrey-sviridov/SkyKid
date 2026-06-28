@@ -458,14 +458,24 @@ struct OutfitView: View {
         let radius: (CGFloat, CGFloat) = (isFirst ? 18 : 6, isLast ? 18 : 6)
 
         return HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 11)
-                    .fill(rowAccent(index).opacity(0.22))
-                    .frame(width: 44, height: 44)
-                Image(systemName: layer.systemImage)
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(rowAccent(index))
-                    .symbolRenderingMode(.hierarchical)
+            if let item = GarmentCatalog.byID[layer.id] {
+                GarmentIconView(
+                    item: item,
+                    isSelected: true,
+                    accentColor: rowAccent(index),
+                    size: 44,
+                    shape: .roundedRectangle(11)
+                )
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 11)
+                        .fill(rowAccent(index).opacity(0.22))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: layer.systemImage)
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(rowAccent(index))
+                        .symbolRenderingMode(.hierarchical)
+                }
             }
 
             VStack(alignment: .leading, spacing: 2) {

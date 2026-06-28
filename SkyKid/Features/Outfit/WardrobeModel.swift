@@ -315,7 +315,41 @@ enum WardrobeAutoSelector {
         if temperature <= -10, let blanket = GarmentCatalog.byID["warm_blanket"] {
             bestSelection.insert(blanket)
         }
-        return bestSelection
+        return applyingMinimumOutdoorCoverage(
+            to: bestSelection,
+            temperature: temperature,
+            ageGroup: ageGroup
+        )
+    }
+
+    private static func applyingMinimumOutdoorCoverage(
+        to items: Set<GarmentItem>,
+        temperature: Double,
+        ageGroup: WardrobeAgeGroup
+    ) -> Set<GarmentItem> {
+        guard (24..<30).contains(temperature) else { return items }
+        guard !items.contains(where: hasOutdoorBodyCoverage) else { return items }
+
+        var coveredItems = items
+        for id in minimumOutdoorCoverageIDs(for: ageGroup) {
+            guard let item = GarmentCatalog.byID[id] else { continue }
+            guard canAdd(item, to: coveredItems) else { continue }
+            coveredItems.insert(item)
+            break
+        }
+        return coveredItems
+    }
+
+    private static func hasOutdoorBodyCoverage(_ item: GarmentItem) -> Bool {
+        item.id != "diaper" && item.layer.occupiesBody
+    }
+
+    private static func minimumOutdoorCoverageIDs(for ageGroup: WardrobeAgeGroup) -> [String] {
+        switch ageGroup {
+        case .earlyInfant: return ["bodi_km_kr", "slip_thin"]
+        case .infant: return ["bodi_short", "pesochnik"]
+        case .active: return ["t_shirt", "bodi_short"]
+        }
     }
 
     private static func candidateIDs(for temperature: Double, ageGroup: WardrobeAgeGroup) -> [String] {

@@ -430,6 +430,30 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertTrue(selectedIDs.contains("bodi_short") || selectedIDs.contains("bodi_long"))
     }
 
+    func test_autoSelector_hotOutdoorInfant_keepsLightBodyCoverage() {
+        let selected = WardrobeAutoSelector.selectItems(temperature: 27, ageGroup: .infant)
+        let selectedIDs = Set(selected.map(\.id))
+
+        XCTAssertTrue(selectedIDs.contains("diaper"), "Diaper remains the pinned baseline")
+        XCTAssertTrue(selectedIDs.contains("bodi_short") || selectedIDs.contains("pesochnik"),
+                      "Outdoor hot-weather recommendation should not leave the infant in diaper only")
+        XCTAssertFalse(selectedIDs.contains("fleece_overall"))
+        XCTAssertFalse(selectedIDs.contains("demi_overall"))
+    }
+
+    func test_displayOutfit_hotOutdoorInfant_hasBodyLayer() {
+        let weather = makeWeather(T: 27)
+        let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
+        let rec = OutfitRecommendationService.shared.recommend(
+            weather: weather,
+            profile: profile,
+            gearSetup: makeGear(transport: .pramBassinette, hood: true)
+        )
+
+        XCTAssertFalse(rec.layers.isEmpty, "Outfit tab should show a practical light body layer at +27°C")
+        XCTAssertTrue(rec.layers.contains { $0.id == "bodi_short" || $0.id == "pesochnik" })
+    }
+
     // MARK: Hot-weather (regression)
 
     // HW-1: при +33°C solver ВСЕГДА даёт полный каталог (ownedIDs = nil).

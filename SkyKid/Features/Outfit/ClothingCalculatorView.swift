@@ -659,70 +659,87 @@ struct GarmentListRow: View {
     let isLast: Bool
     let onTap: () -> Void
 
+    @State private var isPreviewPresented = false
+
     private var effectiveColor: Color { isPinned ? .purple : .blue }
 
     var body: some View {
         VStack(spacing: 0) {
-            Button(action: { if !isPinned { onTap() } }) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(isSelected
-                                  ? effectiveColor.opacity(0.13)
-                                  : Color.primary.opacity(0.07))
-                        Image(systemName: item.symbol)
-                            .font(.system(size: 17))
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundStyle(isSelected ? effectiveColor : .secondary)
-                    }
-                    .frame(width: 40, height: 40)
+            HStack(spacing: 12) {
+                GarmentIconView(
+                    item: item,
+                    isSelected: isSelected,
+                    accentColor: effectiveColor,
+                    size: 40
+                )
+                .onLongPressGesture(minimumDuration: 0.45) {
+                    isPreviewPresented = true
+                }
 
+                Button {
+                    isPreviewPresented = true
+                } label: {
                     Text(item.name)
                         .font(.subheadline)
                         .fontWeight(isSelected ? .semibold : .regular)
                         .foregroundStyle(isSelected ? effectiveColor : .primary)
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
-
-                    VStack(alignment: .center, spacing: 3) {
-                        if isPinned {
-                            Image(systemName: "pin.fill")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundStyle(.purple)
-                                .transition(.scale(scale: 0.4).combined(with: .opacity))
-                        } else if isSelected {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(.blue)
-                                .transition(.scale(scale: 0.4).combined(with: .opacity))
-                        } else {
-                            Circle()
-                                .strokeBorder(Color.secondary.opacity(0.4), lineWidth: 1.5)
-                                .frame(width: 20, height: 20)
-                        }
-                        Text(String(format: "%.2g", item.tog))
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .monospacedDigit()
-                    }
-                    .frame(width: 48)
+                        .contentShape(Rectangle())
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 11)
-                .frame(maxWidth: .infinity)
-                .background(
-                    isSelected
-                        ? effectiveColor.opacity(0.04)
-                        : Color.clear
-                )
+                .buttonStyle(.plain)
+
+                VStack(alignment: .center, spacing: 3) {
+                    Button {
+                        if !isPinned { onTap() }
+                    } label: {
+                        statusIcon
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isPinned)
+
+                    Text(String(format: "%.2g", item.tog))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .monospacedDigit()
+                }
+                .frame(width: 48)
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 11)
+            .frame(maxWidth: .infinity)
+            .background(isSelected ? effectiveColor.opacity(0.04) : Color.clear)
+            .sheet(isPresented: $isPreviewPresented) {
+                GarmentIconPreviewSheet(item: item)
+            }
             .animation(.spring(response: 0.22, dampingFraction: 0.68), value: isSelected)
             .animation(.spring(response: 0.22, dampingFraction: 0.68), value: isPinned)
 
             if !isLast {
                 Divider().padding(.leading, 66)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var statusIcon: some View {
+        if isPinned {
+            Image(systemName: "pin.fill")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(.purple)
+                .frame(width: 28, height: 28)
+                .transition(.scale(scale: 0.4).combined(with: .opacity))
+        } else if isSelected {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(.blue)
+                .frame(width: 28, height: 28)
+                .transition(.scale(scale: 0.4).combined(with: .opacity))
+        } else {
+            Circle()
+                .strokeBorder(Color.secondary.opacity(0.4), lineWidth: 1.5)
+                .frame(width: 20, height: 20)
+                .frame(width: 28, height: 28)
         }
     }
 }

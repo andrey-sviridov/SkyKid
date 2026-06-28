@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "garment_kofta_cardigan.png",
+      "idiom": "universal",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "images": [
+    {
+      "filename": "garment_t_shirt.png",
+      "idiom": "universal",
+      "scale": "1x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}
