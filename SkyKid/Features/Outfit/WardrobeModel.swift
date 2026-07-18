@@ -227,6 +227,18 @@ final class WardrobeModel {
         }
     }
 
+    func resetTemperatureAndAutoSelect() {
+        let result = WardrobeAutoSelector.selectItems(
+            temperature: weatherTemperature,
+            ageGroup: ageGroup,
+            pinnedItemIDs: pinnedItemIDs
+        )
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.75)) {
+            temperature = weatherTemperature
+            selectedItems = result
+        }
+    }
+
     // ── Автоподбор: жадный поиск к «Идеально» ─────────────────────────────
     func autoSelect() {
         let result = WardrobeAutoSelector.selectItems(

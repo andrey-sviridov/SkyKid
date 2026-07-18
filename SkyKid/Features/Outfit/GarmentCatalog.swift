@@ -3,6 +3,15 @@ import SwiftUI
 import UIKit
 #endif
 
+enum GarmentHaptics {
+    @MainActor
+    static func previewTriggered() {
+        #if canImport(UIKit)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        #endif
+    }
+}
+
 // MARK: - GarmentLayer (анатомическая топология слоёв)
 
 enum GarmentLayer: String, CaseIterable, Identifiable {
@@ -269,15 +278,51 @@ struct GarmentIconPreviewSheet: View {
     }
 }
 
+struct GarmentPhotoPreviewSheet: View {
+    let item: GarmentItem
+
+    var body: some View {
+        photo
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 36)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.clear)
+    }
+
+    @ViewBuilder
+    private var photo: some View {
+        #if canImport(UIKit)
+        if let image = UIImage(named: item.imageAssetName) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+        } else {
+            fallbackSymbol
+        }
+        #else
+        fallbackSymbol
+        #endif
+    }
+
+    private var fallbackSymbol: some View {
+        Image(systemName: item.symbol)
+            .font(.system(size: 140, weight: .regular))
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(.white.opacity(0.92))
+    }
+}
+
 // MARK: - GarmentCatalog
 
 enum GarmentCatalog {
 
-    static let all: [GarmentItem] = legacyItems + catalogItems
+    static let all: [GarmentItem] = solverItems + catalogItems
 
-    // ── Старые предметы (используются OutfitSolver §5.1) ─────────────────────
+    // ── Внутренние предметы для алгоритма подбора ─────────────────────────────
     // catalogAgeGroup == nil → не отображаются в пользовательском каталоге
-    static let legacyItems: [GarmentItem] = [
+    static let solverItems: [GarmentItem] = [
         .init(id: "diaper",      name: "Подгузник",             heatValue: 0.2,  tog: 0.10, layer: .baseFull,  symbol: "figure.child"),
         .init(id: "slip",        name: "Хлопковый слип / боди", heatValue: 1.5,  tog: 0.60, layer: .baseFull,  symbol: "tshirt.fill"),
         .init(id: "thermals",    name: "Термобельё",            heatValue: 2.0,  tog: 0.80, layer: .baseFull,  symbol: "thermometer.medium"),

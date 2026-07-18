@@ -3,6 +3,8 @@ import UIKit
 import CoreLocation
 
 struct ContentView: View {
+    let onStartupReady: @MainActor () -> Void
+
     @State private var locationManager = LocationManager()
     @State private var weatherVM = WeatherViewModel(service: WeatherProvider.activeService)
     @State private var selectedTab = 0
@@ -13,6 +15,7 @@ struct ContentView: View {
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
     @Environment(\.scenePhase) private var scenePhase
     @State private var lastForegroundReload: Date = .distantPast
+    @State private var didSignalStartupReady = false
 
     private var preferredScheme: ColorScheme? {
         switch colorSchemeRaw {
@@ -38,6 +41,26 @@ struct ContentView: View {
                 }
             }
         }
+        .task {
+            await loadInitialWeatherIfNeeded()
+            notifyStartupReadyIfNeeded()
+        }
+        .onChange(of: childProfile) { _, _ in
+            notifyStartupReadyIfNeeded()
+        }
+        .onChange(of: locationManager.authorizationStatus) { _, _ in
+            Task { await loadInitialWeatherIfNeeded() }
+            notifyStartupReadyIfNeeded()
+        }
+        .onChange(of: weatherVM.weather != nil) { _, _ in
+            notifyStartupReadyIfNeeded()
+        }
+        .onChange(of: weatherVM.isLoading) { _, _ in
+            notifyStartupReadyIfNeeded()
+        }
+        .onChange(of: weatherVM.error) { _, _ in
+            notifyStartupReadyIfNeeded()
+        }
         .onChange(of: locationManager.location) { old, new in
             guard let new else { return }
             // Не перегружаем погоду, если позиция почти не изменилась (< 5 км).
@@ -56,6 +79,33 @@ struct ContentView: View {
             ChildProfileSetupView(profile: $childProfile)
         }
         .preferredColorScheme(preferredScheme)
+    }
+
+    private var isStartupContentReady: Bool {
+        guard childProfile != nil else { return true }
+
+        switch locationManager.authorizationStatus {
+        case .notDetermined, .denied, .restricted:
+            return true
+        default:
+            return weatherVM.weather != nil || (!weatherVM.isLoading && weatherVM.error != nil)
+        }
+    }
+
+    @MainActor
+    private func notifyStartupReadyIfNeeded() {
+        guard !didSignalStartupReady, isStartupContentReady else { return }
+        didSignalStartupReady = true
+        onStartupReady()
+    }
+
+    private func loadInitialWeatherIfNeeded() async {
+        guard childProfile != nil else { return }
+        guard weatherVM.weather == nil, !weatherVM.isLoading else { return }
+        guard locationManager.authorizationStatus == .authorizedWhenInUse
+            || locationManager.authorizationStatus == .authorizedAlways else { return }
+        guard let location = locationManager.location else { return }
+        await weatherVM.load(coordinate: location.coordinate)
     }
 
     @ViewBuilder

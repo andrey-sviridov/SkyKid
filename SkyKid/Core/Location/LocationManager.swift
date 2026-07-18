@@ -13,6 +13,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         manager.delegate = self
         // Километровая точность достаточна для погоды и даёт фикс быстрее
         manager.desiredAccuracy = kCLLocationAccuracyKilometer
+        authorizationStatus = manager.authorizationStatus
+        hydrateCachedLocationIfAvailable()
     }
 
     func requestWhenInUse() {
@@ -40,14 +42,17 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         guard authorizationStatus == .authorizedWhenInUse
            || authorizationStatus == .authorizedAlways else { return }
 
-        // Кешированная позиция iOS — мгновенно, без ожидания GPS.
-        if let cached = manager.location {
-            location = cached
-            // Если кеш свежее 5 минут — не запускаем железо заново.
-            if cached.timestamp.timeIntervalSinceNow > -300 { return }
-        }
+        if hydrateCachedLocationIfAvailable(maxAge: 300) { return }
 
         // Запрашиваем свежий фикс только если кеш устарел или отсутствует.
         requestOnce()
+    }
+
+    @discardableResult
+    private func hydrateCachedLocationIfAvailable(maxAge: TimeInterval? = nil) -> Bool {
+        guard let cached = manager.location else { return false }
+        location = cached
+        guard let maxAge else { return true }
+        return cached.timestamp.timeIntervalSinceNow > -maxAge
     }
 }

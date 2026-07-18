@@ -105,7 +105,7 @@ struct ClothingCalculatorView: View {
                 let canReset = !(model.selectedItems.isEmpty &&
                                  model.temperature == model.weatherTemperature)
                 Button {
-                    withAnimation(.spring(response: 0.3)) { model.resetAll() }
+                    model.resetTemperatureAndAutoSelect()
                 } label: {
                     Image(systemName: "arrow.counterclockwise")
                         .font(.system(size: 15, weight: .semibold))
@@ -563,9 +563,12 @@ struct ClothingConstructorSection: View {
     var pinnedIDs: Set<String> = []
     let onToggle: (GarmentItem) -> Void
 
+    @State private var displayedSelectedItems: Set<GarmentItem> = []
+    @State private var displayedItemsUpdateTask: Task<Void, Never>?
+
     var body: some View {
         let itemsByLayer = GarmentCatalog.displayItems(for: ageGroup)
-        let allSelected = selectedItems.sorted { $0.name < $1.name }
+        let allSelected = displayedSelectedItems.sorted { $0.name < $1.name }
 
         VStack(spacing: 12) {
             if !allSelected.isEmpty {
@@ -580,6 +583,35 @@ struct ClothingConstructorSection: View {
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: allSelected.map(\.id))
+        .onAppear {
+            displayedSelectedItems = selectedItems
+        }
+        .onChange(of: selectedItems) { _, newItems in
+            updateDisplayedSelectedItems(newItems)
+        }
+        .onDisappear {
+            displayedItemsUpdateTask?.cancel()
+        }
+    }
+
+    private func updateDisplayedSelectedItems(_ newItems: Set<GarmentItem>) {
+        displayedItemsUpdateTask?.cancel()
+
+        let hasNewItemsForSummary = !newItems.isSubset(of: displayedSelectedItems)
+        guard hasNewItemsForSummary else {
+            withAnimation(.spring(response: 0.24, dampingFraction: 0.85)) {
+                displayedSelectedItems = newItems
+            }
+            return
+        }
+
+        displayedItemsUpdateTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                displayedSelectedItems = newItems
+            }
+        }
     }
 
     private func autoSelectedSection(items: [GarmentItem]) -> some View {
@@ -659,7 +691,8 @@ struct GarmentListRow: View {
     let isLast: Bool
     let onTap: () -> Void
 
-    @State private var isPreviewPresented = false
+    @State private var isInfoPresented = false
+    @State private var isPhotoPresented = false
 
     private var effectiveColor: Color { isPinned ? .purple : .blue }
 
@@ -672,16 +705,22 @@ struct GarmentListRow: View {
                     accentColor: effectiveColor,
                     size: 40
                 )
-                .onLongPressGesture(minimumDuration: 0.45) {
-                    isPreviewPresented = true
+                .highPriorityGesture(
+                    LongPressGesture(minimumDuration: 0.30)
+                        .onEnded { _ in
+                            GarmentHaptics.previewTriggered()
+                            isPhotoPresented = true
+                        }
+                )
+                .onTapGesture {
+                    isInfoPresented = true
                 }
 
                 Button {
-                    isPreviewPresented = true
+                    isInfoPresented = true
                 } label: {
                     Text(item.name)
                         .font(.subheadline)
-                        .fontWeight(isSelected ? .semibold : .regular)
                         .foregroundStyle(isSelected ? effectiveColor : .primary)
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -706,14 +745,15 @@ struct GarmentListRow: View {
                 .frame(width: 48)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 11)
             .frame(maxWidth: .infinity)
+            .frame(height: 62)
             .background(isSelected ? effectiveColor.opacity(0.04) : Color.clear)
-            .sheet(isPresented: $isPreviewPresented) {
+            .sheet(isPresented: $isInfoPresented) {
                 GarmentIconPreviewSheet(item: item)
             }
-            .animation(.spring(response: 0.22, dampingFraction: 0.68), value: isSelected)
-            .animation(.spring(response: 0.22, dampingFraction: 0.68), value: isPinned)
+            .sheet(isPresented: $isPhotoPresented) {
+                GarmentPhotoPreviewSheet(item: item)
+            }
 
             if !isLast {
                 Divider().padding(.leading, 66)
@@ -728,13 +768,11 @@ struct GarmentListRow: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.purple)
                 .frame(width: 28, height: 28)
-                .transition(.scale(scale: 0.4).combined(with: .opacity))
         } else if isSelected {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(.blue)
                 .frame(width: 28, height: 28)
-                .transition(.scale(scale: 0.4).combined(with: .opacity))
         } else {
             Circle()
                 .strokeBorder(Color.secondary.opacity(0.4), lineWidth: 1.5)

@@ -75,39 +75,59 @@ struct WardrobeItemRow: View {
     let isLast: Bool
     let action: () -> Void
 
-    @State private var isPreviewPresented = false
+    @State private var isInfoPresented = false
+    @State private var isPhotoPresented = false
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                GarmentIconView(
-                    item: item,
-                    isSelected: isOwned,
-                    accentColor: .green,
-                    size: 34,
-                    shape: .roundedRectangle(8)
-                )
+        HStack(spacing: 12) {
+            GarmentIconView(
+                item: item,
+                isSelected: isOwned,
+                accentColor: .green,
+                size: 34,
+                shape: .roundedRectangle(8)
+            )
+            .highPriorityGesture(
+                LongPressGesture(minimumDuration: 0.30)
+                    .onEnded { _ in
+                        GarmentHaptics.previewTriggered()
+                        isPhotoPresented = true
+                    }
+            )
+            .onTapGesture {
+                isInfoPresented = true
+            }
+
+            Button {
+                isInfoPresented = true
+            } label: {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
-                        .font(.subheadline.weight(isOwned ? .regular : .light))
+                        .font(.subheadline)
                         .foregroundStyle(isOwned ? .primary : .secondary)
                     Text(String(format: "%.2g TOG", item.tog))
-                        .font(.caption2).foregroundStyle(.secondary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Button(action: action) {
                 Image(systemName: isOwned ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
                     .foregroundStyle(isOwned ? .green : Color.secondary)
+                    .frame(width: 36, height: 36)
             }
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
-            isPreviewPresented = true
-        })
-        .sheet(isPresented: $isPreviewPresented) {
+        .frame(height: 54)
+        .sheet(isPresented: $isInfoPresented) {
             GarmentIconPreviewSheet(item: item)
+        }
+        .sheet(isPresented: $isPhotoPresented) {
+            GarmentPhotoPreviewSheet(item: item)
         }
 
         if !isLast {
