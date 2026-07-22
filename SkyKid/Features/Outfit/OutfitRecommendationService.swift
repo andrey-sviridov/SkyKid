@@ -11,40 +11,44 @@ final class OutfitRecommendationService {
     private init() {}
 
     func recommend(
-        weather: WeatherData,
-        profile: ChildProfile,
-        gearSetup: GearSetup
+        weather: NormalizedWeather,
+        profile: ChildThermalProfile,
+        walkContext: WalkContext
     ) -> OutfitRecommendation {
+        let gearSetup = walkContext.gearSetup
 
         // §2 Effective Temperature
         let effOutput = EffectiveTemperatureCalculator.calculate(
-            .init(weather: weather, gearSetup: gearSetup)
+            .init(weather: weather)
         )
 
         // §3 Microclimate
         let microOutput = MicroclimateCalculator.calculate(.init(
-            T: weather.temperature,
-            T_eff: effOutput.T_eff,
-            V_calc: effOutput.V_calc,
+            environment: effOutput,
             gearSetup: gearSetup
         ))
 
         // §8 Personal TOG offset
         let personalOffset = PersonalOffsetStore.shared.currentOffset(
-            for: profile, tMicro: microOutput.T_micro
+            for: profile,
+            tMicro: microOutput.T_micro,
+            walkContext: walkContext
         )
 
         // §4 TOG Required
         let togOutput = TOGCalculator.calculate(.init(
             T_micro: microOutput.T_micro,
             profile: profile,
+            walkContext: walkContext,
             personalOffset: personalOffset
         ))
 
-        // §5 Outfit Solver — всегда полный каталог; wardrobe check после.
+        // §5 Outfit Solver — выбирает только из реального гардероба и отдельно
+        // возвращает безопасный идеальный вариант, если вещей не хватает.
         let solverOutput = OutfitSolver.solve(.init(
             TOG_required: togOutput.TOG_required,
             T_micro: microOutput.T_micro,
+            accessoryTemperature: microOutput.accessoryTemperature,
             T_hi: effOutput.T_hi,
             uvIndex: weather.uvIndex,
             carrierUnderJacket: microOutput.carrierUnderJacket,
@@ -52,22 +56,19 @@ final class OutfitRecommendationService {
             gearSetup: gearSetup,
             weather: weather,
             precipFlags: effOutput.precipFlags,
-            ownedGarmentIDs: nil
+            ownedGarmentIDs: walkContext.availableGarmentIDs
         ))
 
         // §6 Safety Rules
-        let safetyOutput = SafetyRulesEngine.evaluate(.init(
-            T_eff: effOutput.T_eff,
-            T_hi: effOutput.T_hi,
-            T_micro: microOutput.T_micro,
-            V_calc: effOutput.V_calc,
-            TOG_required: togOutput.TOG_required,
-            TOG_base: togOutput.TOG_base,
-            strollerAdvice: microOutput.strollerAdvice,
-            precipFlags: effOutput.precipFlags,
+        let safetyOutput = SafetyRulesEngine.evaluate(SafetyAssessmentContext(
+            effectiveTemperature: effOutput.T_eff,
+            heatIndexTemperature: effOutput.T_hi,
+            microclimateTemperature: microOutput.T_micro,
+            calculatedWindKmh: effOutput.V_calc,
+            precipitation: effOutput.precipFlags,
             weather: weather,
             profile: profile,
-            gearSetup: gearSetup
+            walkContext: walkContext
         ))
 
         var allWarnings = safetyOutput.warnings
@@ -75,119 +76,84 @@ final class OutfitRecommendationService {
         if let overheat = solverOutput.overheatWarning {
             allWarnings.insert(overheat, at: 0)
         }
+        if let qualityWarning = weatherQualityWarning(for: weather) {
+            allWarnings.append(qualityWarning)
+        }
 
-        let displayOutfit = displayOutfit(
-            weather: weather,
-            profile: profile,
-            solverOutput: solverOutput,
-            carrierUnderJacket: microOutput.carrierUnderJacket
-        )
-        let displayLayers = displayOutfit.layers
-        let displayAccessories = displayOutfit.accessories
-
-        // Wardrobe check: какие вещи из рекомендации не куплены.
-        // Не блокирует рекомендацию — всегда показывается полный оптимальный лук.
-        let ownedIDs = UserWardrobeStore.shared.ownedIDs
-        let missingNames = (displayLayers + displayAccessories)
-            .filter { $0.id != "diaper" && !ownedIDs.contains($0.id) }
-            .compactMap { GarmentCatalog.byID[$0.id]?.name }
-        if !missingNames.isEmpty {
+        if let wardrobeGap = solverOutput.wardrobeGap {
+            let isColdDeficit = (solverOutput.fit?.deltaTOG ?? 0) < -OutfitConfig.Solver.togAccuracyTolerance
+            let hasMissingGarments = !solverOutput.missingGarments.isEmpty
             allWarnings.append(SafetyWarning(
-                code: .wardrobeGap,
-                severity: .info,
-                message: "Нет в гардеробе: \(missingNames.map { $0.lowercased() }.joined(separator: ", ")). Добавьте в «Мой гардероб».",
-                systemImage: "bag.badge.questionmark"
+                code: hasMissingGarments ? .wardrobeGap : .outfitFitUncertain,
+                severity: isColdDeficit ? .danger : .caution,
+                message: wardrobeGap,
+                systemImage: hasMissingGarments
+                    ? "bag.badge.questionmark"
+                    : "scope"
             ))
         }
 
-        let allSteps = effOutput.steps + microOutput.steps + togOutput.steps + solverOutput.steps + displayOutfit.steps
-        let displayTOG = microOutput.carrierUnderJacket
-            ? solverOutput.totalTOG
-            : (displayLayers + displayAccessories).reduce(0) { $0 + $1.tog }
+        let allSteps = effOutput.steps + microOutput.steps + togOutput.steps + solverOutput.steps
 
         return OutfitRecommendation(
-            layers: displayLayers,
-            accessories: displayAccessories,
+            temperatures: OutfitTemperatures(
+                outside: weather.temperature,
+                apparent: weather.apparentTemperature,
+                effective: effOutput.T_eff,
+                microclimate: microOutput.T_micro
+            ),
+            layers: solverOutput.layers,
+            accessories: solverOutput.accessories,
             strollerSetup: microOutput.strollerAdvice ?? StrollerAdvice(
                 recommendation: "Поднимите капюшон при ветре или осадках",
                 isSafetyWarning: false
             ),
-            totalTOG: displayTOG,
+            totalTOG: solverOutput.totalTOG,
             targetTOG: togOutput.TOG_required,
-            warnings: allWarnings,
+            fit: solverOutput.fit,
+            missingGarments: solverOutput.missingGarments,
+            warnings: SafetyWarning.orderedForPresentation(allWarnings),
             checkHint: safetyOutput.checkHint,
             walkWindow: safetyOutput.walkWindow,
             explanation: allSteps
         )
     }
 
-    private func displayOutfit(
-        weather: WeatherData,
-        profile: ChildProfile,
-        solverOutput: OutfitSolver.Output,
-        carrierUnderJacket: Bool
-    ) -> (layers: [RecommendedLayer], accessories: [RecommendedLayer], steps: [CalcStep]) {
-        if carrierUnderJacket {
-            return (solverOutput.layers, solverOutput.accessories, [])
-        }
+    // MARK: - Weather quality
 
-        let selectedItems = WardrobeAutoSelector.selectItems(
-            temperature: weather.apparentTemperature,
-            ageGroup: profile.wardrobeAgeGroup
+    private func weatherQualityWarning(
+        for weather: NormalizedWeather
+    ) -> SafetyWarning? {
+        guard weather.confidence.level != .high else { return nil }
+        let severity: SafetyWarning.Severity = weather.confidence.level == .low
+            ? .caution
+            : .info
+        return SafetyWarning(
+            code: .weatherDataQuality,
+            severity: severity,
+            message: "\(weather.confidence.summary) Проверьте ребёнка через 15–20 минут.",
+            systemImage: "exclamationmark.circle.fill"
         )
-        let recommendedItems = selectedItems.sorted(by: sortForDisplay)
-        let recommendedLayers = recommendedItems.map { item in
-            RecommendedLayer(
-                id: item.id,
-                name: item.name,
-                systemImage: item.symbol,
-                reason: outfitReason(for: item, temperature: weather.apparentTemperature),
-                tog: item.tog
+    }
+
+    // MARK: - Legacy compatibility
+
+    /// Keeps previews and isolated legacy tests source-compatible. Main app
+    /// code must pass an explicit `WalkContext` instead.
+    func recommend(
+        weather: NormalizedWeather,
+        profile: ChildProfile,
+        gearSetup: GearSetup
+    ) -> OutfitRecommendation {
+        recommend(
+            weather: weather,
+            profile: profile.thermalProfile,
+            walkContext: .migrated(
+                from: profile,
+                gearSetup: gearSetup,
+                availableGarmentIDs: UserWardrobeStore.shared.ownedIDs
             )
-        }
-
-        let bodyLayers = recommendedLayers.filter { layer in
-            GarmentCatalog.byID[layer.id]?.layer != .accessory
-        }
-        let accessories = recommendedLayers.filter { layer in
-            GarmentCatalog.byID[layer.id]?.layer == .accessory
-        }
-        let totalTOG = recommendedLayers.reduce(0) { $0 + $1.tog }
-        let steps = [CalcStep(
-            label: "Автоподбор гардероба",
-            value: totalTOG,
-            unit: "TOG",
-            note: "По конструктору: \(Int(weather.apparentTemperature.rounded()))°C"
-        )]
-        return (bodyLayers, accessories, steps)
-    }
-
-    private func sortForDisplay(_ lhs: GarmentItem, _ rhs: GarmentItem) -> Bool {
-        let leftRank = displayRank(for: lhs.layer)
-        let rightRank = displayRank(for: rhs.layer)
-        if leftRank != rightRank { return leftRank < rightRank }
-        if lhs.heatValue != rhs.heatValue { return lhs.heatValue < rhs.heatValue }
-        return lhs.name < rhs.name
-    }
-
-    private func displayRank(for layer: GarmentLayer) -> Int {
-        switch layer {
-        case .baseFull, .baseTop, .baseBottom: return 0
-        case .midFull, .midTop, .midBottom: return 1
-        case .outerwear: return 2
-        case .accessory: return 3
-        case .sleepwear: return 4
-        }
-    }
-
-    private func outfitReason(for item: GarmentItem, temperature: Double) -> String {
-        if item.id == "diaper" { return "Базовый слой" }
-        if item.layer == .accessory { return "Аксессуар по погоде" }
-        if temperature >= 30 { return "Минимум одежды при жаре" }
-        if temperature >= 22 { return "Лёгкий слой для тёплой погоды" }
-        if temperature >= 15 { return "Подобрано для мягкой погоды" }
-        if temperature >= 5 { return "Дополнительный слой для прохлады" }
-        return "Тёплый слой для холода"
+        )
     }
 
 }

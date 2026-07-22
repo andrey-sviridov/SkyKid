@@ -1,45 +1,51 @@
 import Foundation
 import Observation
 
-// Persists walk logs and applies feedback to PersonalOffsetStore (§8).
-// Key: "walk_logs_v1" in AppGroup.
+// MARK: - WalkLogStore
 
+/// Persists walk logs and keeps their personalization observations in sync.
 @MainActor
 @Observable
 final class WalkLogStore {
-
     static let shared = WalkLogStore()
 
     private(set) var logs: [WalkLog] = []
+
+    private let defaults: UserDefaults
+    private let personalizationStore: PersonalOffsetStore
     private let storageKey = "walk_logs_v1"
 
-    init() { load() }
+    init(
+        defaults: UserDefaults = AppGroup.defaults,
+        personalizationStore: PersonalOffsetStore = .shared
+    ) {
+        self.defaults = defaults
+        self.personalizationStore = personalizationStore
+        load()
+    }
 
     // MARK: - Public API
 
     func add(_ log: WalkLog, profile: ChildProfile?) {
         logs.insert(log, at: 0)
         save()
-        if let profile {
-            let feedback: UserFeedback
-            switch log.comfortLevel {
-            case .cold:                  feedback = .tooCold
-            case .comfortable:           feedback = .comfortable
-            case .warm, .sweating:       feedback = .tooWarm
-            }
-            PersonalOffsetStore.shared.record(feedback, for: profile, tMicro: log.apparentTemperature)
-        }
+        synchronizePersonalization(for: log, profile: profile)
     }
 
-    func update(_ log: WalkLog) {
-        guard let idx = logs.firstIndex(where: { $0.id == log.id }) else { return }
-        logs[idx] = log
+    func update(_ log: WalkLog, profile: ChildProfile?) {
+        guard let index = logs.firstIndex(where: { $0.id == log.id }) else { return }
+        logs[index] = log
         save()
+        synchronizePersonalization(for: log, profile: profile)
     }
 
     func delete(at offsets: IndexSet) {
+        let deletedIDs = offsets.compactMap { index in
+            logs.indices.contains(index) ? logs[index].id : nil
+        }
         logs.remove(atOffsets: offsets)
         save()
+        deletedIDs.forEach { personalizationStore.removeObservation(sourceID: $0) }
     }
 
     // MARK: - Stats
@@ -51,10 +57,55 @@ final class WalkLogStore {
         return logs.filter { $0.date >= cutoff }.count
     }
 
+    // MARK: - Personalization
+
+    private func synchronizePersonalization(
+        for log: WalkLog,
+        profile: ChildProfile?
+    ) {
+        guard let profile else {
+            personalizationStore.removeObservation(sourceID: log.id)
+            return
+        }
+
+        let defaults = WalkContext.standard(
+            for: profile.thermalProfile,
+            availableGarmentIDs: Set(log.outfitItemIDs)
+        )
+        let context = PersonalizationContext(
+            microclimateTemperature: log.microclimateTemperature ?? log.apparentTemperature,
+            transportMode: log.transportMode ?? defaults.transportMode,
+            activityLevel: log.activityLevel ?? defaults.activityLevel,
+            walkType: log.walkType ?? .regular,
+            outfitItemIDs: log.outfitItemIDs,
+            targetTOG: log.targetTOG,
+            effectiveOutfitTOG: log.effectiveOutfitTOG,
+            durationMinutes: log.durationMinutes
+        )
+
+        personalizationStore.removeObservation(sourceID: log.id)
+        personalizationStore.record(
+            feedback(for: log.comfortLevel),
+            for: profile,
+            context: context,
+            sourceID: log.id,
+            source: .walkLog,
+            recordedAt: log.date
+        )
+    }
+
+    private func feedback(for comfortLevel: BabyComfortLevel) -> UserFeedback {
+        switch comfortLevel {
+        case .cold:             return .tooCold
+        case .comfortable:      return .comfortable
+        case .warm, .sweating:  return .tooWarm
+        }
+    }
+
     // MARK: - Persistence
 
     private func load() {
-        guard let data = AppGroup.defaults.data(forKey: storageKey),
+        guard let data = defaults.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode([WalkLog].self, from: data)
         else { return }
         logs = decoded
@@ -62,6 +113,6 @@ final class WalkLogStore {
 
     private func save() {
         guard let data = try? JSONEncoder().encode(logs) else { return }
-        AppGroup.defaults.set(data, forKey: storageKey)
+        defaults.set(data, forKey: storageKey)
     }
 }

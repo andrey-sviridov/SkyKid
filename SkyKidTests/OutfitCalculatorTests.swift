@@ -1,4 +1,5 @@
 import XCTest
+import CoreLocation
 @testable import SkyKid
 
 // MARK: - Test Fixtures
@@ -13,8 +14,8 @@ private func makeWeather(
     precip: PrecipType = .none,
     weatherCode: Int = 0,
     precipitation: Double = 0
-) -> WeatherData {
-    WeatherData(
+) -> NormalizedWeather {
+    NormalizedWeather(
         temperature: T,
         apparentTemperature: T,
         humidity: RH,
@@ -59,6 +60,48 @@ private func makeGear(
     )
 }
 
+private func makeWalkContext(
+    profile: ChildThermalProfile,
+    healthStatus: CurrentHealthStatus = .well,
+    bodyTemperature: Double? = nil,
+    activity: BabyActivityLevel = .calmAwake,
+    transport: TransportMode = .pramBassinette
+) -> WalkContext {
+    var context = WalkContext.standard(
+        for: profile,
+        availableGarmentIDs: Set(GarmentCatalog.all.map(\.id))
+    )
+    context.healthStatus = healthStatus
+    context.bodyTemperatureCelsius = bodyTemperature
+    context.activityLevel = activity
+    context.transportMode = transport
+    return context
+}
+
+private final class RecordingRecommendationSnapshotStore: RecommendationSnapshotStoring {
+    private(set) var savedSnapshot: OutfitRecommendationSnapshot?
+    private(set) var clearCount = 0
+
+    func save(_ snapshot: OutfitRecommendationSnapshot) {
+        savedSnapshot = snapshot
+    }
+
+    func load() -> OutfitRecommendationSnapshot? {
+        savedSnapshot
+    }
+
+    func clear() {
+        clearCount += 1
+        savedSnapshot = nil
+    }
+}
+
+private struct StubWeatherService: WeatherService {
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather {
+        makeWeather(T: 15)
+    }
+}
+
 // MARK: - OutfitCalculatorTests
 
 @MainActor
@@ -95,9 +138,10 @@ final class OutfitCalculatorTests: XCTestCase {
         p2w.babyActivityLevel = .sleeping
         let gear = makeGear(transport: .pramBassinette, hood: true)
 
-        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather, gearSetup: gear))
+        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
         let microOut = MicroclimateCalculator.calculate(.init(
-            T: weather.temperature, T_eff: effOut.T_eff, V_calc: effOut.V_calc, gearSetup: gear
+            environment: effOut,
+            gearSetup: gear
         ))
 
         XCTAssertLessThan(effOut.T_eff, -4, "TC-2: T_eff should be below −4°C, got \(effOut.T_eff)")
@@ -125,7 +169,7 @@ final class OutfitCalculatorTests: XCTestCase {
         let profile = makeProfile(ageMonths: 1, activity: .calmAwake)
         let gear = makeGear(transport: .pramBassinette, hood: true)
 
-        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather, gearSetup: gear))
+        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
         // §2.2: heat index only applies at T ≥ 26°C. At T=25, T_hi = T = 25.
         // ASSUMPTION: spec TC-3 says "T_hi > 28" but at T=25 the formula doesn't fire.
         // Key check: T_hi equals T when condition is not met.
@@ -153,9 +197,10 @@ final class OutfitCalculatorTests: XCTestCase {
             parentWearingCarrier: false
         )
 
-        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather, gearSetup: gear))
+        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
         let microOut = MicroclimateCalculator.calculate(.init(
-            T: weather.temperature, T_eff: effOut.T_eff, V_calc: effOut.V_calc, gearSetup: gear
+            environment: effOut,
+            gearSetup: gear
         ))
 
         // ASSUMPTION: spec TC-4 says T_micro ≈ 14, but accounting for wind chill + humidity
@@ -170,7 +215,7 @@ final class OutfitCalculatorTests: XCTestCase {
     }
 
     // TC-5: T=−12, V=15 km/h, gestational=28wk, chronological=2 months
-    // Expected: noWalkRecommended warning
+    // Expected: blocked cold-exposure warning
     func test_TC5_preterm_extremeCold() {
         let weather = makeWeather(T: -12, V: 15/3.6)
         // 2 months old, 28 weeks gestational → corrected age ≈ 2mo - (40-28)/4.33 ≈ 2mo - 2.77mo ≈ negative
@@ -180,12 +225,14 @@ final class OutfitCalculatorTests: XCTestCase {
         let gear = makeGear()
 
         let rec = OutfitRecommendationService.shared.recommend(weather: weather, profile: profile, gearSetup: gear)
-        let hasNoWalk = rec.warnings.contains { $0.code == .noWalkRecommended }
-        XCTAssertTrue(hasNoWalk, "TC-5: noWalkRecommended expected for preterm baby at −12°C")
+        let hasNoWalk = rec.warnings.contains {
+            $0.code == .coldExposureLimit && $0.severity == .blocked
+        }
+        XCTAssertTrue(hasNoWalk, "TC-5: blocked cold exposure expected for preterm baby at −12°C")
     }
 
     // TC-6: T=15, V=5 km/h, carrier under parent jacket, 3 months corrected
-    // Expected: T_micro_torso = 19 (fixed); torso TOG very low; thin hat + warm booties only
+    // Expected: protected torso is warmer than outside; accessories use outdoor exposure.
     func test_TC6_carrierUnderJacket() {
         let weather = makeWeather(T: 15, V: 5/3.6)
         let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
@@ -199,13 +246,15 @@ final class OutfitCalculatorTests: XCTestCase {
             parentWearingCarrier: true
         )
 
-        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather, gearSetup: gear))
+        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
         let microOut = MicroclimateCalculator.calculate(.init(
-            T: weather.temperature, T_eff: effOut.T_eff, V_calc: effOut.V_calc, gearSetup: gear
+            environment: effOut,
+            gearSetup: gear
         ))
 
-        XCTAssertEqual(microOut.T_micro, OutfitConfig.Microclimate.carrierUnderJacketTorsoTemp,
-                       accuracy: 0.01, "TC-6: T_micro_torso should be fixed at 19.0°C")
+        XCTAssertGreaterThan(microOut.T_micro, effOut.T_eff)
+        XCTAssertLessThanOrEqual(microOut.T_micro, OutfitConfig.Microclimate.carrierJacketTargetTemperature)
+        XCTAssertEqual(microOut.accessoryTemperature, effOut.T_eff, accuracy: 0.001)
         XCTAssertTrue(microOut.carrierUnderJacket, "TC-6: carrierUnderJacket flag should be true")
 
         let rec = OutfitRecommendationService.shared.recommend(weather: weather, profile: profile, gearSetup: gear)
@@ -253,20 +302,96 @@ final class OutfitCalculatorTests: XCTestCase {
                                  "BC-3: fever hard cap — TOG_required must not exceed TOG_base")
     }
 
-    // BC-4: T=10, V=4.9 km/h → no wind chill applied (below threshold)
-    func test_BC4_windChill_belowThreshold() {
-        let T = 10.0
-        let V_calc = 4.9  // km/h — below 5 km/h threshold
-        let wc = EffectiveTemperatureCalculator.computeWindChill(T: T, V_calc: V_calc)
-        XCTAssertEqual(wc, T, accuracy: 0.001, "BC-4: wind chill should NOT apply at V_calc < 5 km/h")
+    func test_BC3_fever_hardCapWinsOverPositivePersonalOffset() {
+        let profile = makeProfile(ageMonths: 2, healthConditions: [.fever])
+        let result = TOGCalculator.calculate(.init(
+            T_micro: 5,
+            profile: profile,
+            personalOffset: OutfitConfig.TOG.maxPersonalOffsetTOG
+        ))
+
+        XCTAssertLessThanOrEqual(result.TOG_required, result.TOG_base + 0.01,
+                                 "Safety cap must be applied after personalization")
     }
 
-    // BC-5: T=10, V=5.0 km/h → wind chill applied
-    func test_BC5_windChill_atThreshold() {
+    func test_feverWarning_underThreeMonthsRequiresMedicalAttention() {
+        let profile = makeProfile(ageMonths: 2, healthConditions: [.fever])
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: makeWeather(T: 10),
+            profile: profile,
+            gearSetup: makeGear()
+        )
+
+        let warning = recommendation.warnings.first { $0.code == .feverMedicalAttention }
+        XCTAssertEqual(warning?.severity, .blocked)
+        XCTAssertTrue(warning?.message.contains("38°C") == true)
+        XCTAssertFalse(warning?.message.contains("15–20") == true)
+    }
+
+    func test_feverWarning_olderChildDoesNotSuggestWalking() {
+        let profile = makeProfile(ageMonths: 6, healthConditions: [.fever])
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: makeWeather(T: 10),
+            profile: profile,
+            gearSetup: makeGear()
+        )
+
+        let warning = recommendation.warnings.first { $0.code == .feverStayHome }
+        XCTAssertTrue(warning?.message.contains("прогулку отмените") == true)
+        XCTAssertFalse(warning?.message.contains("15–20") == true)
+    }
+
+    func test_coldWithoutFever_doesNotRecommendScarfOverAirways() {
+        let profile = makeProfile(ageMonths: 6, healthConditions: [.coldNoFever])
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: makeWeather(T: -2),
+            profile: profile,
+            gearSetup: makeGear()
+        )
+
+        let messages = recommendation.warnings.map(\.message).joined(separator: " ")
+        XCTAssertFalse(messages.localizedCaseInsensitiveContains("шарф"))
+        XCTAssertTrue(
+            messages.localizedCaseInsensitiveContains(
+                "не закрывайте ребёнку рот и нос тканью"
+            )
+        )
+    }
+
+    // BC-4: low-wind and standard formulas join continuously around 5 km/h.
+    func test_BC4_windChill_isContinuousAroundFiveKmh() {
         let T = 10.0
-        let V_calc = 5.0  // km/h — at threshold
-        let wc = EffectiveTemperatureCalculator.computeWindChill(T: T, V_calc: V_calc)
-        XCTAssertLessThan(wc, T, "BC-5: wind chill should apply at V_calc = 5 km/h")
+        let below = EffectiveTemperatureCalculator.computeWindChill(T: T, V_calc: 4.99)
+        let above = EffectiveTemperatureCalculator.computeWindChill(T: T, V_calc: 5.01)
+
+        XCTAssertLessThan(abs(above - below), 0.05)
+    }
+
+    // BC-5: stronger wind must not make cold conditions warmer.
+    func test_BC5_windChill_isMonotonic() {
+        let T = 10.0
+        let lightWind = EffectiveTemperatureCalculator.computeWindChill(T: T, V_calc: 4)
+        let strongerWind = EffectiveTemperatureCalculator.computeWindChill(T: T, V_calc: 8)
+
+        XCTAssertLessThanOrEqual(strongerWind, lightWind)
+    }
+
+    func test_missingWindGust_fallsBackToSustainedWind() {
+        let output = EffectiveTemperatureCalculator.calculate(.init(
+            weather: makeWeather(T: 0, V: 5, Vgust: 0)
+        ))
+
+        XCTAssertEqual(output.V_calc, 18, accuracy: 0.001,
+                       "Missing gust data must not reduce sustained wind")
+    }
+
+    func test_zeroUV_hasNoSunBonus() {
+        let output = EffectiveTemperatureCalculator.calculate(.init(
+            weather: makeWeather(T: 20, cloud: 20, uv: 0)
+        ))
+
+        XCTAssertEqual(output.T_eff, 20, accuracy: 0.001)
+        XCTAssertFalse(output.steps.contains { $0.label.contains("Солнечная поправка") })
     }
 
     // BC-6: ChildProfile JSON without new fields decodes with correct defaults
@@ -280,14 +405,112 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertEqual(profile.babyActivityLevel, .calmAwake, "BC-6: babyActivityLevel default = .calmAwake")
     }
 
-    // BC-7: 5 "cold" feedbacks accumulate → offset clamped to +1.0
+    func test_childProfileMigration_keepsStableTraitsAndDropsWalkState() throws {
+        let legacyJSON = """
+        {
+          "name": "Алёша",
+          "gender": "boy",
+          "birthday": 0,
+          "activityLevel": "Высокая",
+          "walkType": "long",
+          "healthFeatures": ["cold_sensitive"],
+          "strollerType": "covered",
+          "gestationalAgeWeeks": 35,
+          "healthConditions": ["fever", "anemia"],
+          "babyActivityLevel": "sleeping"
+        }
+        """.data(using: .utf8)!
+
+        let profile = try JSONDecoder().decode(ChildProfile.self, from: legacyJSON)
+
+        XCTAssertEqual(profile.gestationalAgeWeeks, 35)
+        XCTAssertTrue(profile.stableTraits.contains(.coldSensitive))
+        XCTAssertTrue(profile.stableTraits.contains(.anemia))
+        XCTAssertTrue(profile.healthConditions.isEmpty, "Acute illness must not migrate into the persistent profile")
+        XCTAssertEqual(profile.activityLevel, .moderate)
+        XCTAssertEqual(profile.walkType, .regular)
+        XCTAssertEqual(profile.strollerType, .open)
+        XCTAssertEqual(profile.babyActivityLevel, .calmAwake)
+    }
+
+    func test_childProfileEncoding_persistsOnlyStableThermalData() throws {
+        var profile = makeProfile(
+            healthConditions: [.fever, .anemia],
+            activity: .sleeping
+        )
+        profile.activityLevel = .high
+        profile.walkType = .long
+        profile.strollerType = .covered
+        profile.stableTraits = [.anemia, .coldSensitive]
+
+        let data = try JSONEncoder().encode(profile)
+        let object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        let thermalProfile = try XCTUnwrap(object["thermalProfile"] as? [String: Any])
+        let traits = try XCTUnwrap(thermalProfile["stableTraits"] as? [String])
+
+        XCTAssertEqual(object["schemaVersion"] as? Int, ChildProfile.currentSchemaVersion)
+        XCTAssertNil(object["healthConditions"])
+        XCTAssertNil(object["babyActivityLevel"])
+        XCTAssertNil(object["activityLevel"])
+        XCTAssertNil(object["walkType"])
+        XCTAssertNil(object["strollerType"])
+        XCTAssertTrue(traits.contains(StableThermalTrait.anemia.rawValue))
+        XCTAssertTrue(traits.contains(StableThermalTrait.coldSensitive.rawValue))
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains(HealthCondition.fever.rawValue))
+    }
+
+    func test_walkContext_drivesFeverSafetyWithoutMutatingProfile() {
+        let profile = makeProfile(ageMonths: 4).thermalProfile
+        let weather = makeWeather(T: 5)
+        let healthyContext = makeWalkContext(profile: profile)
+        var feverContext = healthyContext
+        feverContext.healthStatus = .coldWithoutFever
+        feverContext.bodyTemperatureCelsius = 38.2
+
+        let healthy = OutfitRecommendationService.shared.recommend(
+            weather: weather,
+            profile: profile,
+            walkContext: healthyContext
+        )
+        let fever = OutfitRecommendationService.shared.recommend(
+            weather: weather,
+            profile: profile,
+            walkContext: feverContext
+        )
+
+        XCTAssertLessThan(fever.targetTOG, healthy.targetTOG)
+        XCTAssertTrue(fever.warnings.contains { $0.code == .feverStayHome })
+        XCTAssertTrue(profile.stableTraits.isEmpty)
+    }
+
+    func test_walkContextStandard_usesAgeAppropriateDefaults() {
+        let infant = makeProfile(ageMonths: 3).thermalProfile
+        let toddler = makeProfile(ageMonths: 24).thermalProfile
+
+        let infantContext = WalkContext.standard(for: infant, availableGarmentIDs: [])
+        let toddlerContext = WalkContext.standard(for: toddler, availableGarmentIDs: [])
+
+        XCTAssertEqual(infantContext.transportMode, .pramBassinette)
+        XCTAssertEqual(infantContext.activityLevel, .calmAwake)
+        XCTAssertEqual(toddlerContext.transportMode, .walking)
+        XCTAssertEqual(toddlerContext.activityLevel, .walkingCrawling)
+    }
+
+    // BC-7: repeated independent "cold" feedbacks → offset clamped to +1.0
     func test_BC7_personalOffset_clampedAt1() {
         let store = PersonalOffsetStore()
         let birthday = Calendar.current.date(byAdding: .month, value: -3, to: Date())!
         let profile = ChildProfile(name: "OfsTest\(UUID().uuidString.prefix(6))", gender: .girl, birthday: birthday)
         let tMicro = 5.0  // cold band
-        for _ in 0..<10 {
-            store.record(.tooCold, for: profile, tMicro: tMicro)
+        for index in 0..<10 {
+            store.record(
+                .tooCold,
+                for: profile.thermalProfile,
+                tMicro: tMicro,
+                recordedAt: Date().addingTimeInterval(Double(index - 10) * 5 * 60 * 60)
+            )
         }
         let offset = store.currentOffset(for: profile, tMicro: tMicro)
         XCTAssertEqual(offset, OutfitConfig.TOG.maxPersonalOffsetTOG, accuracy: 0.001,
@@ -370,7 +593,7 @@ final class OutfitCalculatorTests: XCTestCase {
 
     func test_autoSelector_warmInfant_doesNotUseNonThermalBib() {
         let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
-        let selected = WardrobeAutoSelector.selectItems(
+        let selected = LegacyWardrobeAutoSelector.selectItems(
             temperature: 22,
             ageGroup: profile.wardrobeAgeGroup
         )
@@ -385,25 +608,182 @@ final class OutfitCalculatorTests: XCTestCase {
                        "Warm infant auto-selection should be thermally close to target")
     }
 
-    func test_displayOutfit_usesWardrobeAutoSelector() {
+    func test_recommendationUsesOutfitSolverOutput() {
         let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
         let gear = makeGear(transport: .pramBassinette, hood: true)
 
         for temperature in [20.0, 30.0] {
             let weather = makeWeather(T: temperature)
-            let rec = OutfitRecommendationService.shared.recommend(
+            let effective = EffectiveTemperatureCalculator.calculate(
+                .init(weather: weather)
+            )
+            let microclimate = MicroclimateCalculator.calculate(.init(
+                environment: effective,
+                gearSetup: gear
+            ))
+            let personalOffset = PersonalOffsetStore.shared.currentOffset(
+                for: profile,
+                tMicro: microclimate.T_micro
+            )
+            let target = TOGCalculator.calculate(.init(
+                T_micro: microclimate.T_micro,
+                profile: profile,
+                personalOffset: personalOffset
+            ))
+            let solver = OutfitSolver.solve(.init(
+                TOG_required: target.TOG_required,
+                T_micro: microclimate.T_micro,
+                accessoryTemperature: microclimate.accessoryTemperature,
+                T_hi: effective.T_hi,
+                uvIndex: weather.uvIndex,
+                carrierUnderJacket: microclimate.carrierUnderJacket,
+                profile: profile,
+                gearSetup: gear,
+                weather: weather,
+                precipFlags: effective.precipFlags,
+                ownedGarmentIDs: nil
+            ))
+            let recommendation = OutfitRecommendationService.shared.recommend(
                 weather: weather,
                 profile: profile,
                 gearSetup: gear
             )
-            let expectedIDs = WardrobeAutoSelector
-                .selectItems(temperature: temperature, ageGroup: profile.wardrobeAgeGroup)
-                .filter { $0.layer != .accessory }
-                .map(\.id)
 
-            XCTAssertEqual(Set(rec.layers.map(\.id)), Set(expectedIDs),
-                           "Displayed outfit must come from WardrobeAutoSelector at \(temperature)°C")
+            XCTAssertEqual(recommendation.layers.map(\.id), solver.layers.map(\.id))
+            XCTAssertEqual(recommendation.accessories.map(\.id), solver.accessories.map(\.id))
+            XCTAssertEqual(recommendation.totalTOG, solver.totalTOG, accuracy: 0.001)
         }
+    }
+
+    func test_recommendationExposesExplicitTemperatureStages() {
+        let weather = makeWeather(T: 8, V: 6, Vgust: 9, RH: 75, uv: 1)
+        let profile = makeProfile(ageMonths: 3)
+        let gear = makeGear(transport: .pramBassinette, hood: true)
+
+        let effective = EffectiveTemperatureCalculator.calculate(
+            .init(weather: weather)
+        )
+        let microclimate = MicroclimateCalculator.calculate(.init(
+            environment: effective,
+            gearSetup: gear
+        ))
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: weather,
+            profile: profile,
+            gearSetup: gear
+        )
+
+        XCTAssertEqual(recommendation.temperatures.outside, weather.temperature, accuracy: 0.001)
+        XCTAssertEqual(recommendation.temperatures.apparent, weather.apparentTemperature, accuracy: 0.001)
+        XCTAssertEqual(recommendation.temperatures.effective, effective.T_eff, accuracy: 0.001)
+        XCTAssertEqual(recommendation.temperatures.microclimate, microclimate.T_micro, accuracy: 0.001)
+    }
+
+    func test_snapshotRoundTripPreservesExactRecommendation() throws {
+        let weather = makeWeather(T: 4, V: 5, RH: 80)
+        let profile = makeProfile(ageMonths: 2)
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: weather,
+            profile: profile,
+            gearSetup: makeGear()
+        )
+        let generatedAt = Date(timeIntervalSince1970: 1_750_000_000)
+        let snapshot = OutfitRecommendationSnapshot(
+            recommendation: recommendation,
+            childName: profile.name,
+            childAgeLabel: profile.ageLabel,
+            cityName: "Алматы",
+            generatedAt: generatedAt
+        )
+
+        let data = try JSONEncoder().encode(snapshot)
+        let decoded = try JSONDecoder().decode(OutfitRecommendationSnapshot.self, from: data)
+
+        XCTAssertEqual(decoded, snapshot)
+        XCTAssertEqual(decoded.recommendation, recommendation)
+        XCTAssertTrue(decoded.isFresh(at: generatedAt.addingTimeInterval(60)))
+        XCTAssertFalse(decoded.isFresh(at: snapshot.expiresAt))
+    }
+
+    func test_buildUseCasePublishesTheSameRecommendationItReturns() {
+        let store = RecordingRecommendationSnapshotStore()
+        let useCase = BuildOutfitRecommendationUseCase(snapshotStore: store)
+        let profile = makeProfile(ageMonths: 5)
+        let generatedAt = Date(timeIntervalSince1970: 1_750_100_000)
+
+        let walkContext = makeWalkContext(profile: profile.thermalProfile)
+        let output = useCase.execute(
+            weather: makeWeather(T: 14, V: 3),
+            profile: profile.thermalProfile,
+            walkContext: walkContext,
+            cityName: "Алматы",
+            generatedAt: generatedAt
+        )
+
+        XCTAssertEqual(output.recommendation, output.snapshot.recommendation)
+        XCTAssertEqual(store.savedSnapshot, output.snapshot)
+        XCTAssertEqual(output.snapshot.generatedAt, generatedAt)
+    }
+
+    func test_weatherViewModel_keepsSnapshotWhileWaitingForWeather() {
+        let store = RecordingRecommendationSnapshotStore()
+        let useCase = BuildOutfitRecommendationUseCase(snapshotStore: store)
+        let viewModel = WeatherViewModel(
+            service: StubWeatherService(),
+            outfitUseCase: useCase
+        )
+        let profile = makeProfile(ageMonths: 5)
+        let context = makeWalkContext(profile: profile.thermalProfile)
+        let existingRecommendation = OutfitRecommendationService.shared.recommend(
+            weather: makeWeather(T: 12),
+            profile: profile.thermalProfile,
+            walkContext: context
+        )
+        store.save(OutfitRecommendationSnapshot(
+            recommendation: existingRecommendation,
+            childName: profile.name,
+            childAgeLabel: profile.ageLabel,
+            cityName: "Алматы"
+        ))
+
+        viewModel.refreshOutfitRecommendation(
+            for: profile,
+            walkContext: context
+        )
+
+        XCTAssertEqual(store.clearCount, 0)
+        XCTAssertNotNil(store.savedSnapshot)
+        XCTAssertNil(viewModel.outfitRecommendation)
+    }
+
+    func test_snapshotStoreRemovesLegacyCacheAndRejectsExpiredSnapshot() {
+        let suiteName = "SkyKidTests.snapshot.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        defaults.set(Data([0x01]), forKey: "cached_tog_outfit_v1")
+        let store = AppGroupRecommendationSnapshotStore(defaults: defaults)
+        let generatedAt = Date(timeIntervalSince1970: 1_750_200_000)
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: makeWeather(T: 18),
+            profile: makeProfile(),
+            gearSetup: makeGear()
+        )
+        let snapshot = OutfitRecommendationSnapshot(
+            recommendation: recommendation,
+            childName: "Тест",
+            childAgeLabel: "3 месяца",
+            cityName: "Алматы",
+            generatedAt: generatedAt,
+            timeToLive: 30
+        )
+
+        store.save(snapshot)
+
+        XCTAssertNil(defaults.data(forKey: "cached_tog_outfit_v1"))
+        XCTAssertEqual(store.load(), snapshot)
+        XCTAssertNotNil(store.loadFresh(at: generatedAt.addingTimeInterval(10)))
+        XCTAssertNil(store.loadFresh(at: generatedAt.addingTimeInterval(31)))
     }
 
     func test_catalogInfantDisplay_usesCanonicalBodyItemsOnly() {
@@ -422,7 +802,7 @@ final class OutfitCalculatorTests: XCTestCase {
     }
 
     func test_autoSelector_infantUsesCanonicalBodyIDs() {
-        let selected = WardrobeAutoSelector.selectItems(temperature: 12, ageGroup: .infant)
+        let selected = LegacyWardrobeAutoSelector.selectItems(temperature: 12, ageGroup: .infant)
         let selectedIDs = Set(selected.map(\.id))
 
         XCTAssertFalse(selectedIDs.contains("bodi_st_kr"))
@@ -431,7 +811,7 @@ final class OutfitCalculatorTests: XCTestCase {
     }
 
     func test_autoSelector_hotOutdoorInfant_keepsLightBodyCoverage() {
-        let selected = WardrobeAutoSelector.selectItems(temperature: 27, ageGroup: .infant)
+        let selected = LegacyWardrobeAutoSelector.selectItems(temperature: 27, ageGroup: .infant)
         let selectedIDs = Set(selected.map(\.id))
 
         XCTAssertTrue(selectedIDs.contains("diaper"), "Diaper remains the pinned baseline")
@@ -452,6 +832,17 @@ final class OutfitCalculatorTests: XCTestCase {
 
         XCTAssertFalse(rec.layers.isEmpty, "Outfit tab should show a practical light body layer at +27°C")
         XCTAssertTrue(rec.layers.contains { $0.id == "bodi_short" || $0.id == "pesochnik" })
+    }
+
+    func test_hotWeather_earlyInfantUsesAgeAppropriateBodyLayer() {
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: makeWeather(T: 27),
+            profile: makeProfile(ageMonths: 1, activity: .calmAwake),
+            gearSetup: makeGear(transport: .pramBassinette, hood: true)
+        )
+
+        XCTAssertTrue(recommendation.layers.contains { $0.id == "bodi_km_kr" })
+        XCTAssertFalse(recommendation.layers.contains { $0.id == "bodi_short" })
     }
 
     // MARK: Hot-weather (regression)
@@ -518,7 +909,7 @@ final class OutfitCalculatorTests: XCTestCase {
         let weather = makeWeather(T: -8)
         let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
         let gear = makeGear(transport: .pramBassinette, hood: true)
-        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather, gearSetup: gear))
+        let effOut = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
 
         let out = OutfitSolver.solve(.init(
             TOG_required: 6.0, T_micro: -8, T_hi: -8, uvIndex: 0,
@@ -530,6 +921,126 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertNotNil(out.wardrobeGap, "UD-1: при пустом гардеробе должен сообщаться пробел")
         XCTAssertLessThan(out.totalTOG, 6.0 - OutfitConfig.Solver.togAccuracyTolerance,
                           "UD-1: набранный TOG значительно ниже нужного — ребёнок недоодет")
+    }
+
+    // MARK: - Unified garment solver
+
+    func test_US1_catalogHasNoHiddenSolverDuplicates() {
+        let ids = GarmentCatalog.all.map(\.id)
+        let removedHiddenIDs: Set<String> = [
+            "slip", "thermals", "fleece", "sweater",
+            "pants", "windbreaker", "demi", "winter"
+        ]
+
+        XCTAssertEqual(Set(ids).count, ids.count, "US-1: ID единого каталога должны быть уникальны")
+        XCTAssertTrue(
+            removedHiddenIDs.isDisjoint(with: Set(ids)),
+            "US-1: скрытые дубли старого решателя не должны возвращаться"
+        )
+        XCTAssertTrue(
+            GarmentCatalog.all.allSatisfy { $0.catalogAgeGroup != nil },
+            "US-1: каждая вещь должна быть видна в возрастном каталоге"
+        )
+    }
+
+    func test_US2_solverUsesOnlyOwnedGarmentsAndReportsMissingSeparately() {
+        let weather = makeWeather(T: 4)
+        let profile = makeProfile(ageMonths: 4)
+        let owned: Set<String> = ["diaper", "bodi_long", "leggings", "shapka_trik"]
+        let effective = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
+        let output = OutfitSolver.solve(.init(
+            TOG_required: 4.0,
+            T_micro: 4.0,
+            T_hi: 4.0,
+            uvIndex: 0,
+            carrierUnderJacket: false,
+            profile: profile,
+            gearSetup: makeGear(),
+            weather: weather,
+            precipFlags: effective.precipFlags,
+            ownedGarmentIDs: owned
+        ))
+
+        let selectedIDs = Set((output.layers + output.accessories).map(\.id))
+        XCTAssertTrue(selectedIDs.isSubset(of: owned))
+        XCTAssertFalse(output.missingGarments.isEmpty)
+        XCTAssertEqual(output.fit?.confidence, .low)
+        XCTAssertNotNil(output.wardrobeGap)
+    }
+
+    func test_US3_solverRejectsOverlappingBodySlotsAndExclusiveAccessories() {
+        let weather = makeWeather(T: -5)
+        let profile = makeProfile(ageMonths: 4)
+        let effective = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
+        let output = OutfitSolver.solve(.init(
+            TOG_required: 6.0,
+            T_micro: -5.0,
+            T_hi: -5.0,
+            uvIndex: 0,
+            carrierUnderJacket: false,
+            profile: profile,
+            gearSetup: makeGear(),
+            weather: weather,
+            precipFlags: effective.precipFlags
+        ))
+        let bodyItems = output.layers
+            .filter { $0.id != "diaper" }
+            .compactMap { GarmentCatalog.byID[$0.id] }
+        let accessoryItems = output.accessories.compactMap { GarmentCatalog.byID[$0.id] }
+
+        for lhsIndex in bodyItems.indices {
+            for rhsIndex in bodyItems.indices where lhsIndex < rhsIndex {
+                XCTAssertFalse(
+                    GarmentCompatibilityPolicy.conflicts(bodyItems[lhsIndex], bodyItems[rhsIndex])
+                )
+            }
+        }
+        let accessoryGroups = accessoryItems.compactMap(\.exclusiveGroup)
+        XCTAssertEqual(Set(accessoryGroups).count, accessoryGroups.count)
+    }
+
+    func test_US4_fitIsHighWhenAvailableOutfitMatchesTarget() {
+        let weather = makeWeather(T: 25)
+        let profile = makeProfile(ageMonths: 1)
+        let effective = EffectiveTemperatureCalculator.calculate(.init(weather: weather))
+        let output = OutfitSolver.solve(.init(
+            TOG_required: 0.38,
+            T_micro: 25,
+            T_hi: 25,
+            uvIndex: 0,
+            carrierUnderJacket: false,
+            profile: profile,
+            gearSetup: makeGear(),
+            weather: weather,
+            precipFlags: effective.precipFlags
+        ))
+
+        XCTAssertEqual(output.fit?.confidence, .high)
+        XCTAssertLessThanOrEqual(
+            output.fit?.absoluteError ?? .infinity,
+            OutfitConfig.Solver.togAccuracyTolerance
+        )
+    }
+
+    func test_US5_recommendationServiceDoesNotDisplayUnownedGarments() {
+        let profile = makeProfile(ageMonths: 4)
+        let owned: Set<String> = ["diaper", "bodi_long", "leggings", "shapka_trik"]
+        var context = WalkContext.standard(
+            for: profile.thermalProfile,
+            availableGarmentIDs: owned
+        )
+        context.transportMode = .pramBassinette
+        context.activityLevel = .calmAwake
+
+        let recommendation = OutfitRecommendationService.shared.recommend(
+            weather: makeWeather(T: 3),
+            profile: profile.thermalProfile,
+            walkContext: context
+        )
+        let displayedIDs = Set(recommendation.allDisplayLayers.map(\.id))
+
+        XCTAssertTrue(displayedIDs.isSubset(of: owned))
+        XCTAssertTrue(recommendation.warnings.contains { $0.code == .wardrobeGap })
     }
 
     // BaseTOG interpolation

@@ -1,11 +1,8 @@
 import Foundation
 import UserNotifications
 
-// P2-3: локальные уведомления.
-// «Проветрите дождевик» — через 15 мин после установки дождевика.
-// «Хорошая погода для прогулки» — когда наступает walkWindow из §6.1.
-// «Время прогулки» — по расписанию пользователя (до 4 слотов).
-// Включается переключателем в ProfileSummaryView; ключ — в AppGroup.
+// Локальные уведомления не содержат повторяющийся комплект одежды:
+// прогноз и рекомендация могут устареть до момента доставки.
 
 // MARK: - WalkScheduleEntry
 
@@ -38,11 +35,18 @@ final class NotificationService {
     private enum ID {
         static let rainCoverVent = "rain_cover_vent"
         static let walkWindow    = "walk_window_start"
-        static let dailyOutfit   = "daily_outfit_summary"
-        static var all: [String] { [rainCoverVent, walkWindow, dailyOutfit] }
+        static let dailyWeatherRefresh = "daily_weather_refresh_v2"
+        static let legacyDailyOutfit = "daily_outfit_summary"
+        static var all: [String] {
+            [rainCoverVent, walkWindow, dailyWeatherRefresh, legacyDailyOutfit]
+        }
     }
 
-    private init() {}
+    private init() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: [ID.legacyDailyOutfit]
+        )
+    }
 
     var isEnabled: Bool {
         AppGroup.defaults.bool(forKey: Self.enabledKey)
@@ -59,41 +63,32 @@ final class NotificationService {
         let granted = (try? await UNUserNotificationCenter.current()
             .requestAuthorization(options: [.alert, .sound])) ?? false
         AppGroup.defaults.set(granted, forKey: Self.enabledKey)
-        if !granted { removeAll() }
+        if granted {
+            await scheduleDailyRefresh()
+            await syncWalkSchedule(loadWalkSchedule())
+        } else {
+            removeAll()
+        }
         return granted
     }
 
     /// Синхронизирует отложенные уведомления с текущей рекомендацией.
     /// Идемпотентно: можно вызывать при каждом обновлении погоды.
-    func sync(recommendation: OutfitRecommendation, weather: WeatherData, gearSetup: GearSetup) async {
+    func sync(recommendation: OutfitRecommendation, gearSetup: GearSetup) async {
         guard isEnabled else { return }
         let center = UNUserNotificationCenter.current()
         let pending = Set(await center.pendingNotificationRequests().map(\.identifier))
 
-        // Ежедневное уведомление в 08:00 — всегда перезаписываем свежим контентом
-        let dailyContent = UNMutableNotificationContent()
-        dailyContent.title = "Что надеть малышу сегодня?"
-        let temp = Int(weather.apparentTemperature.rounded())
-        let topLayers = recommendation.layers.prefix(3).map(\.name).joined(separator: " + ")
-        dailyContent.body = topLayers.isEmpty
-            ? "Ощущается \(temp)°C — откройте приложение для рекомендации."
-            : "Ощущается \(temp)°C: \(topLayers)."
-        dailyContent.sound = .default
-        var dailyComps = DateComponents()
-        dailyComps.hour   = 8
-        dailyComps.minute = 0
-        let dailyTrigger = UNCalendarNotificationTrigger(dateMatching: dailyComps, repeats: true)
-        center.removePendingNotificationRequests(withIdentifiers: [ID.dailyOutfit])
-        try? await center.add(UNNotificationRequest(
-            identifier: ID.dailyOutfit, content: dailyContent, trigger: dailyTrigger))
+        // Повторяющееся уведомление просит обновить данные и никогда не
+        // повторяет вчерашний комплект как актуальный.
+        await scheduleDailyRefresh()
 
         // Дождевик: таймер не перезапускаем, если уже заведён
         if gearSetup.rainCover == .present_on {
             if !pending.contains(ID.rainCoverVent) {
-                let content = UNMutableNotificationContent()
-                content.title = "Проветрите дождевик"
-                content.body  = "Дождевик стоит уже 15 минут — приоткройте его на 1–2 минуты."
-                content.sound = .default
+                let content = notificationContent(
+                    from: SafeReminderContentFactory.rainCoverVentilationCheck()
+                )
                 let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 15 * 60, repeats: false)
                 try? await center.add(UNNotificationRequest(
                     identifier: ID.rainCoverVent, content: content, trigger: trigger))
@@ -103,13 +98,12 @@ final class NotificationService {
         }
 
         // walkWindow: время окна может сдвигаться с каждым прогнозом — перезаписываем
-        if let window = recommendation.walkWindow, window.start > Date() {
-            let content = UNMutableNotificationContent()
-            content.title = "Хорошая погода для прогулки"
-            let time = window.start.formatted(
-                Date.FormatStyle.dateTime.hour(.twoDigits(amPM: .omitted)).minute())
-            content.body  = "С \(time) условия подходят для прогулки — собирайтесь!"
-            content.sound = .default
+        if recommendation.blockingWarning == nil,
+           let window = recommendation.walkWindow,
+           window.start > Date() {
+            let content = notificationContent(
+                from: SafeReminderContentFactory.suitableWalkWindow(start: window.start)
+            )
             let comps = Calendar.current.dateComponents(
                 [.year, .month, .day, .hour, .minute], from: window.start)
             let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
@@ -144,10 +138,9 @@ final class NotificationService {
         center.removePendingNotificationRequests(withIdentifiers: toRemove)
 
         for entry in entries where entry.isEnabled {
-            let content = UNMutableNotificationContent()
-            content.title = "Время прогулки!"
-            content.body  = "Не забудьте проверить погоду и подобрать одежду для малыша."
-            content.sound = .default
+            let content = notificationContent(
+                from: SafeReminderContentFactory.scheduledWalkCheck()
+            )
             var comps = DateComponents()
             comps.hour   = entry.hour
             comps.minute = entry.minute
@@ -161,6 +154,38 @@ final class NotificationService {
     }
 
     // MARK: - Private
+
+    private func notificationContent(
+        from reminder: SafeReminderContent
+    ) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = reminder.title
+        content.body = reminder.body
+        content.sound = .default
+        return content
+    }
+
+    private func scheduleDailyRefresh() async {
+        let center = UNUserNotificationCenter.current()
+        let content = notificationContent(
+            from: SafeReminderContentFactory.dailyWeatherRefresh()
+        )
+        var components = DateComponents()
+        components.hour = 8
+        components.minute = 0
+        let trigger = UNCalendarNotificationTrigger(
+            dateMatching: components,
+            repeats: true
+        )
+        center.removePendingNotificationRequests(
+            withIdentifiers: [ID.dailyWeatherRefresh, ID.legacyDailyOutfit]
+        )
+        try? await center.add(UNNotificationRequest(
+            identifier: ID.dailyWeatherRefresh,
+            content: content,
+            trigger: trigger
+        ))
+    }
 
     private func removeAll() {
         let center = UNUserNotificationCenter.current()

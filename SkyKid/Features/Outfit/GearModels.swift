@@ -6,6 +6,7 @@ import Foundation
 // MARK: - TransportMode §3
 
 enum TransportMode: String, Codable, CaseIterable, Sendable {
+    case walking           // ребёнок идёт сам; защиты транспортом нет
     case pramBassinette   // люлька коляски с высокими бортами
     case pushchairSeat    // прогулочный блок (сидячая позиция)
     case carrier          // эргорюкзак / слинг

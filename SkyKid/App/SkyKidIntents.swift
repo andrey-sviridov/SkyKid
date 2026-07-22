@@ -17,50 +17,37 @@ struct GetOutfitRecommendationIntent: AppIntent {
     static let description = IntentDescription("Рекомендация одежды для ребёнка по текущей погоде")
     static let openAppWhenRun: Bool = false
 
-    // @MainActor required — BiasStore.shared is @MainActor-isolated.
-    // AppIntents dispatches perform() to the main actor automatically.
     @MainActor
     func perform() async throws -> some IntentResult & ShowsSnippetView {
-        guard let profile = AppGroup.loadProfile() else {
-            throw SkyKidIntentError(errorDescription: "Создайте профиль ребёнка в приложении SkyKid")
+        let store = AppGroupRecommendationSnapshotStore()
+        guard let snapshot = store.load() else {
+            throw SkyKidIntentError(
+                errorDescription: "Откройте SkyKid, чтобы обновить погоду и безопасную рекомендацию"
+            )
         }
-        guard let cached = AppGroup.loadCachedWeather() else {
-            throw SkyKidIntentError(errorDescription: "Откройте SkyKid и дождитесь загрузки погоды")
-        }
-
-        // TOG-кеш: свежее 2 ч — используем персонализированный результат
-        if let tog = AppGroup.loadTOGOutfit(),
-           Date().timeIntervalSince(tog.updatedAt) < 7_200 {
-            return .result(view: OutfitSnippetView(
-                childName:     profile.name,
-                ageLabel:      profile.ageLabel,
-                cityName:      cached.cityName,
-                effectiveTemp: tog.effectiveChildTemp,
-                layers:        tog.layers
-            ))
+        guard snapshot.isFresh() else {
+            let updated = snapshot.generatedAt.formatted(
+                .dateTime.day().month(.abbreviated).hour().minute()
+            )
+            let conditions = snapshot.context.map { " (\($0.shortSummary))" } ?? ""
+            throw SkyKidIntentError(
+                errorDescription: "Последняя рекомендация от \(updated)\(conditions) устарела. Откройте SkyKid и обновите погоду"
+            )
         }
 
-        // Fallback: CLO-движок на случай если TOG-кеш отсутствует
-        let weather = WeatherData(
-            temperature:         cached.temperature,
-            apparentTemperature: cached.apparentTemperature,
-            humidity:            0,
-            windSpeed:           cached.windSpeed,
-            windDirection:       0,
-            precipitation:       cached.precipitation,
-            weatherCode:         cached.weatherCode
-        )
-        let bias   = BiasStore.shared.currentBias(for: profile, feelsLike: cached.apparentTemperature)
-        let outfit = ClothingRecommendationEngine.recommend(weather: weather, profile: profile, learnedBias: bias)
-        let cloLayers = outfit.allLayers.prefix(4).map {
-            CachedTOGOutfit.Layer(name: $0.name, systemImage: $0.systemImage, reason: $0.reason)
-        }
+        let recommendation = snapshot.recommendation
         return .result(view: OutfitSnippetView(
-            childName:     profile.name,
-            ageLabel:      profile.ageLabel,
-            cityName:      cached.cityName,
-            effectiveTemp: outfit.effectiveTemp,
-            layers:        Array(cloLayers)
+            childName: snapshot.childName,
+            ageLabel: snapshot.childAgeLabel,
+            cityName: snapshot.cityName,
+            updatedAt: snapshot.generatedAt,
+            context: snapshot.context,
+            temperatures: recommendation.temperatures,
+            layers: recommendation.blockingWarning == nil
+                ? recommendation.allDisplayLayers
+                : [],
+            warning: recommendation.primarySafetyWarning?.message,
+            blocksScenario: recommendation.blockingWarning != nil
         ))
     }
 }
@@ -72,14 +59,31 @@ struct OutfitSnippetView: View {
     let childName: String
     let ageLabel: String
     let cityName: String
-    let effectiveTemp: Double
-    let layers: [CachedTOGOutfit.Layer]
+    let updatedAt: Date
+    let context: RecommendationSnapshotContext?
+    let temperatures: OutfitTemperatures
+    let layers: [RecommendedLayer]
+    let warning: String?
+    let blocksScenario: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             headerRow
-            Divider().opacity(0.4)
-            layersList
+            if let warning {
+                Label(warning, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if blocksScenario {
+                Text("Одежда для прогулки не показывается, пока действует ограничение.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Divider().opacity(0.4)
+                layersList
+            }
         }
         .padding(16)
     }
@@ -87,24 +91,46 @@ struct OutfitSnippetView: View {
     // MARK: Header
 
     private var headerRow: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(childName)
-                    .font(.headline)
-                Text(ageLabel + " · " + cityName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(childName)
+                        .font(.headline)
+                    Text(ageLabel + " · " + cityName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("\(Int(temperatures.microclimate.rounded()))°")
+                        .font(.system(size: 40, weight: .thin, design: .rounded))
+                        .foregroundStyle(tempColor(temperatures.effective))
+                        .contentTransition(.numericText())
+                    Text("в микроклимате")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 0) {
-                Text("\(Int(effectiveTemp.rounded()))°")
-                    .font(.system(size: 40, weight: .thin, design: .rounded))
-                    .foregroundStyle(tempColor(effectiveTemp))
-                    .contentTransition(.numericText())
-                Text("для ребёнка")
+            Text("На улице \(Int(temperatures.outside.rounded()))° · ощущается \(Int(temperatures.apparent.rounded()))° · эффективная \(Int(temperatures.effective.rounded()))°")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 4) {
+                Image(systemName: "clock")
+                    .accessibilityHidden(true)
+                Text("Обновлено")
+                Text(updatedAt, style: .time)
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+
+            if let context {
+                Text("\(context.fullSummary) · \(context.weatherSource) · \(context.weatherConfidence)")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

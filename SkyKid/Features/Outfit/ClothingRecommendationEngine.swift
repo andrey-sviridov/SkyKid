@@ -29,14 +29,6 @@ struct LayeredOutfit: Equatable {
     }
 }
 
-// MARK: - UserFeedback
-
-enum UserFeedback {
-    case tooCold     // "холодно"
-    case comfortable // "комфортно"
-    case tooWarm     // "жарко"
-}
-
 // MARK: - LayerStrategy (OCP)
 //
 // Новая возрастная группа или контекст (бассейн, горы) → новый тип,

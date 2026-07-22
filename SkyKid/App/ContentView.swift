@@ -7,6 +7,8 @@ struct ContentView: View {
 
     @State private var locationManager = LocationManager()
     @State private var weatherVM = WeatherViewModel(service: WeatherProvider.activeService)
+    @State private var wardrobeStore = UserWardrobeStore.shared
+    @State private var walkContextStore = WalkContextStore.shared
     @State private var selectedTab = 0
 
     @State private var childProfile: ChildProfile? = ChildProfileStore.shared.profile
@@ -42,11 +44,23 @@ struct ContentView: View {
             }
         }
         .task {
+            prepareWalkContext()
             await loadInitialWeatherIfNeeded()
             notifyStartupReadyIfNeeded()
         }
-        .onChange(of: childProfile) { _, _ in
+        .onChange(of: childProfile) { _, newProfile in
+            walkContextStore.prepare(
+                for: newProfile,
+                availableGarmentIDs: wardrobeStore.ownedIDs
+            )
+            refreshOutfitRecommendation()
             notifyStartupReadyIfNeeded()
+        }
+        .onChange(of: wardrobeStore.ownedIDs) { _, _ in
+            walkContextStore.updateAvailableGarments(wardrobeStore.ownedIDs)
+        }
+        .onChange(of: walkContextStore.context) { _, _ in
+            refreshOutfitRecommendation()
         }
         .onChange(of: locationManager.authorizationStatus) { _, _ in
             Task { await loadInitialWeatherIfNeeded() }
@@ -158,7 +172,18 @@ struct ContentView: View {
     private var outfitTab: some View {
         NavigationStack {
             if let weather = weatherVM.weather {
-                OutfitView(weather: weather, profile: childProfile)
+                OutfitView(
+                    weather: weather,
+                    profile: childProfile,
+                    recommendation: weatherVM.outfitRecommendation,
+                    walkContext: walkContextStore.context,
+                    onWalkContextChange: { context in
+                        walkContextStore.update(context)
+                    },
+                    onFeedbackRecorded: {
+                        refreshOutfitRecommendation()
+                    }
+                )
             } else {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -178,7 +203,13 @@ struct ContentView: View {
 
     private var historyTab: some View {
         NavigationStack {
-            WalkHistoryView(weather: weatherVM.weather, profile: childProfile)
+            WalkHistoryView(
+                weather: weatherVM.weather,
+                profile: childProfile,
+                recommendation: weatherVM.outfitRecommendation,
+                walkContext: walkContextStore.context,
+                onPersonalizationChange: refreshOutfitRecommendation
+            )
         }
         .tabItem { Label("История", systemImage: "clock.arrow.circlepath") }
         .tag(4)
@@ -212,6 +243,23 @@ struct ContentView: View {
 
     private var cityName: String {
         weatherVM.cityName
+    }
+
+    // MARK: - Recommendation context
+
+    private func prepareWalkContext() {
+        walkContextStore.prepare(
+            for: childProfile,
+            availableGarmentIDs: wardrobeStore.ownedIDs
+        )
+        refreshOutfitRecommendation()
+    }
+
+    private func refreshOutfitRecommendation() {
+        weatherVM.refreshOutfitRecommendation(
+            for: childProfile,
+            walkContext: walkContextStore.context
+        )
     }
 }
 
@@ -289,4 +337,3 @@ private struct IdleTimerDebugBanner: View {
     }
 }
 #endif
-

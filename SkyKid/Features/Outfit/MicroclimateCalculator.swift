@@ -5,97 +5,159 @@ import Foundation
 enum MicroclimateCalculator {
 
     struct Input: Sendable {
-        let T: Double          // air temperature °C (for wind chill recalculation)
-        let T_eff: Double      // effective temperature from §2
-        let V_calc: Double     // blended wind speed km/h from §2.1
+        let environment: EffectiveTemperatureCalculator.Output
         let gearSetup: GearSetup
     }
 
     struct Output: Sendable {
         let T_micro: Double
-        let carrierUnderJacket: Bool   // when true, torso TOG solver is skipped
+        let accessoryTemperature: Double
+        let carrierUnderJacket: Bool
+        let rainCoverHeatGain: Double
+        let exposure: TransportExposureProfile
         let strollerAdvice: StrollerAdvice?
         let steps: [CalcStep]
     }
 
     static func calculate(_ input: Input) -> Output {
-        var steps: [CalcStep] = []
+        let environment = input.environment
+        let effects = environment.effects
+        let exposure = TransportExposureProfile.resolve(for: input.gearSetup)
 
-        // Special mode: carrier under parent jacket — torso treated as indoor
-        if input.gearSetup.transportMode == .carrier,
-           input.gearSetup.parentWearingCarrier {
-            let T_micro = OutfitConfig.Microclimate.carrierUnderJacketTorsoTemp
-            steps.append(CalcStep(label: "Слинг под курткой (§3)",
-                                   value: T_micro, unit: "°C",
-                                   note: "Фиксированная температура корпуса"))
-            return Output(T_micro: T_micro, carrierUnderJacket: true,
-                          strollerAdvice: nil, steps: steps)
-        }
+        let windDelta = effects.windDelta * exposure.wind
+        let precipitationDelta = effects.precipitationDelta * exposure.precipitation
+        let solarDelta = effects.solarDelta * exposure.solar
+        let reducedVentilationGain = heatRetentionGain(
+            environment: environment,
+            windExposure: exposure.wind
+        )
 
-        // §3: Determine V_eff multiplier and flat offsets
-        let (shieldMult, flatOffset, advice) = shieldConfig(input.gearSetup)
+        var microclimate = effects.airTemperature
+            + windDelta
+            + effects.heatDelta
+            + effects.humidityDelta
+            + precipitationDelta
+            + solarDelta
+            + reducedVentilationGain
+            + exposure.bodyHeatGain
 
-        let V_eff = input.V_calc * shieldMult
-        // Re-evaluate wind chill with reduced V_eff
-        let T_wc_micro = EffectiveTemperatureCalculator.computeWindChill(T: input.T, V_calc: V_eff)
+        let rainCoverHeatGain = exposure.isEnclosed && input.gearSetup.rainCover == .present_on
+            ? enclosureHeatGain(baseTemperature: microclimate, solarDelta: solarDelta)
+            : 0
+        microclimate += rainCoverHeatGain
 
-        // base_micro: use re-evaluated wind chill if conditions met, otherwise T_eff
-        let base_micro: Double
-        if input.T <= OutfitConfig.EffectiveTemp.windChillApplyBelow,
-           V_eff >= OutfitConfig.EffectiveTemp.windChillMinSpeedKmh {
-            base_micro = T_wc_micro
-        } else {
-            base_micro = input.T_eff
-        }
+        let jacketGain = max(
+            0,
+            OutfitConfig.Microclimate.carrierJacketTargetTemperature - microclimate
+        ) * exposure.jacketRetention
+        microclimate += jacketGain
 
-        let T_micro = base_micro + flatOffset
+        let carrierUnderJacket = input.gearSetup.transportMode == .carrier
+            && input.gearSetup.parentWearingCarrier
+        let accessoryTemperature = carrierUnderJacket
+            ? effects.effectiveTemperature
+            : microclimate
 
-        steps.append(CalcStep(label: "Микроклимат коляски (§3)",
-                               value: T_micro, unit: "°C",
-                               note: "V_eff = \(String(format:"%.1f", V_eff)) км/ч, offset = \(String(format:"+%.1f", flatOffset))°C"))
+        return Output(
+            T_micro: microclimate,
+            accessoryTemperature: accessoryTemperature,
+            carrierUnderJacket: carrierUnderJacket,
+            rainCoverHeatGain: rainCoverHeatGain,
+            exposure: exposure,
+            strollerAdvice: strollerAdvice(for: input.gearSetup),
+            steps: calculationSteps(
+                microclimate: microclimate,
+                windDelta: windDelta,
+                precipitationDelta: precipitationDelta,
+                solarDelta: solarDelta,
+                bodyHeatGain: exposure.bodyHeatGain,
+                rainCoverHeatGain: rainCoverHeatGain,
+                jacketGain: jacketGain,
+                exposure: exposure
+            )
+        )
+    }
+}
 
-        return Output(T_micro: T_micro, carrierUnderJacket: false,
-                      strollerAdvice: advice, steps: steps)
+// MARK: - Heat retention
+
+private extension MicroclimateCalculator {
+    static func heatRetentionGain(
+        environment: EffectiveTemperatureCalculator.Output,
+        windExposure: Double
+    ) -> Double {
+        guard environment.effects.heatDelta > 0 else { return 0 }
+        return OutfitConfig.EffectiveTemp.heatIndexWindCoolFactor
+            * environment.V_calc
+            * (1 - windExposure)
     }
 
-    // MARK: - §3 Shield configuration table
+    static func enclosureHeatGain(baseTemperature: Double, solarDelta: Double) -> Double {
+        let warmFactor = smoothStep(
+            from: OutfitConfig.Microclimate.rainCoverWarmGainStarts,
+            to: OutfitConfig.Microclimate.rainCoverWarmGainFullAbove,
+            value: baseTemperature
+        )
+        let gain = OutfitConfig.Microclimate.rainCoverMinimumHeatGain
+            + OutfitConfig.Microclimate.rainCoverWarmAdditionalGain * warmFactor
+            + max(solarDelta, 0) * OutfitConfig.Microclimate.rainCoverSolarAmplification
+        return min(gain, OutfitConfig.Microclimate.rainCoverMaximumHeatGain)
+    }
+}
 
-    private static func shieldConfig(_ gear: GearSetup) -> (multiplier: Double, flatOffset: Double, advice: StrollerAdvice?) {
-        // Rain cover takes priority
-        if gear.rainCover == .present_on {
-            let advice = StrollerAdvice(
-                recommendation: "Дождевик установлен — парниковый эффект. Снимайте каждые 15–20 мин для проветривания.",
-                isSafetyWarning: true
-            )
-            return (OutfitConfig.Microclimate.rainCoverOnShield,
-                    OutfitConfig.Microclimate.rainCoverOnGreenhouseOffset,
-                    advice)
-        }
+// MARK: - Advice and trace
 
-        switch gear.transportMode {
-        case .pramBassinette:
-            if gear.hoodUp {
-                // Check if leg cover also present (strollerConvertTOG signals footmuff = leg cover)
-                if gear.strollerConvertTOG != nil {
-                    return (OutfitConfig.Microclimate.pramHoodPlusLegCoverShield,
-                            OutfitConfig.Microclimate.pramHoodPlusLegCoverFlatOffset,
-                            nil)
-                }
-                return (OutfitConfig.Microclimate.pramHoodUpShield, 0.0, nil)
-            }
-            return (OutfitConfig.Microclimate.pushchairOpenShield, 0.0, nil)
+private extension MicroclimateCalculator {
+    static func strollerAdvice(for gear: GearSetup) -> StrollerAdvice? {
+        guard gear.rainCover == .present_on else { return nil }
+        return StrollerAdvice(
+            recommendation: "Дождевик удерживает тепло и ограничивает вентиляцию. Используйте только от осадков и регулярно проверяйте ребёнка.",
+            isSafetyWarning: true
+        )
+    }
 
-        case .pushchairSeat:
-            return gear.hoodUp
-                ? (OutfitConfig.Microclimate.pushchairHoodUpShield, 0.0, nil)
-                : (OutfitConfig.Microclimate.pushchairOpenShield, 0.0, nil)
+    static func calculationSteps(
+        microclimate: Double,
+        windDelta: Double,
+        precipitationDelta: Double,
+        solarDelta: Double,
+        bodyHeatGain: Double,
+        rainCoverHeatGain: Double,
+        jacketGain: Double,
+        exposure: TransportExposureProfile
+    ) -> [CalcStep] {
+        var steps = [CalcStep(
+            label: "Микроклимат транспорта (§3)",
+            value: microclimate,
+            unit: "°C",
+            note: "ветер \(percent(exposure.wind)), осадки \(percent(exposure.precipitation)), солнце \(percent(exposure.solar))"
+        )]
 
-        case .carrier:
-            let offset = OutfitConfig.Microclimate.carrierBodyHeatOffset
-            return (1.0, offset, nil)  // V not reduced; body heat flat offset
+        appendGain(label: "Ветер после защиты (§3.1)", value: windDelta, to: &steps)
+        appendGain(label: "Осадки после защиты (§3.2)", value: precipitationDelta, to: &steps)
+        appendGain(label: "Солнце после защиты (§3.3)", value: solarDelta, to: &steps)
+        appendGain(label: "Тепло взрослого (§3.4)", value: bodyHeatGain, to: &steps)
+        appendGain(label: "Дождевик и вентиляция (§3.5)", value: rainCoverHeatGain, to: &steps)
+        appendGain(label: "Слинг под курткой (§3.6)", value: jacketGain, to: &steps)
+        return steps
+    }
 
-        case .carSeat:
-            return (OutfitConfig.Microclimate.pushchairOpenShield, 0.0, nil)
-        }
+    static func appendGain(label: String, value: Double, to steps: inout [CalcStep]) {
+        guard abs(value) > 0.001 else { return }
+        steps.append(CalcStep(label: label, value: value, unit: "°C", note: nil))
+    }
+
+    static func percent(_ value: Double) -> String {
+        "\(Int((value * 100).rounded()))%"
+    }
+}
+
+// MARK: - Continuous interpolation
+
+private extension MicroclimateCalculator {
+    static func smoothStep(from lower: Double, to upper: Double, value: Double) -> Double {
+        guard upper > lower else { return value >= upper ? 1 : 0 }
+        let normalized = min(max((value - lower) / (upper - lower), 0), 1)
+        return normalized * normalized * (3 - 2 * normalized)
     }
 }

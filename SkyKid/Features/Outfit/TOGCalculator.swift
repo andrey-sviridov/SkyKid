@@ -6,8 +6,35 @@ enum TOGCalculator {
 
     struct Input: Sendable {
         let T_micro: Double
-        let profile: ChildProfile
+        let profile: ChildThermalProfile
+        let walkContext: WalkContext
         let personalOffset: Double    // from PersonalOffsetStore (§8)
+
+        init(
+            T_micro: Double,
+            profile: ChildThermalProfile,
+            walkContext: WalkContext,
+            personalOffset: Double
+        ) {
+            self.T_micro = T_micro
+            self.profile = profile
+            self.walkContext = walkContext
+            self.personalOffset = personalOffset
+        }
+
+        /// Compatibility initializer for tests and the isolated legacy path.
+        init(T_micro: Double, profile: ChildProfile, personalOffset: Double) {
+            self.init(
+                T_micro: T_micro,
+                profile: profile.thermalProfile,
+                walkContext: .migrated(
+                    from: profile,
+                    gearSetup: .from(profile: profile),
+                    availableGarmentIDs: Set(GarmentCatalog.all.map(\.id))
+                ),
+                personalOffset: personalOffset
+            )
+        }
     }
 
     struct Output: Sendable {
@@ -43,16 +70,21 @@ enum TOGCalculator {
         }
 
         // §4.4 Activity
-        let dActivity = activityDelta(activity: profile.babyActivityLevel,
-                                      walkType: profile.walkType)
+        let dActivity = activityDelta(
+            activity: input.walkContext.activityLevel,
+            walkType: input.walkContext.walkType
+        )
         if dActivity != 0 {
             steps.append(CalcStep(label: "Активность (§4.4)",
                                    value: dActivity, unit: "TOG",
-                                   note: profile.babyActivityLevel.label))
+                                   note: input.walkContext.activityLevel.label))
         }
 
         // §4.5 Health
-        let (dHealth, feverActive) = healthDelta(profile: profile)
+        let (dHealth, feverActive) = healthDelta(
+            profile: profile,
+            walkContext: input.walkContext
+        )
         if dHealth != 0 {
             steps.append(CalcStep(label: "Здоровье (§4.5)",
                                    value: dHealth, unit: "TOG", note: nil))
@@ -60,19 +92,19 @@ enum TOGCalculator {
 
         var TOG_required = TOG_base + dAge + dPreterm + dActivity + dHealth
 
-        // §4.5 Fever hard cap — apply BEFORE personalOffset
-        if feverActive {
-            TOG_required = min(TOG_required, TOG_base)
-            steps.append(CalcStep(label: "Кап при температуре (§4.5)",
-                                   value: TOG_required, unit: "TOG",
-                                   note: "Перегрев опасен — ограничено базовым TOG"))
-        }
-
         // §8 Personal Offset
         if input.personalOffset != 0 {
             TOG_required += input.personalOffset
             steps.append(CalcStep(label: "Персональная поправка (§8)",
                                    value: input.personalOffset, unit: "TOG", note: nil))
+        }
+
+        // §4.5 Fever hard cap — safety rules always win over personalization.
+        if feverActive {
+            TOG_required = min(TOG_required, TOG_base)
+            steps.append(CalcStep(label: "Ограничение при температуре (§4.5)",
+                                   value: TOG_required, unit: "TOG",
+                                   note: "Применено после персональной поправки"))
         }
 
         // §4.6 Clamp
@@ -135,7 +167,7 @@ enum TOGCalculator {
 
     // MARK: - §4.3 Prematurity
 
-    private static func pretermDelta(profile: ChildProfile) -> Double {
+    private static func pretermDelta(profile: ChildThermalProfile) -> Double {
         let corrWeeks   = profile.correctedAgeWeeks
         let gestWeeks   = profile.gestationalAgeWeeks
         let chronoMonths = profile.chronologicalAgeMonths
@@ -143,11 +175,7 @@ enum TOGCalculator {
         let isPreterm = corrWeeks < 0
                      || (gestWeeks < OutfitConfig.TOG.pretermGestationThreshold
                          && chronoMonths < OutfitConfig.TOG.pretermChronoMonthsThreshold)
-        // Also check legacy healthFeature for backward compat
-        let legacyPreterm = profile.healthFeatures.contains(.premature)
-                         && chronoMonths < OutfitConfig.TOG.pretermChronoMonthsThreshold
-
-        return (isPreterm || legacyPreterm) ? OutfitConfig.TOG.pretermDelta : 0
+        return isPreterm ? OutfitConfig.TOG.pretermDelta : 0
     }
 
     // MARK: - §4.4 Activity
@@ -167,33 +195,29 @@ enum TOGCalculator {
 
     // MARK: - §4.5 Health
 
-    private static func healthDelta(profile: ChildProfile) -> (delta: Double, feverActive: Bool) {
+    private static func healthDelta(
+        profile: ChildThermalProfile,
+        walkContext: WalkContext
+    ) -> (delta: Double, feverActive: Bool) {
         var delta = 0.0
-        var feverActive = false
+        let feverActive = walkContext.hasFever
 
-        for condition in profile.healthConditions {
-            switch condition {
-            case .fever:
-                delta += OutfitConfig.TOG.feverDelta
-                feverActive = true
-            case .coldNoFever:
-                break  // no TOG change; warning emitted by SafetyRulesEngine
-            case .anemia:
-                delta += OutfitConfig.TOG.anemiaOutDelta
-            case .atopicDermatitis:
-                break  // wardrobe filter only; no TOG change
-            case .cardioRespiratory:
-                break  // uses preterm no-walk thresholds in SafetyRulesEngine
-            }
+        if feverActive {
+            delta += OutfitConfig.TOG.feverDelta
         }
 
-        // Legacy HealthFeature bridge
-        for feature in profile.healthFeatures {
-            switch feature {
-            case .frequentIllness: delta += OutfitConfig.TOG.legacyFreqIllnessDelta
-            case .coldSensitive:   delta += OutfitConfig.TOG.legacyColdSensitiveDelta
-            case .premature:       break  // handled in §4.3
-            case .heatSensitive:   delta += OutfitConfig.TOG.legacyHeatSensitiveDelta
+        for trait in profile.stableTraits {
+            switch trait {
+            case .frequentIllness:
+                delta += OutfitConfig.TOG.legacyFreqIllnessDelta
+            case .coldSensitive:
+                delta += OutfitConfig.TOG.legacyColdSensitiveDelta
+            case .heatSensitive:
+                delta += OutfitConfig.TOG.legacyHeatSensitiveDelta
+            case .anemia:
+                delta += OutfitConfig.TOG.anemiaOutDelta
+            case .atopicDermatitis, .cardioRespiratory:
+                break
             }
         }
 

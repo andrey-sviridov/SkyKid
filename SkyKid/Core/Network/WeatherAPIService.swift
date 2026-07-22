@@ -9,7 +9,7 @@ struct WeatherAPIService: WeatherService {
     let apiKey: String
     private static let base = "https://api.weatherapi.com/v1/current.json"
 
-    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData {
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather {
         var comps = URLComponents(string: Self.base)!
         comps.queryItems = [
             .init(name: "key",  value: apiKey),
@@ -20,15 +20,19 @@ struct WeatherAPIService: WeatherService {
         let (data, _) = try await URLSession.shared.data(from: comps.url!)
         let root = try JSONDecoder().decode(WAPIRoot.self, from: data)
         let c = root.current
-        return WeatherData(
-            temperature:         c.temp_c,
+        return try WeatherNormalizer.normalize(RawWeatherObservation(
+            source: .weatherAPI,
+            temperature: c.temp_c,
             apparentTemperature: c.feelslike_c,
-            humidity:            c.humidity,
-            windSpeed:           c.wind_kph / 3.6,   // km/h → m/s
-            windDirection:       c.wind_degree,
-            precipitation:       c.precip_mm,
-            weatherCode:         Self.mapCode(c.condition.code)
-        )
+            humidity: c.humidity,
+            windSpeed: c.wind_kph.map { $0 / 3.6 },
+            windDirection: c.wind_degree,
+            precipitation: c.precip_mm,
+            weatherCode: c.condition.map { Self.mapCode($0.code) },
+            windGust: c.gust_kph.map { $0 / 3.6 },
+            uvIndex: c.uv,
+            cloudCover: c.cloud.map(Double.init)
+        ))
     }
 
     // MARK: - Condition code → WMO code
@@ -66,13 +70,16 @@ struct WeatherAPIService: WeatherService {
 private struct WAPIRoot: Decodable { let current: WAPICurrent }
 
 private struct WAPICurrent: Decodable {
-    let temp_c:      Double
-    let feelslike_c: Double
-    let humidity:    Int
-    let wind_kph:    Double
-    let wind_degree: Int
-    let precip_mm:   Double
-    let condition:   WAPICondition
+    let temp_c:      Double?
+    let feelslike_c: Double?
+    let humidity:    Int?
+    let wind_kph:    Double?
+    let wind_degree: Int?
+    let precip_mm:   Double?
+    let gust_kph:    Double?
+    let uv:          Double?
+    let cloud:       Int?
+    let condition:   WAPICondition?
 }
 
 private struct WAPICondition: Decodable { let code: Int }

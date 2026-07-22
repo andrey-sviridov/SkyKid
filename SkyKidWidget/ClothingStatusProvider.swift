@@ -1,5 +1,5 @@
-import WidgetKit
 import Foundation
+import WidgetKit
 
 // MARK: - Timeline Entry
 
@@ -7,104 +7,90 @@ struct ClothingStatusEntry: TimelineEntry {
     let date: Date
     let recommendation: WidgetOutfitRecommendation
     let isPlaceholder: Bool
+    let requiresRefresh: Bool
+    let lastUpdatedAt: Date?
 
     static var placeholder: ClothingStatusEntry {
         ClothingStatusEntry(
             date: Date(),
-            recommendation: WidgetClothingCalculator.placeholder,
-            isPlaceholder: true
+            recommendation: .placeholder,
+            isPlaceholder: true,
+            requiresRefresh: false,
+            lastUpdatedAt: nil
+        )
+    }
+
+    static func refreshRequired(
+        from snapshot: OutfitRecommendationSnapshot?
+    ) -> ClothingStatusEntry {
+        ClothingStatusEntry(
+            date: Date(),
+            recommendation: snapshot.map { WidgetOutfitRecommendation(snapshot: $0) } ?? .placeholder,
+            isPlaceholder: false,
+            requiresRefresh: true,
+            lastUpdatedAt: snapshot?.generatedAt
         )
     }
 }
 
 // MARK: - Timeline Provider
 
-/// Читает кешированные данные из AppGroup.
-/// Если кеш старше 90 минут — пытается самостоятельно получить свежую погоду
-/// через OpenMeteoService, используя последние известные координаты из AppGroup.
+/// Reads the exact versioned recommendation produced by the main app.
+/// The widget never runs a separate clothing algorithm.
 struct ClothingStatusProvider: TimelineProvider {
-
-    // MARK: TimelineProvider
-
     func placeholder(in context: Context) -> ClothingStatusEntry {
         .placeholder
     }
 
     func getSnapshot(in context: Context, completion: @escaping (ClothingStatusEntry) -> Void) {
-        if context.isPreview {
-            completion(.placeholder)
-        } else {
-            Task { completion(await makeEntry()) }
-        }
+        completion(context.isPreview ? .placeholder : makeEntry())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<ClothingStatusEntry>) -> Void) {
-        Task {
-            let entry = await makeEntry()
-            // Следующее плановое обновление — через 30 минут.
-            // При загрузке погоды в приложении WidgetCenter.reloadAllTimelines()
-            // вызывается раньше, поэтому реальная задержка обычно меньше.
-            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
-            completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
-        }
+        let now = Date()
+        let snapshot = AppGroupRecommendationSnapshotStore().load()
+        let entry = makeEntry(snapshot: snapshot, at: now)
+        let regularUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: now) ?? now
+        let nextUpdate = nextUpdateDate(
+            now: now,
+            regularUpdate: regularUpdate,
+            snapshot: snapshot
+        )
+        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 
     // MARK: - Entry construction
 
-    private func makeEntry() async -> ClothingStatusEntry {
-        let profile = AppGroup.loadProfile()
-
-        // Пробуем прочитать кеш без ограничения возраста
-        let rawCached = AppGroup.loadCachedWeatherIgnoringAge()
-        let cacheAge  = rawCached.map { Date().timeIntervalSince($0.updatedAt) } ?? .infinity
-
-        // Кеш свежий (< 90 мин) — используем его напрямую
-        if cacheAge < 5_400, let cached = rawCached {
-            return entry(from: cached, profile: profile)
-        }
-
-        // Кеш устарел или пуст — пробуем живой fetch
-        if let coordinate = AppGroup.loadLastKnownCoordinate(),
-           let weatherData = try? await OpenMeteoService().fetch(coordinate: coordinate) {
-            let fresh = CachedWeather(
-                temperature:         weatherData.temperature,
-                apparentTemperature: weatherData.apparentTemperature,
-                weatherCode:         weatherData.weatherCode,
-                windSpeed:           weatherData.windSpeed,
-                precipitation:       weatherData.precipitation,
-                // Название города берём из старого кеша, если есть
-                cityName:            rawCached?.cityName ?? "—",
-                updatedAt:           Date()
-            )
-            return entry(from: fresh, profile: profile)
-        }
-
-        // Последний вариант: устаревший кеш лучше, чем заглушка
-        if let stale = rawCached {
-            return entry(from: stale, profile: profile)
-        }
-
-        return .placeholder
+    private func makeEntry() -> ClothingStatusEntry {
+        let now = Date()
+        let snapshot = AppGroupRecommendationSnapshotStore().load()
+        return makeEntry(snapshot: snapshot, at: now)
     }
 
-    private func entry(from weather: CachedWeather, profile: ChildProfile?) -> ClothingStatusEntry {
-        // Prefer TOG cache (personalized, matches Outfit tab)
-        if let tog = AppGroup.loadTOGOutfit(),
-           Date().timeIntervalSince(tog.updatedAt) < 5_400 {
-            let rec = WidgetOutfitRecommendation(
-                temperature:         weather.temperature,
-                apparentTemperature: weather.apparentTemperature,
-                effectiveChildTemp:  tog.effectiveChildTemp,
-                cityName:            weather.cityName,
-                status:              WidgetClothingCalculator.status(for: tog.effectiveChildTemp),
-                outfitItems:         tog.layers.map(\.name),
-                ageLabel:            profile?.ageLabel ?? "малыша",
-                updatedAt:           tog.updatedAt
-            )
-            return ClothingStatusEntry(date: Date(), recommendation: rec, isPlaceholder: false)
+    private func makeEntry(
+        snapshot: OutfitRecommendationSnapshot?,
+        at date: Date
+    ) -> ClothingStatusEntry {
+        guard let snapshot, snapshot.isFresh(at: date) else {
+            return .refreshRequired(from: snapshot)
         }
-        // Fallback: CLO calculator
-        let rec = WidgetClothingCalculator.recommend(weather: weather, profile: profile)
-        return ClothingStatusEntry(date: Date(), recommendation: rec, isPlaceholder: false)
+
+        return ClothingStatusEntry(
+            date: date,
+            recommendation: WidgetOutfitRecommendation(snapshot: snapshot),
+            isPlaceholder: false,
+            requiresRefresh: false,
+            lastUpdatedAt: snapshot.generatedAt
+        )
+    }
+
+    private func nextUpdateDate(
+        now: Date,
+        regularUpdate: Date,
+        snapshot: OutfitRecommendationSnapshot?
+    ) -> Date {
+        guard let snapshot, snapshot.isFresh(at: now) else { return regularUpdate }
+        let expiryUpdate = max(snapshot.expiresAt, now.addingTimeInterval(60))
+        return min(regularUpdate, expiryUpdate)
     }
 }

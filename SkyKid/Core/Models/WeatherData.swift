@@ -42,7 +42,9 @@ struct HourlyForecast: Equatable, Sendable {
     }
 }
 
-struct WeatherData: Equatable {
+/// Legacy scalar container retained for the isolated CLO engine and widget
+/// source compatibility. New recommendation code uses `NormalizedWeather`.
+struct WeatherData: Equatable, Sendable {
     let temperature: Double
     let apparentTemperature: Double
     let humidity: Int
@@ -145,4 +147,3 @@ extension WeatherData {
     }
 }
 #endif
-

@@ -1,6 +1,6 @@
 # SkyKid — Карта проекта
 
-> Версия: 2026-06-09 (после полного рефакторинга)
+> Версия: 2026-07-23 (профиль v2 + нормализованная погода + контекстная персонализация v2 + родительский UX)
 > Стек: SwiftUI · iOS 17+ · Swift 6 · @Observable · WidgetKit · AppIntents
 > Bundle ID: `com.skykid.app` · App Group: `group.com.skykid.app`
 
@@ -18,7 +18,8 @@ SkyKid/
 ├── Features/
 │   ├── Weather/
 │   │   ├── WeatherView.swift        Вкладка 0 «Погода»
-│   │   └── WeatherViewModel.swift   @MainActor @Observable; DI через any WeatherService
+│   │   ├── WeatherViewModel.swift   @MainActor @Observable; DI через any WeatherService
+│   │   └── Components/WeatherDataQualityCard.swift источник и уверенность
 │   │
 │   ├── Map/
 │   │   ├── RadarMapView.swift       Вкладка 1 «Осадки»
@@ -26,14 +27,36 @@ SkyKid/
 │   │   └── RainViewerOverlay.swift  MKTileOverlay + renderer (opacity 0.6)
 │   │
 │   ├── Outfit/
-│   │   ├── OutfitView.swift              Вкладка 2 «Одежда» — glassmorphism UI + feedback
-│   │   ├── ClothingRecommendationEngine.swift  Слоевой движок (LayeredOutfit, LayerStrategy)
+│   │   ├── OutfitView.swift              Вкладка 2 «Одежда»
+│   │   ├── OutfitViewModel.swift         Presentation state + контекстный TOG feedback
+│   │   ├── OutfitParentSummary.swift     Короткий ответ + общая уверенность
+│   │   ├── TransportMode+Presentation.swift подписи/иконки транспорта
+│   │   ├── WalkPreparation/              Форма контекста прогулки + value-type ViewModel
+│   │   ├── Components/                   Parent summary, alternatives, details, warnings, feedback
+│   │   ├── BuildOutfitRecommendationUseCase.swift UI result + App Group snapshot
+│   │   ├── OutfitRecommendationService.swift пайплайн §2→§6
+│   │   ├── WeatherThermalEffects.swift  независимые вклады среды
+│   │   ├── EffectiveTemperatureCalculator.swift единый расчёт среды
+│   │   ├── TransportExposureProfile.swift коэффициенты защиты транспорта
+│   │   ├── MicroclimateCalculator.swift  композиция среды и транспорта
+│   │   ├── GarmentCompatibilityPolicy.swift зоны тела и совместимость
+│   │   ├── OutfitCombinationSolver.swift поиск доступных слоёв по TOG
+│   │   ├── OutfitAccessoryResolver.swift защита головы, рук и стоп
+│   │   ├── OutfitSolver.swift            оркестрация корпуса/аксессуаров/fit
+│   │   ├── ClothingRecommendationEngine.swift  Legacy CLO-движок
 │   │   ├── ClothingCalculatorView.swift  Вкладка 3 «Конструктор» — только SwiftUI views
-│   │   ├── WardrobeModel.swift           CLO-логика, авто-выбор, reset к погоде
-│   │   └── GarmentCatalog.swift          Каталог предметов одежды (19 позиций)
+│   │   ├── WardrobeModel.swift           CLO-состояние и действия Конструктора
+│   │   ├── LegacyWardrobeAutoSelector.swift жадный CLO-подбор только Конструктора
+│   │   └── GarmentCatalog.swift          Единый каталог одежды и метаданных
+│   │
+│   ├── History/
+│   │   ├── WalkHistoryView.swift         Прогулки + история отзывов
+│   │   ├── FeedbackHistoryItem.swift     Presentation builder наблюдений
+│   │   └── FeedbackHistorySection.swift  Сворачиваемая карточка истории
 │   │
 │   └── Profile/
-│       ├── ChildProfileSetupView.swift  Онбординг + редактирование (активность, здоровье, прогулка)
+│       ├── ChildProfileSetupView.swift  Онбординг + только постоянные данные
+│       ├── Components/StableThermalTraitRow.swift
 │       └── ChildWeatherPerception.swift Вычисляемая обёртка комфорта ребёнка
 │
 ├── Core/
@@ -43,31 +66,51 @@ SkyKid/
 │   │   ├── OpenWeatherMapService.swift   Провайдер 2 — ключ owmApiKey
 │   │   ├── WeatherAPIService.swift       Провайдер 3 — ключ wapiApiKey
 │   │   ├── WeatherKitService.swift       Провайдер 4 — ⚠️ заглушка (requires Dev Portal capability)
+│   │   ├── YandexWeatherService.swift    Провайдер 5 — ключ yandexApiKey
 │   │   ├── WeatherServiceSettings.swift  WeatherProvider enum + фабрика + activeService
 │   │   └── RainViewerService.swift       Радарные фреймы (RainViewer API v2)
 │   │
 │   ├── Location/
 │   │   └── LocationManager.swift        @Observable CLLocationManager
 │   │
-│   └── Models/
-│       ├── WeatherData.swift            Доменная модель погоды + RadarFrame
-│       ├── ChildProfile.swift           ChildProfile + ChildGender + AgeGroup + ActivityLevel +
-│       │                                WalkType + HealthFeature + AppGroup + CachedWeather
+│   ├── Notifications/
+│   │   ├── NotificationService.swift    Планирование локальных уведомлений
+│   │   └── SafeReminderContent.swift    Проверяемые безопасные тексты
+│   │
+│   ├── Models/
+│       ├── RawWeatherObservation.swift Optional-поля ответа + WeatherSource
+│       ├── NormalizedWeather.swift     Единая погодная модель + WeatherConfidence
+│       ├── WeatherNormalizer.swift     Safe fallback и статусы качества
+│       ├── WeatherData.swift           Legacy scalar model + PrecipType/Hourly/RadarFrame
+│       ├── ChildThermalProfile.swift    Постоянные данные + StableThermalTrait
+│       ├── WalkContext.swift            Текущая прогулка; намеренно не Codable
+│       ├── WalkContextStore.swift       In-memory lifecycle контекста
+│       ├── ChildProfile.swift           Codable v2 + миграция legacy JSON
 │       │                                ⚠️ Target Membership: SkyKid + SkyKidWidget
 │       ├── ChildProfileStore.swift      Singleton-обёртка над AppGroup (только SkyKid)
+│       ├── OutfitRecommendationSnapshot.swift версионированный общий снимок
+│       ├── PersonalizationModels.swift  контекст, наблюдение, state и summary
+│       ├── PersonalizationEngine.swift  повторяемые сигналы, дедупликация, лимиты
+│       ├── PersonalOffsetStore.swift    App Group persistence + миграция v1 → v2
+│       ├── WalkLog.swift                прогулка + optional-контекст feedback
 │       └── BiasStore.swift             TempZone + ClothingBiasEngine + BiasStore @MainActor
+│   └── Storage/
+│       ├── RecommendationSnapshotStore.swift App Group persistence
+│       └── WalkLogStore.swift           журнал + синхронизация наблюдений
 │
 └── Info.plist
 
 SkyKidWidget/
 ├── SkyKidWidgetBundle.swift         @main → 2 виджета (Home + LockScreen)
-├── WidgetClothingCalculator.swift   Логика виджета + ClothingWidgetStatus (7 уровней)
-├── ClothingStatusProvider.swift     TimelineProvider: async fetch, stale-cache refresh (90 мин)
-└── ClothingStatusWidgetView.swift   Small / Medium (с баннером риска) / Circular / Rectangular
+├── WidgetClothingCalculator.swift   Presentation-адаптер snapshot + ClothingWidgetStatus
+├── ClothingStatusProvider.swift     fresh outfit / stale update metadata
+└── ClothingStatusWidgetView.swift   Outfit + время/контекст или запрос обновления
 ```
 
-**Удалённые файлы:**
-- `OutfitAdvisor.swift` — заменён `ClothingRecommendationEngine.swift`
+**История миграции:**
+- `OutfitAdvisor.swift` удалён; основная вкладка использует TOG-пайплайн `OutfitRecommendationService` → `OutfitSolver`
+- `ClothingRecommendationEngine.swift` и `WardrobeModel.swift` сохранены только для legacy-вкладки «Конструктор»
+- Виджет и Siri не пересчитывают одежду: они читают `OutfitRecommendationSnapshot`
 
 ---
 
@@ -103,7 +146,7 @@ SkyKidApp (@main)
 - `statsGrid`: Ветер (м/с) · Направление · Влажность (%) · Осадки (мм)
 - Градиент фона: 7 состояний по `weatherCode` и температуре
 
-**Зависимости:** pure view — принимает `WeatherData` + `ChildProfile?`
+**Зависимости:** pure view — принимает `NormalizedWeather` + `ChildProfile?`; при сниженной уверенности показывает `WeatherDataQualityCard`.
 
 ---
 
@@ -117,25 +160,33 @@ SkyKidApp (@main)
 
 ### 3.3 Вкладка «Одежда» (OutfitView)
 
-**UI — glassmorphism, Apple-style минимализм:**
-- `LinearGradient` фон: 6 диапазонов от ≤ −10°C (deep navy) до ≥ 22°C (coral), анимируется по `gradientKey = Int((effectiveTemp/4).rounded())`
-- Hero-карточка: `.ultraThinMaterial` + `strokeBorder(.white.opacity(0.18))` · SF Symbol с `.bounce` · температура с `.numericText()` transition
-- Карточка восприятия (`ChildWeatherPerception`): `.thinMaterial`
-- Чипы условий (ветер/снег/дождь): `Capsule` + `.thinMaterial`
-- Карточки слоёв: `.regularMaterial` + `UnevenRoundedRectangle` · `fixedSize(horizontal: false, vertical: true)` на текстах
-- Spring-анимация списка: `.spring(response: 0.4, dampingFraction: 0.75)`
-- `ContentUnavailableView` при отсутствии профиля
+**Порядок ответа для родителя:**
+- `ParentOutfitSummaryCard`: что надеть, почему выбран комплект и как проверить ребёнка; рядом точный возраст, диапазон группы и худшая из погодной/гардеробной уверенностей
+- `WalkContextSummaryCard`: текущий транспорт, активность, самочувствие и кнопка изменения
+- safety-предупреждения и более подходящее погодное окно
+- реальные слои из личного гардероба
+- `WardrobeAlternativesCard`: недостающие вещи как варианты замены с безопасным fallback-действием
+- `OutfitCalculationDetailsCard`: температуры, источник, качество, `OutfitFit` и трассировка; по умолчанию свёрнута
+- персонализация и обратная связь после прогулки
 
-**Feedback-секция (BiasStore):**
+Форма `WalkPreparationView` использует по одному пикеру транспорта и утепления, очищает несовместимые параметры при смене транспорта и закрепляет основное действие снизу. Ключевые тексты не обрезаются; заголовок summary и feedback-кнопки переходят в вертикальную раскладку при accessibility Dynamic Type.
+
+**Feedback-секция (PersonalOffsetStore):**
 - Три кнопки: `thermometer.snowflake` (Холодно) · `checkmark.circle` (Комфортно) · `thermometer.sun` (Жарко)
 - Haptics: `UIImpactFeedbackGenerator(style: .light)`
-- «Холодно» → `BiasStore.shared.record(.tooCold, ...)` ; «Жарко» → `.tooWarm` ; «Комфортно» → только анимация
-- Баннер подтверждения: `brain.headset` + цвет нажатой кнопки, автосброс через 3 сек
+- Выбор передаётся в `OutfitViewModel` как контекстное наблюдение; одно нажатие не меняет TOG
+- Сигналы ближе четырёх часов считаются одной прогулкой; изменение начинается после двух согласованных наблюдений
+- `PersonalizationStatusCard` показывает зону, активность, текущий offset и правила обучения, а также даёт полный сброс
+- Баннер подтверждения различает сохранённое наблюдение, повторившийся сигнал и подтверждение «Комфортно»
 
 **Движок:**
 ```swift
-let bias   = BiasStore.shared.currentBias(for: profile, feelsLike: weather.apparentTemperature)
-let outfit = ClothingRecommendationEngine.recommend(weather: weather, profile: profile, learnedBias: bias)
+let output = BuildOutfitRecommendationUseCase().execute(
+    weather: weather,
+    profile: profile.thermalProfile,
+    walkContext: walkContext,
+    cityName: cityName
+)
 ```
 
 ---
@@ -165,20 +216,14 @@ currentHeat  = Σ(selectedItems.heatValue)
 heatDeviation = currentHeat − requiredHeat
 ```
 
-**GarmentCatalog — 19 предметов:**
-```
-.base      : подгузник · боди · термобельё · носки × 2 · царапки
-.insulator : флис-комбез · свитер · брюки
-.outer     : ветровка · демисез. комбез · зимний комбез · одеялко × 2
-.accessory : шапочки × 2 · варежки · пинетки · слюнявчик
-```
+**GarmentCatalog:** один список для личного гардероба, основного TOG-решателя и legacy-Конструктора. Каждая позиция содержит возраст, TOG/CLO, покрываемые зоны, назначение и группу несовместимости. Скрытый набор solver-предметов удалён.
 
 ---
 
 ### 3.5 Вкладка «Профиль» (ProfileSummaryView)
 
 - Аватар (градиентный круг + эмодзи пола)
-- Карточки: день рождения · возрастная группа · **активность · тип прогулки** · возрастная поправка · склонность (если ≠ 0) · особенности здоровья (если заполнены)
+- Карточки: день рождения · возрастная группа · срок рождения · температурная склонность · устойчивые тепловые особенности
 - Пикер темы: Авто / Светлая / Тёмная (`@AppStorage("colorScheme")`)
 - **Карточка «Спросить Siri»:** `ShortcutsLink()` — открывает Shortcuts.app где пользователь сам назначает произвольную фразу для `GetOutfitRecommendationIntent`
 - Кнопка «Изменить данные» → sheet → `ChildProfileSetupView`
@@ -187,38 +232,44 @@ heatDeviation = currentHeat − requiredHeat
 
 ## 4. Модели данных
 
-### 4.1 WeatherData
+### 4.1 NormalizedWeather
 
 ```swift
-struct WeatherData: Equatable, Sendable {
+struct NormalizedWeather: Equatable, Sendable {
+    source: WeatherSource
     temperature, apparentTemperature: Double  // °C
     humidity:                          Int     // %
     windSpeed:                         Double  // м/с
+    windGust:                          Double  // м/с
     windDirection:                     Int     // градусы
     precipitation:                     Double  // мм
     weatherCode:                       Int     // WMO (0–99)
+    uvIndex, cloudCover:               Double
+    fieldStatuses: [WeatherField: WeatherFieldStatus]
 }
-// computed: conditionDescription, conditionIcon, windDirectionLabel
+// computed: confidence, conditionDescription, conditionIcon, windDirectionLabel
 ```
+
+`RawWeatherObservation` сохраняет `nil` из API. `WeatherNormalizer` является единственным местом fallback-правил. `WeatherData` оставлен только для legacy CLO-конструктора и общих типов виджета.
 
 ---
 
-### 4.2 ChildProfile
+### 4.2 ChildThermalProfile
 
 ```swift
-struct ChildProfile: Equatable {
-    name:                        String
-    gender:                      ChildGender         // .boy / .girl
-    birthday:                    Date
-    activityLevel:               ActivityLevel       // .low / .moderate / .high
-    walkType:                    WalkType            // .short / .regular / .long / .park
-    healthFeatures:              Set<HealthFeature>  // множественный выбор
-    temperaturePreferenceOffset: Double              // ручная поправка °C, default 0
+struct ChildThermalProfile: Codable, Equatable, Sendable {
+    var name: String
+    var gender: ChildGender
+    var birthday: Date
+    var gestationalAgeWeeks: Int
+    var stableTraits: Set<StableThermalTrait>
+    var temperaturePreferenceOffset: Double
 }
-// Codable в extension: backward-compatible (новые поля через try?)
-// computed: ageYears, ageMonths, ageLabel, ageGroup, healthTemperatureAdjustment
-// func name(_ RussianCase): склонение (nominative / accusative / dative / genitive)
 ```
+
+Это единственная долгоживущая тепловая модель ребёнка. Она не содержит текущую болезнь, активность, длительность или транспорт.
+
+`ChildProfile` оборачивает эту модель для Codable-миграции. Схема v2 хранит только `thermalProfile`; острые и прогулочные поля старой схемы при миграции отбрасываются.
 
 ---
 
@@ -235,37 +286,40 @@ struct ChildProfile: Equatable {
 
 ---
 
-### 4.4 ActivityLevel
+### 4.4 StableThermalTrait
 
-| Кейс | Поправка | Описание |
-|---|---|---|
-| `.low` | −2°C | В коляске, дремлет |
-| `.moderate` | 0°C | Спокойно гуляет |
-| `.high` | +3°C | Активно бегает |
+`frequentIllness`, `coldSensitive`, `heatSensitive`, `anemia`, `atopicDermatitis`, `cardioRespiratory`. Точный срок рождения хранится отдельно в `gestationalAgeWeeks`, а не как булевый флаг.
 
 ---
 
-### 4.5 WalkType (новый)
+### 4.5 WalkContext
 
-| Кейс | Поправка | Описание |
-|---|---|---|
-| `.short` | +1°C | До 30 минут |
-| `.regular` | 0°C | Около 1 часа |
-| `.long` | −1.5°C | 2+ часа (нужен запас тепла) |
-| `.park` | −1°C | Парк / лес (ветер, влажность) |
+```swift
+struct WalkContext: Equatable, Sendable {
+    var healthStatus: CurrentHealthStatus
+    var bodyTemperatureCelsius: Double?
+    var activityLevel: BabyActivityLevel
+    var transportMode: TransportMode
+    var hoodUp: Bool
+    var rainCover: RainCoverState
+    var strollerConvertTOG: Double?
+    var blanketTOG: Double?
+    var walkType: WalkType
+    var parentWearingCarrier: Bool
+    var availableGarmentIDs: Set<String>
+}
+```
+
+`WalkContext.standard(for:)` выбирает возрастно-уместные начальные значения. `WalkContextStore` хранит контекст только в памяти; модель не `Codable`.
 
 ---
 
-### 4.6 HealthFeature (новый)
+### 4.6 CurrentHealthStatus и BabyActivityLevel
 
-| Кейс | Поправка | Описание |
-|---|---|---|
-| `.frequentIllness` | −1.5°C | Часто болеет |
-| `.coldSensitive` | −2°C | Реакция на холод |
-| `.premature` | −2°C | Недоношенный |
-| `.heatSensitive` | +1.5°C | Плохо переносит жару |
-
-`healthTemperatureAdjustment` = сумма поправок всех флагов в `Set<HealthFeature>`
+- `CurrentHealthStatus`: `.well`, `.coldWithoutFever`, `.fever`.
+- Температура тела 38°C и выше активирует лихорадочные safety-правила независимо от текстового статуса.
+- `BabyActivityLevel`: `.sleeping`, `.calmAwake`, `.activeInStroller`, `.walkingCrawling`.
+- `WalkType`: `.short`, `.regular`, `.long`, `.park`.
 
 ---
 
@@ -273,7 +327,7 @@ struct ChildProfile: Equatable {
 
 | Ключ | Тип | Назначение |
 |---|---|---|
-| `child_profile` | Data (JSON) | ChildProfile |
+| `child_profile` | Data (JSON v2) | `ChildThermalProfile` внутри `ChildProfile` migration envelope |
 | `wg_temperature` | Double | Реальная температура |
 | `wg_apparent_temp` | Double | feelsLike |
 | `wg_weather_code` | Int | WMO-код |
@@ -288,13 +342,14 @@ struct ChildProfile: Equatable {
 | `weatherProvider` | String | Активный провайдер |
 | `owmApiKey` | String | Ключ OpenWeatherMap |
 | `wapiApiKey` | String | Ключ WeatherAPI.com |
+| `yandexApiKey` | String | Ключ Яндекс Погоды |
 | `colorScheme` | String | Тема: system / light / dark |
 
 **Методы AppGroup:**
-- `saveWeather(...)` / `loadCachedWeather()` — TTL 2 ч
-- `loadCachedWeatherIgnoringAge()` — для виджетного fallback
-- `saveLocation(lat:lon:)` / `loadLastKnownCoordinate()` — координаты для виджета
+- `saveWeather(...)` / `loadCachedWeather()` — legacy-кеш погоды; не используется для подбора одежды в расширениях
+- `saveLocation(lat:lon:)` / `loadLastKnownCoordinate()` — кеш последней известной позиции приложения
 - `saveProfile(_:)` / `loadProfile()` / `deleteProfile()`
+- `AppGroupRecommendationSnapshotStore.save/load/loadFresh` — единый `OutfitRecommendation` с временем/контекстом использованной погоды, TTL 2 ч
 
 ---
 
@@ -304,7 +359,7 @@ struct ChildProfile: Equatable {
 
 ```swift
 protocol WeatherService: Sendable {
-    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather
 }
 ```
 
@@ -315,6 +370,7 @@ protocol WeatherService: Sendable {
 | `OpenMeteoService` | Open-Meteo (ECMWF) | Не нужен | ✅ По умолчанию |
 | `OpenWeatherMapService` | OpenWeatherMap | `owmApiKey` | ✅ |
 | `WeatherAPIService` | WeatherAPI.com | `wapiApiKey` | ✅ |
+| `YandexWeatherService` | Яндекс Погода | `yandexApiKey` | ✅ |
 | `WeatherKitService` | Apple WeatherKit | App ID capability | ⚠️ Заглушка — делегирует на OpenMeteo |
 
 **WeatherKit отключён:** entitlement `com.apple.developer.weatherkit` и `WeatherKit.framework` убраны из проекта. Для активации: включить capability в Dev Portal, раскомментировать тело `WeatherKitService.fetch()`.
@@ -323,7 +379,9 @@ protocol WeatherService: Sendable {
 
 ---
 
-## 6. ClothingRecommendationEngine
+## 6. Legacy ClothingRecommendationEngine
+
+Этот раздел описывает только изолированный CLO-конструктор. Основная вкладка «Одежда», виджет и Siri его не вызывают.
 
 ### 6.1 Формула effectiveTemp
 
@@ -369,7 +427,7 @@ struct LayeredOutfit.Layer: Equatable, Sendable, Identifiable {
 ### 6.4 Типичный вызов
 
 ```swift
-// @MainActor контекст (OutfitView, SkyKidIntents.perform())
+// Только legacy-вкладка «Конструктор»
 let bias   = BiasStore.shared.currentBias(for: profile, feelsLike: weather.apparentTemperature)
 let outfit = ClothingRecommendationEngine.recommend(weather: weather, profile: profile, learnedBias: bias)
 ```
@@ -417,17 +475,17 @@ enum UserFeedback {
 - Пол (GenderButton × 2)
 - Дата рождения (DatePicker, compact)
 
-### Карточка 2: Поведение на прогулке
-- **Активность** (`ActivityButton` × 3): В коляске / Умеренная / Высокая
-- **Тип прогулки** (`WalkTypeButton` × 4, 2×2 grid): Короткая / Обычная / Долгая / Парк–лес
+### Карточка 2: Рождение
+- Признак недоношенности
+- Точный срок рождения в неделях
 
 ### Карточка 3: Предпочтения
 - **Склонность к температуре**: Slider −3…+3°C (step 0.5), цвет: синий ← зелёный → оранжевый
-- **Особенности здоровья** (`HealthFeatureRow` × 4, multi-select): Часто болеет / Реакция на холод / Недоношенный / Плохо переносит жару
+- **Устойчивые тепловые особенности** (`StableThermalTraitRow`, multi-select)
 
 ### Карточка предпросмотра + кнопка «Начать» / «Сохранить»
 
-Все поля Codable-backward-compatible: старые профили загружаются без ошибок (новые поля = дефолты).
+Текущее самочувствие, температура тела, активность, транспорт и длительность задаются не здесь, а в `WalkPreparationView`. Старые профили загружаются через миграцию v2; острые данные при этом не переносятся.
 
 ---
 
@@ -445,19 +503,17 @@ enum UserFeedback {
 ```
 Основное приложение
 └── WeatherViewModel.load(coordinate:)
-    ├── AppGroup.saveLocation(lat, lon)      // координаты для виджетного fetch
-    ├── AppGroup.saveWeather(...)            // кеш погоды
+    ├── BuildOutfitRecommendationUseCase.execute()
+    │   ├── OutfitRecommendationService.recommend()
+    │   └── RecommendationSnapshotStore.save()
     └── WidgetCenter.reloadAllTimelines()
 
 SkyKidWidgetExtension
-└── ClothingStatusProvider.getTimeline()    // async Task {}
-    └── makeEntry() async
-        ├── loadCachedWeatherIgnoringAge()
-        ├── cacheAge < 90 мин → использовать кеш
-        ├── cacheAge ≥ 90 мин → OpenMeteoService().fetch(loadLastKnownCoordinate())
-        │   └── успех → свежий CachedWeather
-        │   └── ошибка / нет координат → stale кеш
-        └── нет данных → .placeholder
+└── ClothingStatusProvider.getTimeline()
+    └── RecommendationSnapshotStore.load()
+        ├── fresh → OutfitRecommendation + время + условия
+        ├── stale → время/условия последних данных без одежды
+        └── nil → «Откройте SkyKid»
 ```
 
 ### 9.3 Баннер экстремального риска
@@ -471,7 +527,7 @@ SkyKidWidgetExtension
 
 ### 9.4 Файлы в Sources обоих таргетов
 
-Виджет-таргет явно включает: `ChildProfile.swift` · `OpenMeteoService.swift` · `WeatherData.swift` · `WeatherServiceProtocol.swift`
+Виджет-таргет явно включает: `ChildProfile.swift` · `ChildThermalProfile.swift` · `OutfitOutputModels.swift` · `OutfitRecommendationSnapshot.swift` · `RecommendationSnapshotStore.swift`.
 
 ---
 
@@ -485,21 +541,20 @@ struct GetOutfitRecommendationIntent: AppIntent {
     static let title: LocalizedStringResource = "Что надеть"
     static let openAppWhenRun: Bool = false
 
-    @MainActor   // BiasStore.shared изолирован на @MainActor
+    @MainActor
     func perform() async throws -> some IntentResult & ShowsSnippetView {
-        // AppGroup.loadProfile() → AppGroup.loadCachedWeather()
-        // → WeatherData из CachedWeather
-        // → BiasStore.currentBias() → ClothingRecommendationEngine.recommend()
+        // RecommendationSnapshotStore.load() + isFresh()
+        // → тот же OutfitRecommendation, что в UI и виджете
         // → .result(view: OutfitSnippetView(...))
     }
 }
 ```
 
-Ошибки: `LocalizedError` с русским описанием («нет профиля» / «нет данных погоды»).
+Ошибка: `LocalizedError` просит открыть SkyKid, если снимок отсутствует. Для устаревшего снимка сообщение дополнительно показывает время и краткие условия последних данных.
 
 ### 10.2 OutfitSnippetView
 
-Компактная карточка Siri: имя + возраст + город · температура с цветом · топ-4 слоя (иконка в `RoundedRectangle(7)` + название + причина). Все тексты: `fixedSize(horizontal: false, vertical: true)`.
+Компактная карточка Siri: имя + возраст + город · время, условия, источник и уверенность · температура с цветом · топ-4 слоя. Все тексты: `fixedSize(horizontal: false, vertical: true)`.
 
 ### 10.3 Подключение Siri пользователем
 
@@ -511,39 +566,51 @@ struct GetOutfitRecommendationIntent: AppIntent {
 
 ```
 ContentView
+├── ChildProfileStore       → ChildProfile.thermalProfile (persistent)
+├── WalkContextStore       → WalkContext (in-memory only)
 ├── WeatherViewModel          ← any WeatherService
 │                                  ← OpenMeteoService (default) | OWM | WAPI | WeatherKit(stub)
 │                                  ← WeatherProvider.activeService (UserDefaults)
+│   └── BuildOutfitRecommendationUseCase
+│       ├── NormalizedWeather + ChildThermalProfile + WalkContext
+│       ├── OutfitRecommendationService
+│       │   ├── EffectiveTemperatureCalculator → WeatherThermalEffects
+│       │   ├── TransportExposureProfile → MicroclimateCalculator
+│       │   ├── TOGCalculator → OutfitSolver
+│       │   ├── SafetyRulesEngine
+│       │   │   ├── AgeSafetyPolicy + MedicalSafetyPolicy
+│       │   │   ├── WeatherSafetyPolicy + TransportSafetyPolicy
+│       │   │   └── ThermalComfortCheckPolicy
+│       │   └── OutfitRecommendation
+│       └── RecommendationSnapshotStore → AppGroup
 ├── LocationManager
 │
-├── WeatherView               ← WeatherData, ChildProfile?
+├── WeatherView               ← NormalizedWeather, ChildProfile?
 │   └── ChildPerceptionCard  ← ChildWeatherPerception
 │
 ├── RadarMapView              ← RadarMapViewModel ← RainViewerService
 │
-├── OutfitView                ← WeatherData, ChildProfile?
-│   ├── ClothingRecommendationEngine ← WeatherData, ChildProfile
-│   │   ├── StandardLayerStrategy / InfantLayerStrategy
-│   │   └── LayeredOutfit
-│   └── BiasStore             ← FeedbackEvent, TempZone, ClothingBiasEngine
+├── OutfitView                ← NormalizedWeather, ChildProfile?, WalkContext?, OutfitRecommendation
+│   ├── OutfitViewModel       ← presentation state, PersonalOffsetStore
+│   └── WalkPreparationView   → explicit WalkContext update
 │
-├── ClothingCalculatorView    ← WeatherData?, ChildProfile?
+├── ClothingCalculatorView    ← NormalizedWeather?, ChildProfile?
 │   └── WardrobeModel         ← GarmentCatalog
 │
 └── ProfileSummaryView        ← ChildProfile
     └── ChildProfileSetupView ← ChildProfileStore ← AppGroup
 
 SkyKidIntents
-├── GetOutfitRecommendationIntent ← AppGroup, BiasStore, ClothingRecommendationEngine
-└── OutfitSnippetView             ← LayeredOutfit
+├── GetOutfitRecommendationIntent ← RecommendationSnapshotStore
+└── OutfitSnippetView             ← OutfitRecommendation
 
 SkyKidWidget
-├── ClothingStatusProvider   ← AppGroup, OpenMeteoService
-└── ClothingStatusWidgetView ← WidgetClothingCalculator ← CachedWeather, ChildProfile
+├── ClothingStatusProvider   ← RecommendationSnapshotStore
+└── ClothingStatusWidgetView ← presentation adapter ← OutfitRecommendation
 ```
 
 **Shared (SkyKid + SkyKidWidget):**
-`ChildProfile.swift` · `WeatherData.swift` · `OpenMeteoService.swift` · `WeatherServiceProtocol.swift`
+`ChildProfile.swift` · `ChildThermalProfile.swift` · `OutfitOutputModels.swift` · `OutfitRecommendationSnapshot.swift` · `RecommendationSnapshotStore.swift`
 
 ---
 

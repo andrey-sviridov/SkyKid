@@ -5,174 +5,235 @@ import Foundation
 enum EffectiveTemperatureCalculator {
 
     struct Input: Sendable {
-        let weather: WeatherData
-        let gearSetup: GearSetup
+        let weather: NormalizedWeather
     }
 
     struct Output: Sendable {
-        let T_eff: Double       // final effective temperature (°C)
-        let T_wc: Double        // wind chill value used (may equal T if condition not met)
-        let T_hi: Double        // heat index value used (may equal T if condition not met)
-        let V_calc: Double      // blended wind speed (km/h) for §3 reuse
+        let effects: WeatherThermalEffects
+        let V_calc: Double
         let precipFlags: PrecipFlags
         let steps: [CalcStep]
+
+        var T_eff: Double { effects.effectiveTemperature }
+        var T_wc: Double { effects.windChillTemperature }
+        var T_hi: Double { effects.heatIndexTemperature }
     }
 
-    struct PrecipFlags: Sendable {
+    struct PrecipFlags: Equatable, Sendable {
         let needsRainCover: Bool
         let noWalkInRain: Bool
     }
 
     static func calculate(_ input: Input) -> Output {
-        let T  = input.weather.temperature
-        let RH = Double(input.weather.humidity)
-        // Convert m/s → km/h for wind chill formula
-        let V_ms   = input.weather.windSpeed
-        let Vg_ms  = input.weather.windGust
-        let V_kmh  = V_ms * 3.6
-        let Vg_kmh = Vg_ms * 3.6
-        let V_calc = V_kmh * (1 - OutfitConfig.EffectiveTemp.gustBlendFactor)
-                   + Vg_kmh * OutfitConfig.EffectiveTemp.gustBlendFactor  // §2.1
+        let weather = input.weather
+        let temperature = weather.temperature
+        let humidity = Double(weather.humidity)
+        let windKmh = weather.windSpeed * 3.6
+        let gustKmh = weather.windGust * 3.6
+        let gustWeight = OutfitConfig.EffectiveTemp.gustBlendFactor
+        let calculatedWind = windKmh * (1 - gustWeight) + gustKmh * gustWeight
 
-        var steps: [CalcStep] = []
+        let windChill = computeWindChill(T: temperature, V_calc: calculatedWind)
+        let heatIndex = computeHeatIndex(T: temperature, RH: humidity, V_calc: calculatedWind)
+        let humidityEffect = humidityDelta(T: temperature, RH: humidity)
+        let (precipitationEffect, precipFlags) = precipitationEffect(for: weather.precipType)
+        let solarEffect = solarDelta(cloud: weather.cloudCover, uv: weather.uvIndex)
 
-        // §2.1 Wind Chill
-        let T_wc = computeWindChill(T: T, V_calc: V_calc)
-        if T_wc < T {
-            steps.append(CalcStep(label: "Ветро-холодовой индекс (§2.1)",
-                                  value: T_wc, unit: "°C",
-                                  note: "V_calc = \(String(format: "%.1f", V_calc)) км/ч"))
-        }
+        let effects = WeatherThermalEffects(
+            airTemperature: temperature,
+            windChillTemperature: windChill,
+            heatIndexTemperature: heatIndex,
+            windDelta: windChill - temperature,
+            heatDelta: heatIndex - temperature,
+            humidityDelta: humidityEffect,
+            precipitationDelta: precipitationEffect,
+            solarDelta: solarEffect
+        )
 
-        // §2.2 Heat Index
-        let T_hi = computeHeatIndex(T: T, RH: RH, V_calc: V_calc)
-        if T_hi > T {
-            steps.append(CalcStep(label: "Тепловой индекс (§2.2)",
-                                  value: T_hi, unit: "°C",
-                                  note: "RH = \(Int(RH))%"))
-        }
-
-        // §2.6 base
-        let base: Double
-        if T <= OutfitConfig.EffectiveTemp.windChillApplyBelow {
-            base = T_wc
-        } else if T >= OutfitConfig.EffectiveTemp.heatIndexApplyAbove {
-            base = T_hi
-        } else {
-            base = T
-        }
-
-        // §2.3 Humidity-Cold Penalty
-        let dtHumid = humidityDelta(T: T, RH: RH)
-        if dtHumid != 0 {
-            steps.append(CalcStep(label: "Влажный холод (§2.3)",
-                                  value: dtHumid, unit: "°C",
-                                  note: "RH = \(Int(RH))%"))
-        }
-
-        // §2.4 Precipitation
-        let (dtPrecip, precipFlags) = precipDelta(precip: input.weather.precipType,
-                                                   rainCover: input.gearSetup.rainCover)
-        if dtPrecip != 0 {
-            steps.append(CalcStep(label: "Осадки (§2.4)",
-                                  value: dtPrecip, unit: "°C", note: nil))
-        }
-
-        // §2.5 Sun Bonus
-        let dtSun = sunBonus(cloud: input.weather.cloudCover,
-                             uv: input.weather.uvIndex,
-                             gearSetup: input.gearSetup)
-        if dtSun != 0 {
-            steps.append(CalcStep(label: "Солнечная поправка (§2.5)",
-                                  value: dtSun, unit: "°C", note: nil))
-        }
-
-        let T_eff = base + dtHumid + dtPrecip + dtSun
-        steps.insert(CalcStep(label: "База T_eff (§2.6)",
-                               value: T_eff, unit: "°C",
-                               note: "T=\(String(format:"%.1f",T))°C → T_eff"), at: 0)
-
-        return Output(T_eff: T_eff, T_wc: T_wc, T_hi: T_hi,
-                      V_calc: V_calc, precipFlags: precipFlags, steps: steps)
+        return Output(
+            effects: effects,
+            V_calc: calculatedWind,
+            precipFlags: precipFlags,
+            steps: calculationSteps(effects: effects, calculatedWind: calculatedWind, humidity: humidity)
+        )
     }
+}
 
-    // MARK: - §2.1 Wind Chill formula (Environment Canada / NWS)
+// MARK: - Wind chill
 
+extension EffectiveTemperatureCalculator {
+    /// Environment Canada formulas. The low-wind branch joins the standard
+    /// branch at 5 km/h, avoiding a discontinuity around the old threshold.
     static func computeWindChill(T: Double, V_calc: Double) -> Double {
-        guard T <= OutfitConfig.EffectiveTemp.windChillApplyBelow,
-              V_calc >= OutfitConfig.EffectiveTemp.windChillMinSpeedKmh else { return T }
-        let v016 = pow(V_calc, 0.16)
-        let wc = 13.12 + 0.6215 * T - 11.37 * v016 + 0.3965 * T * v016
-        return min(wc, T) // wind chill never warmer than air temp
-    }
-
-    // MARK: - §2.2 Heat Index (Steadman simplified)
-
-    static func computeHeatIndex(T: Double, RH: Double, V_calc: Double) -> Double {
-        guard T >= OutfitConfig.EffectiveTemp.heatIndexApplyAbove else { return T }
-        let e = (RH / 100.0) * OutfitConfig.EffectiveTemp.heatIndexVaporA
-              * exp(OutfitConfig.EffectiveTemp.heatIndexVaporB * T
-                    / (OutfitConfig.EffectiveTemp.heatIndexVaporC + T))
-        var hi = T + OutfitConfig.EffectiveTemp.heatIndexHumidFactor * e
-                   - OutfitConfig.EffectiveTemp.heatIndexBaseDrop
-        hi -= OutfitConfig.EffectiveTemp.heatIndexWindCoolFactor * V_calc
-        return max(hi, T) // wind never lowers heat index below air temp
-    }
-
-    // MARK: - §2.3 Humidity-Cold Penalty
-
-    private static func humidityDelta(T: Double, RH: Double) -> Double {
-        guard T >= OutfitConfig.EffectiveTemp.humidColdApplyMinTemp,
-              T <= OutfitConfig.EffectiveTemp.humidColdApplyMaxTemp else { return 0 }
-        if RH >= OutfitConfig.EffectiveTemp.humidHighRHThreshold {
-            return OutfitConfig.EffectiveTemp.humidHighDelta
-        } else if RH >= OutfitConfig.EffectiveTemp.humidModRHThreshold {
-            return OutfitConfig.EffectiveTemp.humidModDelta
+        guard V_calc > 0, T < OutfitConfig.EffectiveTemp.windChillFadeOutAbove else {
+            return T
         }
-        return 0
+
+        let rawWindChill: Double
+        if V_calc < OutfitConfig.EffectiveTemp.windChillStandardSpeedKmh {
+            rawWindChill = T
+                + ((-1.59 + 0.1345 * T) / 5)
+                * V_calc
+        } else {
+            let v016 = pow(V_calc, 0.16)
+            rawWindChill = 13.12
+                + 0.6215 * T
+                - 11.37 * v016
+                + 0.3965 * T * v016
+        }
+
+        let fade = 1 - smoothStep(
+            from: OutfitConfig.EffectiveTemp.windChillFullEffectBelow,
+            to: OutfitConfig.EffectiveTemp.windChillFadeOutAbove,
+            value: T
+        )
+        return T + min(rawWindChill - T, 0) * fade
+    }
+}
+
+// MARK: - Heat index
+
+extension EffectiveTemperatureCalculator {
+    static func computeHeatIndex(T: Double, RH: Double, V_calc: Double) -> Double {
+        guard T > OutfitConfig.EffectiveTemp.heatIndexApplyAbove else { return T }
+
+        let vaporPressure = (RH / 100)
+            * OutfitConfig.EffectiveTemp.heatIndexVaporA
+            * exp(
+                OutfitConfig.EffectiveTemp.heatIndexVaporB * T
+                    / (OutfitConfig.EffectiveTemp.heatIndexVaporC + T)
+            )
+        let rawHeatIndex = T
+            + OutfitConfig.EffectiveTemp.heatIndexHumidFactor * vaporPressure
+            - OutfitConfig.EffectiveTemp.heatIndexBaseDrop
+            - OutfitConfig.EffectiveTemp.heatIndexWindCoolFactor * V_calc
+        let activation = smoothStep(
+            from: OutfitConfig.EffectiveTemp.heatIndexApplyAbove,
+            to: OutfitConfig.EffectiveTemp.heatIndexFullEffectAbove,
+            value: T
+        )
+        return T + max(rawHeatIndex - T, 0) * activation
+    }
+}
+
+// MARK: - Humidity, precipitation and sun
+
+private extension EffectiveTemperatureCalculator {
+    static func humidityDelta(T: Double, RH: Double) -> Double {
+        let humidityFactor = smoothStep(
+            from: OutfitConfig.EffectiveTemp.humidEffectStartsAtRH,
+            to: OutfitConfig.EffectiveTemp.humidEffectFullAtRH,
+            value: RH
+        )
+        let coldEntry = smoothStep(
+            from: OutfitConfig.EffectiveTemp.humidColdFadeInBelow,
+            to: OutfitConfig.EffectiveTemp.humidColdFullAbove,
+            value: T
+        )
+        let warmExit = 1 - smoothStep(
+            from: OutfitConfig.EffectiveTemp.humidColdFadeOutStarts,
+            to: OutfitConfig.EffectiveTemp.humidColdFadeOutEnds,
+            value: T
+        )
+        return OutfitConfig.EffectiveTemp.humidMaxColdDelta
+            * humidityFactor
+            * min(coldEntry, warmExit)
     }
 
-    // MARK: - §2.4 Precipitation
-
-    private static func precipDelta(precip: PrecipType, rainCover: RainCoverState) -> (Double, PrecipFlags) {
-        let covered = (rainCover == .present_on)
-        switch precip {
+    static func precipitationEffect(
+        for precipitation: PrecipType
+    ) -> (Double, PrecipFlags) {
+        switch precipitation {
         case .none:
             return (0, PrecipFlags(needsRainCover: false, noWalkInRain: false))
-        case .drizzle:
-            if covered { return (0, PrecipFlags(needsRainCover: false, noWalkInRain: false)) }
-            return (OutfitConfig.EffectiveTemp.precipRainDelta, PrecipFlags(needsRainCover: true, noWalkInRain: false))
-        case .lightRain:
-            if covered { return (0, PrecipFlags(needsRainCover: false, noWalkInRain: false)) }
-            return (OutfitConfig.EffectiveTemp.precipRainDelta, PrecipFlags(needsRainCover: true, noWalkInRain: false))
+        case .drizzle, .lightRain:
+            return (
+                OutfitConfig.EffectiveTemp.precipRainDelta,
+                PrecipFlags(needsRainCover: true, noWalkInRain: false)
+            )
         case .rain:
-            if covered { return (0, PrecipFlags(needsRainCover: false, noWalkInRain: false)) }
-            return (OutfitConfig.EffectiveTemp.precipRainDelta, PrecipFlags(needsRainCover: true, noWalkInRain: true))
+            return (
+                OutfitConfig.EffectiveTemp.precipRainDelta,
+                PrecipFlags(needsRainCover: true, noWalkInRain: true)
+            )
         case .snow:
-            return (OutfitConfig.EffectiveTemp.precipSnowDelta, PrecipFlags(needsRainCover: false, noWalkInRain: false))
+            return (
+                OutfitConfig.EffectiveTemp.precipSnowDelta,
+                PrecipFlags(needsRainCover: false, noWalkInRain: false)
+            )
         }
     }
 
-    // MARK: - §2.5 Sun Bonus
+    static func solarDelta(cloud: Double, uv: Double) -> Double {
+        let uvFactor = smoothStep(
+            from: OutfitConfig.EffectiveTemp.sunEffectStartsAtUV,
+            to: OutfitConfig.EffectiveTemp.sunEffectFullAtUV,
+            value: uv
+        )
+        let cloudFactor = 1 - smoothStep(
+            from: OutfitConfig.EffectiveTemp.sunCloudFadeStartsPct,
+            to: OutfitConfig.EffectiveTemp.sunCloudNoGainPct,
+            value: cloud
+        )
+        return OutfitConfig.EffectiveTemp.sunMaximumBonus * uvFactor * cloudFactor
+    }
+}
 
-    private static func sunBonus(cloud: Double, uv: Double, gearSetup: GearSetup) -> Double {
-        // Only applies if child is actually exposed: hood down OR active walk (pushchair open)
-        let isExposed = !gearSetup.hoodUp || gearSetup.transportMode == .pushchairSeat
-        guard isExposed else {
-            // Pram bassinet with hood up: halve the value
-            let full = sunBonusFull(cloud: cloud, uv: uv)
-            return full * OutfitConfig.EffectiveTemp.sunHoodHalveFactor
-        }
-        return sunBonusFull(cloud: cloud, uv: uv)
+// MARK: - Calculation trace
+
+private extension EffectiveTemperatureCalculator {
+    static func calculationSteps(
+        effects: WeatherThermalEffects,
+        calculatedWind: Double,
+        humidity: Double
+    ) -> [CalcStep] {
+        var steps = [CalcStep(
+            label: "Итог внешней среды (§2)",
+            value: effects.effectiveTemperature,
+            unit: "°C",
+            note: "Все погодные вклады рассчитаны один раз"
+        )]
+
+        appendStep(
+            label: "Ветер (§2.1)",
+            delta: effects.windDelta,
+            note: "V_calc = \(String(format: "%.1f", calculatedWind)) км/ч",
+            to: &steps
+        )
+        appendStep(
+            label: "Тепловой индекс (§2.2)",
+            delta: effects.heatDelta,
+            note: "RH = \(Int(humidity))%",
+            to: &steps
+        )
+        appendStep(
+            label: "Влажность (§2.3)",
+            delta: effects.humidityDelta,
+            note: "RH = \(Int(humidity))%",
+            to: &steps
+        )
+        appendStep(label: "Осадки (§2.4)", delta: effects.precipitationDelta, to: &steps)
+        appendStep(label: "Солнце (§2.5)", delta: effects.solarDelta, to: &steps)
+        return steps
     }
 
-    private static func sunBonusFull(cloud: Double, uv: Double) -> Double {
-        if cloud <= OutfitConfig.EffectiveTemp.sunBrightCloudMaxPct,
-           uv >= OutfitConfig.EffectiveTemp.sunMinUV {
-            return OutfitConfig.EffectiveTemp.sunBrightBonus
-        } else if cloud <= OutfitConfig.EffectiveTemp.sunPartCloudMaxPct {
-            return OutfitConfig.EffectiveTemp.sunPartBonus
-        }
-        return 0
+    static func appendStep(
+        label: String,
+        delta: Double,
+        note: String? = nil,
+        to steps: inout [CalcStep]
+    ) {
+        guard abs(delta) > 0.001 else { return }
+        steps.append(CalcStep(label: label, value: delta, unit: "°C", note: note))
+    }
+}
+
+// MARK: - Continuous interpolation
+
+private extension EffectiveTemperatureCalculator {
+    static func smoothStep(from lower: Double, to upper: Double, value: Double) -> Double {
+        guard upper > lower else { return value >= upper ? 1 : 0 }
+        let normalized = min(max((value - lower) / (upper - lower), 0), 1)
+        return normalized * normalized * (3 - 2 * normalized)
     }
 }

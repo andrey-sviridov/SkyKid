@@ -1,4 +1,5 @@
 // ClothingCalculatorView.swift
+// LEGACY: ручной CLO-конструктор, не источник прогноза.
 // SRP: только SwiftUI-компоненты вкладки «Конструктор».
 // Бизнес-логика — WardrobeModel.swift | Модели — GarmentCatalog.swift
 // ─────────────────────────────────────────────────────────────────────────
@@ -13,10 +14,10 @@ import SwiftUI
 
 struct ClothingCalculatorView: View {
     var profile: ChildProfile?
-    var weather: WeatherData?
+    var weather: NormalizedWeather?
     @State private var model: WardrobeModel
 
-    init(profile: ChildProfile? = nil, weather: WeatherData? = nil) {
+    init(profile: ChildProfile? = nil, weather: NormalizedWeather? = nil) {
         self.profile = profile
         self.weather = weather
         _model = State(initialValue: WardrobeModel(
@@ -25,18 +26,11 @@ struct ClothingCalculatorView: View {
         ))
     }
 
-    private var togRecommendation: OutfitRecommendation? {
-        guard let profile, let weather else { return nil }
-        return OutfitRecommendationService.shared.recommend(
-            weather: weather,
-            profile: profile,
-            gearSetup: GearSetup.from(profile: profile)
-        )
-    }
-
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
+
+                LegacyConstructorNoticeCard()
 
                 WeatherControlsCard(model: model)
 
@@ -89,14 +83,9 @@ struct ClothingCalculatorView: View {
             if let profile {
                 model.ageGroup = profile.wardrobeAgeGroup
             }
-            if let rec = togRecommendation {
-                model.syncWithTOG(rec)
-            }
         }
         .onChange(of: weather?.apparentTemperature) { _, newTemp in
-            if let rec = togRecommendation {
-                model.syncWithTOG(rec)
-            } else if let t = newTemp {
+            if let t = newTemp {
                 model.weatherTemperature = t
             }
         }
@@ -813,8 +802,8 @@ struct TemperatureNoWalkCard: View {
             Divider()
 
             Text(isHot
-                 ? "Если вышли вынужденно — лёгкое боди, тень, вода каждые 10 минут."
-                 : "Если нужно выйти — максимальное утепление, не дольше 15 минут.")
+                 ? "Перенесите выход на более прохладное время. Для младенца — тень и обычные кормления чаще."
+                 : "Прогулку лучше перенести. Одежда не отменяет риск от экстремального холода.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)

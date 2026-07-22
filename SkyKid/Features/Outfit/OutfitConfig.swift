@@ -9,13 +9,16 @@ enum OutfitConfig {
     // MARK: §2 — Effective Temperature
 
     enum EffectiveTemp {
-        // §2.1 Wind Chill (T ≤ windChillApplyBelow AND V_calc ≥ windChillMinSpeedKmh)
-        static let windChillApplyBelow: Double = 10.0       // °C
-        static let windChillMinSpeedKmh: Double = 5.0       // km/h
+        // §2.1 Wind Chill. Low and standard wind formulas meet at 5 km/h;
+        // the temperature effect fades continuously between 10 and 12°C.
+        static let windChillFullEffectBelow: Double = 10.0  // °C
+        static let windChillFadeOutAbove: Double = 12.0     // °C
+        static let windChillStandardSpeedKmh: Double = 5.0  // km/h
         static let gustBlendFactor: Double = 0.3            // V_calc = 0.7*V + 0.3*V_gust
 
         // §2.2 Heat Index (T ≥ heatIndexApplyAbove)
         static let heatIndexApplyAbove: Double = 26.0       // °C
+        static let heatIndexFullEffectAbove: Double = 28.0  // °C
         static let heatIndexVaporA: Double = 6.105          // hPa
         static let heatIndexVaporB: Double = 17.27
         static let heatIndexVaporC: Double = 237.7          // °C
@@ -23,40 +26,58 @@ enum OutfitConfig {
         static let heatIndexBaseDrop: Double = 4.0
         static let heatIndexWindCoolFactor: Double = 0.07   // wind cooling at high temp
 
-        // §2.3 Humidity-Cold Penalty (0 ≤ T ≤ humidColdApplyMaxTemp)
-        static let humidColdApplyMinTemp: Double = 0.0
-        static let humidColdApplyMaxTemp: Double = 15.0
-        static let humidHighRHThreshold: Double = 85.0
-        static let humidModRHThreshold: Double = 70.0
-        static let humidHighDelta: Double = -1.5            // °C
-        static let humidModDelta: Double = -1.0             // °C
+        // §2.3 Humidity-Cold Penalty. Smooth ranges prevent a 1°C jump when
+        // humidity changes by a fraction around a threshold.
+        static let humidEffectStartsAtRH: Double = 60.0
+        static let humidEffectFullAtRH: Double = 90.0
+        static let humidColdFadeInBelow: Double = -10.0
+        static let humidColdFullAbove: Double = 0.0
+        static let humidColdFadeOutStarts: Double = 12.0
+        static let humidColdFadeOutEnds: Double = 18.0
+        static let humidMaxColdDelta: Double = -1.5          // °C
 
         // §2.4 Precipitation
         static let precipRainDelta: Double = -1.5           // drizzle / lightRain
         static let precipSnowDelta: Double = -0.5           // snow
 
-        // §2.5 Sun Bonus
-        static let sunBrightCloudMaxPct: Double = 30.0      // cloud %
-        static let sunPartCloudMaxPct: Double = 60.0        // cloud %
-        static let sunMinUV: Double = 3.0
-        static let sunBrightBonus: Double = 2.0             // °C
-        static let sunPartBonus: Double = 1.0               // °C
-        static let sunHoodHalveFactor: Double = 0.5
+        // §2.5 Sun Bonus. UV and cloud effects are continuous.
+        static let sunEffectStartsAtUV: Double = 1.0
+        static let sunEffectFullAtUV: Double = 5.0
+        static let sunCloudFadeStartsPct: Double = 20.0
+        static let sunCloudNoGainPct: Double = 90.0
+        static let sunMaximumBonus: Double = 2.0             // °C
     }
 
     // MARK: §3 — Microclimate
 
     enum Microclimate {
-        // V_eff = V_calc * shieldMultiplier, then re-run §2.1 wind chill formula
-        static let pramHoodUpShield: Double = 0.40
-        static let pramHoodPlusLegCoverShield: Double = 0.25
-        static let pramHoodPlusLegCoverFlatOffset: Double = 1.0  // °C
-        static let pushchairHoodUpShield: Double = 0.60
-        static let pushchairOpenShield: Double = 1.00
-        static let rainCoverOnShield: Double = 0.10
-        static let rainCoverOnGreenhouseOffset: Double = 3.0     // °C greenhouse
-        static let carrierBodyHeatOffset: Double = 4.0           // °C parent body heat
-        static let carrierUnderJacketTorsoTemp: Double = 19.0   // fixed torso when under jacket
+        // Fractions of outdoor exposure that reach the child.
+        static let pramOpenWindExposure: Double = 0.75
+        static let pramHoodWindExposure: Double = 0.40
+        static let pushchairHoodWindExposure: Double = 0.60
+        static let carSeatWindExposure: Double = 0.80
+        static let hoodSolarExposure: Double = 0.50
+        static let pramOpenSolarExposure: Double = 0.85
+        static let carSeatSolarExposure: Double = 0.80
+
+        // A fitted rain cover compounds the base transport protection.
+        // Heat gains are bounded product heuristics, not a clinical model or
+        // a direct measurement for every stroller and cover combination.
+        static let rainCoverWindExposureFactor: Double = 0.25
+        static let rainCoverMinimumHeatGain: Double = 1.0
+        static let rainCoverWarmAdditionalGain: Double = 1.0
+        static let rainCoverSolarAmplification: Double = 0.75
+        static let rainCoverMaximumHeatGain: Double = 3.5
+        static let rainCoverWarmGainStarts: Double = 10.0
+        static let rainCoverWarmGainFullAbove: Double = 30.0
+
+        // Parent heat and jacket protection are gradual, never a fixed 19°C.
+        static let carrierBodyHeatGain: Double = 4.0
+        static let carrierJacketWindExposure: Double = 0.30
+        static let carrierJacketPrecipitationExposure: Double = 0.20
+        static let carrierJacketSolarExposure: Double = 0.20
+        static let carrierJacketRetention: Double = 0.75
+        static let carrierJacketTargetTemperature: Double = 19.0
     }
 
     // MARK: §4 — Required TOG
@@ -116,7 +137,6 @@ enum OutfitConfig {
 
         // §8 Personal Offset
         static let feedbackStepTOG: Double = 0.2
-        static let feedbackDecayFactor: Double = 0.95       // "fine" → decay toward 0
         static let maxPersonalOffsetTOG: Double = 1.0
     }
 
@@ -125,6 +145,8 @@ enum OutfitConfig {
     enum Solver {
         static let maxBodyLayers: Int = 4
         static let togAccuracyTolerance: Double = 0.4
+        static let mediumConfidenceTolerance: Double = 0.9
+        static let agePreferenceBonus: Double = 0.12
         static let carSeatMaxHarnessLayerTOG: Double = 1.5
         // §5.5 Мокрая одежда: хлопок теряет ~70%, флис ~40%, в среднем ~35%
         static let wetClothingRetentionFactor: Double = 0.65
@@ -156,10 +178,5 @@ enum OutfitConfig {
         static let rainCoverVentilationAbove: Double = 15.0    // T_micro threshold
         static let rainCoverGreenhouseAbove: Double = 22.0
 
-        // §6.5 Car Seat
-        static let carSeatMaxHarnessLayerTOG: Double = 1.5
-
-        // §6.2 Check hint (always shown)
-        static let overheatCheckHint = "Проверьте шею малыша: тёплая и сухая — норма; влажная — жарко. Холодные нос и руки ≠ малыш замёрз."
     }
 }

@@ -8,7 +8,12 @@ struct MyWardrobeView: View {
 
     // Подгузник считается всегда в наличии — не показываем
     private var togglableItems: [GarmentLayer: [GarmentItem]] {
-        GarmentCatalog.byLayer.mapValues { $0.filter { $0.id != "diaper" } }
+        GarmentCatalog.byLayer.mapValues { items in
+            items.filter { item in
+                item.id != "diaper"
+                    && (item.use == .outdoorClothing || item.use == .accessory)
+            }
+        }
     }
 
     var body: some View {

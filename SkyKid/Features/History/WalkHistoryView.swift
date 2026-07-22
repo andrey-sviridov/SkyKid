@@ -3,10 +3,14 @@ import SwiftUI
 // MARK: - WalkHistoryView (History tab)
 
 struct WalkHistoryView: View {
-    var weather: WeatherData?
+    var weather: NormalizedWeather?
     var profile: ChildProfile?
+    var recommendation: OutfitRecommendation? = nil
+    var walkContext: WalkContext? = nil
+    var onPersonalizationChange: () -> Void = {}
 
     @State private var store = WalkLogStore.shared
+    @State private var personalizationStore = PersonalOffsetStore.shared
     @State private var showLog = false
     @State private var editingLog: WalkLog? = nil
     @State private var selectedLog: WalkLog? = nil
@@ -19,6 +23,13 @@ struct WalkHistoryView: View {
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 0, trailing: 16))
+                }
+
+                if !feedbackHistoryItems.isEmpty {
+                    FeedbackHistorySection(items: feedbackHistoryItems)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
                 }
 
                 if store.logs.isEmpty {
@@ -40,6 +51,7 @@ struct WalkHistoryView: View {
                             Button(role: .destructive) {
                                 if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
                                     store.delete(at: IndexSet(integer: idx))
+                                    onPersonalizationChange()
                                 }
                             } label: {
                                 Label("Удалить", systemImage: "trash")
@@ -57,7 +69,11 @@ struct WalkHistoryView: View {
             .skyKidBackground()
             .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
             .navigationDestination(item: $selectedLog) { log in
-                WalkLogDetailView(log: log, store: store)
+                WalkLogDetailView(
+                    log: log,
+                    store: store,
+                    onDelete: onPersonalizationChange
+                )
             }
 
             Button { showLog = true } label: {
@@ -81,11 +97,34 @@ struct WalkHistoryView: View {
         .navigationTitle("Журнал прогулок")
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showLog) {
-            LogWalkSheet(weather: weather, profile: profile)
+            LogWalkSheet(
+                weather: weather,
+                profile: profile,
+                recommendation: recommendation,
+                walkContext: walkContext,
+                onSaved: onPersonalizationChange
+            )
         }
         .sheet(item: $editingLog) { log in
-            LogWalkSheet(weather: weather, profile: profile, editingLog: log)
+            LogWalkSheet(
+                weather: weather,
+                profile: profile,
+                recommendation: recommendation,
+                walkContext: walkContext,
+                editingLog: log,
+                onSaved: onPersonalizationChange
+            )
         }
+    }
+
+    // MARK: - Feedback history
+
+    private var feedbackHistoryItems: [FeedbackHistoryItem] {
+        guard let profile else { return [] }
+        let observations = personalizationStore.feedbackHistory(
+            for: profile.thermalProfile
+        )
+        return FeedbackHistoryItemBuilder.make(from: observations)
     }
 }
 
@@ -111,9 +150,9 @@ private struct StatsHeaderCard: View {
             )
             Divider().frame(height: 46)
             statCell(
-                value: learningStatus,
-                label: "Обучение",
-                icon: "brain",
+                value: "\(store.totalCount)",
+                label: "Всего\nзаписей",
+                icon: "list.bullet.clipboard",
                 color: .purple
             )
         }
@@ -144,13 +183,6 @@ private struct StatsHeaderCard: View {
         return avg >= 60 ? "\(avg / 60)ч \(avg % 60)м" : "\(avg) мин"
     }
 
-    private var learningStatus: String {
-        let n = store.totalCount
-        if n == 0 { return "0" }
-        if n < 5 { return "🌱" }
-        if n < 15 { return "📈" }
-        return "✅"
-    }
 }
 
 // MARK: - EmptyHistoryCard
@@ -166,7 +198,7 @@ private struct EmptyHistoryCard: View {
             VStack(spacing: 6) {
                 Text("Нет записей о прогулках")
                     .font(.headline)
-                Text("Нажмите + чтобы записать свою первую прогулку. На основе ваших оценок приложение будет точнее подбирать одежду.")
+                Text("Нажмите +, чтобы записать первую прогулку. Повторяющиеся оценки в похожих условиях помогут точнее подбирать одежду.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -252,9 +284,12 @@ private struct WalkLogRow: View {
 // MARK: - LogWalkSheet
 
 struct LogWalkSheet: View {
-    var weather: WeatherData?
+    var weather: NormalizedWeather?
     var profile: ChildProfile?
+    var recommendation: OutfitRecommendation? = nil
+    var walkContext: WalkContext? = nil
     var editingLog: WalkLog? = nil
+    var onSaved: () -> Void = {}
 
     @State private var store = WalkLogStore.shared
     @State private var walkDate: Date = .now
@@ -267,10 +302,8 @@ struct LogWalkSheet: View {
     private var isEditing: Bool { editingLog != nil }
 
     private var suggestedIDs: [String] {
-        guard let w = weather, let p = profile else { return [] }
-        let rec = OutfitRecommendationService.shared.recommend(
-            weather: w, profile: p, gearSetup: GearSetup.from(profile: p))
-        return (rec.layers + rec.accessories).map(\.id)
+        guard let recommendation else { return [] }
+        return recommendation.allDisplayLayers.map(\.id)
     }
 
     var body: some View {
@@ -326,7 +359,13 @@ struct LogWalkSheet: View {
             existing.durationMinutes    = durationMinutes
             existing.comfortLevel       = comfortLevel
             existing.outfitItemIDs      = Array(selectedOutfitIDs)
-            store.update(existing)
+            existing.microclimateTemperature = existing.microclimateTemperature ?? walkTemperature
+            existing.transportMode      = existing.transportMode ?? walkContext?.transportMode
+            existing.activityLevel      = existing.activityLevel ?? walkContext?.activityLevel
+            existing.walkType           = existing.walkType ?? walkContext?.walkType
+            existing.targetTOG           = existing.targetTOG ?? recommendation?.targetTOG
+            existing.effectiveOutfitTOG  = selectedOutfitTOG
+            store.update(existing, profile: profile)
         } else {
             let log = WalkLog(
                 date: walkDate,
@@ -334,11 +373,23 @@ struct LogWalkSheet: View {
                 outfitItemIDs: Array(selectedOutfitIDs),
                 comfortLevel: comfortLevel,
                 weatherTemperature: walkTemperature,
-                apparentTemperature: walkTemperature
+                apparentTemperature: weather?.apparentTemperature ?? walkTemperature,
+                microclimateTemperature: recommendation?.temperatures.microclimate ?? walkTemperature,
+                transportMode: walkContext?.transportMode,
+                activityLevel: walkContext?.activityLevel,
+                walkType: walkContext?.walkType,
+                targetTOG: recommendation?.targetTOG,
+                effectiveOutfitTOG: selectedOutfitTOG
             )
             store.add(log, profile: profile)
         }
+        onSaved()
         dismiss()
+    }
+
+    private var selectedOutfitTOG: Double? {
+        let values = selectedOutfitIDs.compactMap { GarmentCatalog.byID[$0]?.tog }
+        return values.isEmpty ? nil : values.reduce(0, +)
     }
 }
 
@@ -441,7 +492,7 @@ private struct WalkTemperatureCard: View {
 // MARK: - WeatherContextCard (kept for possible reuse)
 
 private struct WeatherContextCard: View {
-    let weather: WeatherData
+    let weather: NormalizedWeather
 
     var body: some View {
         HStack(spacing: 14) {
@@ -521,7 +572,7 @@ private struct ComfortLevelCard: View {
                 Label("Как чувствовал себя малыш?", systemImage: "hand.raised.circle.fill")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Text("Приложите ладонь к затылку/шее ребёнка — это самый точный способ проверить температуру тела.")
+                Text("Проверьте шею и верх спины: кожа должна быть тёплой и сухой. Холодные кисти сами по себе не означают, что ребёнок замёрз.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -671,6 +722,7 @@ private struct OutfitSummaryCard: View {
 private struct WalkLogDetailView: View {
     let log: WalkLog
     let store: WalkLogStore
+    let onDelete: () -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -788,6 +840,7 @@ private struct WalkLogDetailView: View {
         Button(role: .destructive) {
             if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
                 store.delete(at: IndexSet(integer: idx))
+                onDelete()
             }
             dismiss()
         } label: {

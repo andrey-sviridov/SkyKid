@@ -5,5 +5,5 @@ import CoreLocation
 // Подменяется в тестах / предпросмотрах без изменения ViewModel.
 
 protocol WeatherService: Sendable {
-    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather
 }

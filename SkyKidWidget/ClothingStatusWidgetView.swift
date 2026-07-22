@@ -8,19 +8,72 @@ struct ClothingStatusWidgetView: View {
 
     @Environment(\.widgetFamily) private var family
 
+    @ViewBuilder
     var body: some View {
-        switch family {
-        case .systemSmall:
-            SmallWidgetView(entry: entry)
-        case .systemMedium:
-            MediumWidgetView(entry: entry)
-        case .accessoryCircular:
-            CircularAccessoryView(entry: entry)
-        case .accessoryRectangular:
-            RectangularAccessoryView(entry: entry)
-        default:
-            SmallWidgetView(entry: entry)
+        if entry.requiresRefresh {
+            WidgetRefreshRequiredView(
+                family: family,
+                lastUpdatedAt: entry.lastUpdatedAt,
+                contextSummary: entry.recommendation.contextSummary
+            )
+        } else {
+            switch family {
+            case .systemSmall:
+                SmallWidgetView(entry: entry)
+            case .systemMedium:
+                MediumWidgetView(entry: entry)
+            case .accessoryCircular:
+                CircularAccessoryView(entry: entry)
+            case .accessoryRectangular:
+                RectangularAccessoryView(entry: entry)
+            default:
+                SmallWidgetView(entry: entry)
+            }
         }
+    }
+}
+
+// MARK: - Refresh required
+
+private struct WidgetRefreshRequiredView: View {
+    let family: WidgetFamily
+    let lastUpdatedAt: Date?
+    let contextSummary: String
+
+    var body: some View {
+        VStack(spacing: family == .accessoryCircular ? 2 : 8) {
+            Image(systemName: "arrow.clockwise.circle.fill")
+                .font(family == .accessoryCircular ? .title3 : .title)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.blue)
+            if family != .accessoryCircular {
+                Text("Откройте SkyKid")
+                    .font(.caption.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                if let lastUpdatedAt {
+                    HStack(spacing: 3) {
+                        Text("Последние данные:")
+                        Text(lastUpdatedAt, style: .time)
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    Text(contextSummary)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                } else {
+                    Text("Нужна свежая погода")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .containerBackground(.fill.tertiary, for: .widget)
     }
 }
 
@@ -38,7 +91,11 @@ struct ClothingStatusWidgetView: View {
 struct SmallWidgetView: View {
     let entry: ClothingStatusEntry
     private var rec: WidgetOutfitRecommendation { entry.recommendation }
-    private var isExtreme: Bool { rec.status == .extremeHeat || rec.status == .extremeCold }
+    private var isExtreme: Bool {
+        rec.hasBlockingWarning
+            || rec.status == .extremeHeat
+            || rec.status == .extremeCold
+    }
 
     var body: some View {
         ZStack {
@@ -53,7 +110,7 @@ struct SmallWidgetView: View {
         .containerBackground(
             LinearGradient(
                 colors: isExtreme
-                    ? [rec.status.color.opacity(0.35), rec.status.color.opacity(0.08)]
+                    ? [rec.alertColor.opacity(0.35), rec.alertColor.opacity(0.08)]
                     : [rec.status.color.opacity(0.18), Color(.systemBackground)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -71,16 +128,21 @@ struct SmallWidgetView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                Image(systemName: rec.status.systemImage)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(rec.status.color)
-                    .symbolRenderingMode(.hierarchical)
+                VStack(alignment: .trailing, spacing: 1) {
+                    Image(systemName: rec.status.systemImage)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(rec.status.color)
+                        .symbolRenderingMode(.hierarchical)
+                    Text(rec.updatedAt, style: .time)
+                        .font(.system(size: 8))
+                        .foregroundStyle(.tertiary)
+                }
             }
 
             Spacer(minLength: 6)
 
             HStack(alignment: .lastTextBaseline, spacing: 1) {
-                Text("\(Int(rec.temperature.rounded()))°")
+                Text("\(Int(rec.outsideTemperature.rounded()))°")
                     .font(.system(size: 38, weight: .thin, design: .rounded))
                     .foregroundStyle(rec.status.color)
                     .contentTransition(.numericText())
@@ -89,10 +151,16 @@ struct SmallWidgetView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Ребёнок: \(Int(rec.effectiveChildTemp.rounded()))°")
+            Text("Микроклимат: \(Int(rec.microclimateTemperature.rounded()))°")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 6)
+
+            Text(rec.contextSummary)
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .padding(.bottom, 4)
 
             StatusBadgeView(status: rec.status)
                 .padding(.bottom, 6)
@@ -111,24 +179,24 @@ struct SmallWidgetView: View {
     // Баннер опасности — вся площадь виджета
     private var smallExtremeView: some View {
         VStack(alignment: .center, spacing: 6) {
-            Image(systemName: rec.status.systemImage)
+            Image(systemName: rec.alertSystemImage)
                 .font(.system(size: 26, weight: .bold))
-                .foregroundStyle(rec.status.color)
+                .foregroundStyle(rec.alertColor)
 
-            Text(rec.status.label)
+            Text(rec.alertLabel)
                 .font(.caption.weight(.black))
-                .foregroundStyle(rec.status.color)
+                .foregroundStyle(rec.alertColor)
                 .multilineTextAlignment(.center)
 
-            if let warning = rec.status.safetyWarning {
+            if let warning = rec.primaryWarning ?? rec.status.defaultSafetyWarning {
                 Text(warning)
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(rec.status.color.opacity(0.85))
+                    .foregroundStyle(rec.alertColor.opacity(0.85))
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            Text("\(Int(rec.temperature.rounded()))°C")
+            Text("\(Int(rec.outsideTemperature.rounded()))°C")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
@@ -150,7 +218,11 @@ struct SmallWidgetView: View {
 struct MediumWidgetView: View {
     let entry: ClothingStatusEntry
     private var rec: WidgetOutfitRecommendation { entry.recommendation }
-    private var isExtreme: Bool { rec.status == .extremeHeat || rec.status == .extremeCold }
+    private var isExtreme: Bool {
+        rec.hasBlockingWarning
+            || rec.status == .extremeHeat
+            || rec.status == .extremeCold
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -180,7 +252,7 @@ struct MediumWidgetView: View {
         .containerBackground(
             LinearGradient(
                 colors: isExtreme
-                    ? [rec.status.color.opacity(0.28), rec.status.color.opacity(0.06)]
+                    ? [rec.alertColor.opacity(0.28), rec.alertColor.opacity(0.06)]
                     : [rec.status.color.opacity(0.12), Color(.systemBackground)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -193,13 +265,19 @@ struct MediumWidgetView: View {
 
     private var leftColumn: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(rec.cityName)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            HStack(spacing: 5) {
+                Text(rec.cityName)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Image(systemName: "clock")
+                    .accessibilityHidden(true)
+                Text(rec.updatedAt, style: .time)
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
 
             HStack(alignment: .lastTextBaseline, spacing: 1) {
-                Text("\(Int(rec.temperature.rounded()))°")
+                Text("\(Int(rec.outsideTemperature.rounded()))°")
                     .font(.system(size: 46, weight: .thin, design: .rounded))
                     .foregroundStyle(rec.status.color)
                 Text("C")
@@ -207,13 +285,14 @@ struct MediumWidgetView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Ощущается \(Int(rec.apparentTemperature.rounded()))°")
+            Text("Микроклимат: \(Int(rec.microclimateTemperature.rounded()))°")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 
-            Text("Для \(rec.ageLabel): \(Int(rec.effectiveChildTemp.rounded()))°")
+            Text(rec.contextSummary)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(2)
 
             Spacer(minLength: 4)
 
@@ -244,19 +323,19 @@ struct MediumWidgetView: View {
     // Баннер экстремального риска — правая колонка
     private var mediumExtremeBanner: some View {
         VStack(alignment: .center, spacing: 8) {
-            Image(systemName: rec.status.systemImage)
+            Image(systemName: rec.alertSystemImage)
                 .font(.system(size: 30, weight: .bold))
-                .foregroundStyle(rec.status.color)
+                .foregroundStyle(rec.alertColor)
 
-            Text(rec.status.label)
+            Text(rec.alertLabel)
                 .font(.caption.weight(.black))
-                .foregroundStyle(rec.status.color)
+                .foregroundStyle(rec.alertColor)
                 .multilineTextAlignment(.center)
 
-            if let warning = rec.status.safetyWarning {
+            if let warning = rec.primaryWarning ?? rec.status.defaultSafetyWarning {
                 Text(warning)
                     .font(.caption2.weight(.medium))
-                    .foregroundStyle(rec.status.color.opacity(0.85))
+                    .foregroundStyle(rec.alertColor.opacity(0.85))
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -299,13 +378,16 @@ struct CircularAccessoryView: View {
                 Image(systemName: rec.status.systemImage)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(rec.status.color)
-                Text("\(Int(rec.temperature.rounded()))°")
+                Text("\(Int(rec.outsideTemperature.rounded()))°")
                     .font(.system(.callout, design: .rounded).weight(.bold))
                     .foregroundStyle(rec.status.color)
                     .contentTransition(.numericText())
             }
         }
         .containerBackground(.clear, for: .widget)
+        .accessibilityLabel(
+            "\(rec.status.label), \(Int(rec.outsideTemperature.rounded())) градусов, обновлено \(rec.updatedAt.formatted(date: .omitted, time: .shortened)), \(rec.contextDetails)"
+        )
     }
 }
 
@@ -336,12 +418,19 @@ struct RectangularAccessoryView: View {
 
                 Spacer(minLength: 0)
 
-                Text("\(Int(rec.temperature.rounded()))°C")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 3) {
+                    Text("\(Int(rec.outsideTemperature.rounded()))°C ·")
+                    Text(rec.updatedAt, style: .time)
+                }
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.secondary)
             }
 
-            // Три главные вещи
+            Text(rec.contextSummary)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
             Text(rec.topItemsSummary)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -426,4 +515,3 @@ struct ClothingStatusLockScreenWidget: Widget {
         .supportedFamilies([.accessoryCircular, .accessoryRectangular])
     }
 }
-

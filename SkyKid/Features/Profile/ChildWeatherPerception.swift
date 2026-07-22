@@ -2,12 +2,12 @@ import Foundation
 
 struct ChildWeatherPerception {
     let profile: ChildProfile
-    let weather: WeatherData
+    let weather: NormalizedWeather
     /// Если передана явно (из outfit.effectiveTemp) — используется как есть.
     /// По умолчанию — apparentTemp + ageOffset (простая формула для вкладки «Погода»).
     private let _effectiveTemp: Double?
 
-    init(profile: ChildProfile, weather: WeatherData, effectiveTemp: Double? = nil) {
+    init(profile: ChildProfile, weather: NormalizedWeather, effectiveTemp: Double? = nil) {
         self.profile = profile
         self.weather = weather
         self._effectiveTemp = effectiveTemp

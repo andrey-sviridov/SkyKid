@@ -12,11 +12,9 @@ final class UserWardrobeStore {
     static let seenKey    = "user_wardrobe_seen"      // снимок ID каталога на момент сохранения
     static let versionKey = "user_wardrobe_schema_version"
 
-    /// Каталог одежды переписан (анатомическая топология, новые ID). Старые
-    /// сохранённые наборы ссылались на мёртвые ID → подбор схлопывался до
-    /// «подгузник + боди». Bump версии один раз сбрасывает гардероб в
-    /// «всё в наличии». Инкрементировать при любой смене ID каталога.
-    static let currentSchemaVersion = 3
+    /// Версия единого каталога: скрытые solver-ID удалены, а реальные предметы
+    /// получили зоны тела и ограничения совместимости.
+    static let currentSchemaVersion = 4
 
     /// id предметов в наличии. По умолчанию (ключ отсутствует) — весь каталог.
     private(set) var ownedIDs: Set<String>
@@ -33,7 +31,8 @@ final class UserWardrobeStore {
     }
 
     /// Чистая функция миграции — без побочных эффектов, удобно тестировать.
-    /// - reseed к полному каталогу, если схема устарела (переименование ID);
+    /// - при известном старом снимке сохраняет пользовательские отметки;
+    /// - при неизвестной старой схеме безопасно включает весь каталог;
     /// - авто-владение предметами, добавленными после прошлого запуска;
     /// - отбрасывание мёртвых ID, которых больше нет в каталоге.
     static func migratedOwnedIDs(
@@ -42,14 +41,24 @@ final class UserWardrobeStore {
         storedVersion: Int,
         allIDs: Set<String>
     ) -> Set<String> {
-        // Схема изменилась (или первый запуск) → весь гардероб считается в наличии.
-        guard storedVersion >= currentSchemaVersion, let saved else {
+        guard let saved else {
             return allIDs
         }
-        // Новые предметы каталога (появились после прошлого сохранения) — авто-владение.
-        let newItems = allIDs.subtracting(seen ?? [])
-        let canonicalSaved = Set(saved.map { GarmentCatalog.canonicalID(for: $0) })
-        return canonicalSaved.intersection(allIDs).union(newItems)
+        let canonicalSaved = Set(saved.map { canonicalID($0, availableIn: allIDs) })
+        let validSaved = canonicalSaved.intersection(allIDs)
+
+        if storedVersion < currentSchemaVersion, seen == nil {
+            return allIDs
+        }
+
+        let canonicalSeen = Set((seen ?? []).map { canonicalID($0, availableIn: allIDs) })
+        let newItems = allIDs.subtracting(canonicalSeen)
+        return validSaved.union(newItems).union(["diaper"])
+    }
+
+    private static func canonicalID(_ id: String, availableIn allIDs: Set<String>) -> String {
+        let canonical = GarmentCatalog.canonicalID(for: id)
+        return allIDs.contains(canonical) ? canonical : id
     }
 
     private func persist(allIDs: Set<String>) {

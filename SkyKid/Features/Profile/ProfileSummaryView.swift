@@ -77,7 +77,7 @@ struct ProfileSummaryView: View {
 
     private func infoCards(_ p: ChildProfile) -> some View {
         let ageOffset = p.ageGroup.temperatureOffset
-        let showHealth = !p.healthFeatures.isEmpty
+        let showHealth = !p.stableTraits.isEmpty
         let showTempPref = p.temperaturePreferenceOffset != 0
 
         return VStack(spacing: 1) {
@@ -91,14 +91,11 @@ struct ProfileSummaryView: View {
                     value: p.ageGroup.description,
                     isFirst: false, isLast: false)
 
-            infoRow(icon: p.activityLevel.icon, color: .green,
-                    title: "Активность",
-                    value: p.activityLevel.rawValue + " · " + activityDetail(p.activityLevel),
-                    isFirst: false, isLast: false)
-
-            infoRow(icon: p.walkType.icon, color: .teal,
-                    title: "Тип прогулки",
-                    value: p.walkType.label + " (" + p.walkType.detail + ")",
+            infoRow(icon: "heart.text.square.fill", color: .pink,
+                    title: "Срок рождения",
+                    value: p.gestationalAgeWeeks < 40
+                        ? "\(p.gestationalAgeWeeks) недель"
+                        : "Доношенный",
                     isFirst: false, isLast: false)
 
             infoRow(icon: "thermometer.medium", color: .blue,
@@ -120,17 +117,9 @@ struct ProfileSummaryView: View {
             if showHealth {
                 infoRow(icon: "cross.case.fill", color: .red,
                         title: "Особенности здоровья",
-                        value: p.healthFeatures.map(\.label).joined(separator: ", "),
+                        value: p.stableTraits.map(\.label).sorted().joined(separator: ", "),
                         isFirst: false, isLast: true)
             }
-        }
-    }
-
-    private func activityDetail(_ level: ActivityLevel) -> String {
-        switch level {
-        case .low:      return "в коляске / спокойно"
-        case .moderate: return "обычная прогулка"
-        case .high:     return "активно бегает"
         }
     }
 
@@ -273,7 +262,7 @@ struct ProfileSummaryView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Уведомления")
                     .font(.body)
-                Text("Ежедневно в 8:00 · дождевик · окно прогулки")
+                Text("Обновление погоды · дождевик · осторожное окно прогулки")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -405,7 +394,7 @@ struct WalkScheduleView: View {
         NavigationStack {
             List {
                 Section {
-                    Text("Приложение будет напоминать вам о прогулке в выбранное время каждый день.")
+                    Text("Приложение напомнит обновить погоду и проверить самочувствие ребёнка. Сохранённый комплект не будет выдаваться за актуальный.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .listRowBackground(Color.clear)

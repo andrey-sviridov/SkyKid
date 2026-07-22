@@ -1,22 +1,34 @@
 import SwiftUI
 
-// MARK: - Статус теплового комфорта (виджет-версия)
+// MARK: - Thermal status
 
 enum ClothingWidgetStatus: String, Codable, CaseIterable, Sendable {
-    case extremeHeat    // ≥ 30 °C эффективная температура для ребёнка
-    case hot            // 22–30 °C
-    case warm           // 18–22 °C
-    case ideal          // 8–18 °C
-    case slightlyCold   // 0–8 °C
-    case cold           // −10…0 °C
-    case extremeCold    // ≤ −10 °C
+    case extremeHeat
+    case hot
+    case warm
+    case ideal
+    case slightlyCold
+    case cold
+    case extremeCold
+
+    init(effectiveTemperature: Double) {
+        switch effectiveTemperature {
+        case 30...:    self = .extremeHeat
+        case 22..<30:  self = .hot
+        case 18..<22:  self = .warm
+        case 8..<18:   self = .ideal
+        case 0..<8:    self = .slightlyCold
+        case -10..<0:  self = .cold
+        default:       self = .extremeCold
+        }
+    }
 
     var label: String {
         switch self {
         case .extremeHeat:  return "ОПАСНО: ПЕРЕГРЕВ"
         case .hot:          return "Жарко"
         case .warm:         return "Тепловато"
-        case .ideal:        return "Идеально"
+        case .ideal:        return "Комфортно"
         case .slightlyCold: return "Прохладно"
         case .cold:         return "Холодно"
         case .extremeCold:  return "ОПАСНО: МОРОЗ"
@@ -25,13 +37,13 @@ enum ClothingWidgetStatus: String, Codable, CaseIterable, Sendable {
 
     var color: Color {
         switch self {
-        case .extremeHeat:  return Color.red
-        case .hot:          return Color.orange
-        case .warm:         return Color(red: 0.95, green: 0.78, blue: 0.0)
-        case .ideal:        return Color.green
-        case .slightlyCold: return Color(red: 0.3,  green: 0.65, blue: 1.0)
-        case .cold:         return Color.blue
-        case .extremeCold:  return Color(red: 0.0,  green: 0.1,  blue: 0.75)
+        case .extremeHeat:  return .red
+        case .hot:          return .orange
+        case .warm:         return Color(red: 0.95, green: 0.78, blue: 0)
+        case .ideal:        return .green
+        case .slightlyCold: return Color(red: 0.3, green: 0.65, blue: 1)
+        case .cold:         return .blue
+        case .extremeCold:  return Color(red: 0, green: 0.1, blue: 0.75)
         }
     }
 
@@ -47,144 +59,124 @@ enum ClothingWidgetStatus: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    var emoji: String {
+    var defaultSafetyWarning: String? {
         switch self {
-        case .extremeHeat:  return "🔥"
-        case .hot:          return "☀️"
-        case .warm:         return "😅"
-        case .ideal:        return "😊"
-        case .slightlyCold: return "😐"
-        case .cold:         return "🥶"
-        case .extremeCold:  return "❄️"
-        }
-    }
-
-    /// Предупреждение безопасности — только для крайних состояний.
-    var safetyWarning: String? {
-        switch self {
-        case .extremeHeat: return "Не выходить в пиковые часы"
-        case .extremeCold: return "Прогулка: 15-20 мин максимум"
+        case .extremeHeat: return "Прогулку лучше перенести"
+        case .extremeCold: return "Прогулку лучше перенести"
         default:           return nil
         }
     }
 }
 
-// MARK: - Рекомендация для виджета
+// MARK: - Widget presentation model
 
+/// A presentation-only adapter for the persisted recommendation snapshot.
+/// It does not calculate or alter clothing layers.
 struct WidgetOutfitRecommendation: Sendable {
-    let temperature: Double          // реальная температура
-    let apparentTemperature: Double  // ощущаемая
-    let effectiveChildTemp: Double   // ощущаемая с поправкой на возраст
+    let outsideTemperature: Double
+    let apparentTemperature: Double
+    let effectiveTemperature: Double
+    let microclimateTemperature: Double
     let cityName: String
     let status: ClothingWidgetStatus
-    let outfitItems: [String]        // упорядоченный список (от важного к менее важному)
-    let ageLabel: String             // «3 года» / «8 месяцев»
+    let outfitItems: [String]
+    let ageLabel: String
+    let primaryWarning: String?
+    let hasBlockingWarning: Bool
     let updatedAt: Date
+    let contextSummary: String
+    let contextDetails: String
+    let weatherSource: String
+    let weatherConfidence: String
 
-    /// Три главных элемента одежды одной строкой: «Куртка · Шапка · Перчатки»
+    init(snapshot: OutfitRecommendationSnapshot) {
+        let recommendation = snapshot.recommendation
+        let temperatures = recommendation.temperatures
+
+        self.outsideTemperature = temperatures.outside
+        self.apparentTemperature = temperatures.apparent
+        self.effectiveTemperature = temperatures.effective
+        self.microclimateTemperature = temperatures.microclimate
+        self.cityName = snapshot.cityName
+        self.status = ClothingWidgetStatus(effectiveTemperature: temperatures.effective)
+        self.outfitItems = recommendation.allDisplayLayers.map(\.name)
+        self.ageLabel = snapshot.childAgeLabel
+        self.primaryWarning = recommendation.primarySafetyWarning?.message
+        self.hasBlockingWarning = recommendation.blockingWarning != nil
+        self.updatedAt = snapshot.generatedAt
+        self.contextSummary = snapshot.context?.shortSummary ?? "Контекст не сохранён"
+        self.contextDetails = snapshot.context?.fullSummary ?? "Условия прогулки не сохранены"
+        self.weatherSource = snapshot.context?.weatherSource ?? "Источник не сохранён"
+        self.weatherConfidence = snapshot.context?.weatherConfidence ?? "Уверенность не сохранена"
+    }
+
+    private init(
+        outsideTemperature: Double,
+        apparentTemperature: Double,
+        effectiveTemperature: Double,
+        microclimateTemperature: Double,
+        cityName: String,
+        status: ClothingWidgetStatus,
+        outfitItems: [String],
+        ageLabel: String,
+        primaryWarning: String?,
+        hasBlockingWarning: Bool,
+        updatedAt: Date,
+        contextSummary: String,
+        contextDetails: String,
+        weatherSource: String,
+        weatherConfidence: String
+    ) {
+        self.outsideTemperature = outsideTemperature
+        self.apparentTemperature = apparentTemperature
+        self.effectiveTemperature = effectiveTemperature
+        self.microclimateTemperature = microclimateTemperature
+        self.cityName = cityName
+        self.status = status
+        self.outfitItems = outfitItems
+        self.ageLabel = ageLabel
+        self.primaryWarning = primaryWarning
+        self.hasBlockingWarning = hasBlockingWarning
+        self.updatedAt = updatedAt
+        self.contextSummary = contextSummary
+        self.contextDetails = contextDetails
+        self.weatherSource = weatherSource
+        self.weatherConfidence = weatherConfidence
+    }
+
     var topItemsSummary: String {
         outfitItems.prefix(3).joined(separator: " · ")
     }
-}
 
-// MARK: - Вычислитель рекомендаций виджета
-
-struct WidgetClothingCalculator {
-
-    // MARK: Определение статуса по эффективной температуре ребёнка
-
-    static func status(for effectiveTemp: Double) -> ClothingWidgetStatus {
-        switch effectiveTemp {
-        case 30...:    return .extremeHeat
-        case 22..<30:  return .hot
-        case 18..<22:  return .warm
-        case 8..<18:   return .ideal
-        case 0..<8:    return .slightlyCold
-        case -10..<0:  return .cold
-        default:       return .extremeCold   // ≤ −10
-        }
+    var alertLabel: String {
+        hasBlockingWarning ? "ПРОГУЛКУ ОТМЕНИТЕ" : status.label
     }
 
-    // MARK: Список рекомендованных вещей
-
-    static func outfitItems(
-        effectiveTemp t: Double,
-        weatherCode: Int,
-        windSpeed: Double,
-        precipitation: Double
-    ) -> [String] {
-        let isSnowing = (71...77).contains(weatherCode)
-        let isRaining = (51...82).contains(weatherCode) || precipitation > 0.1
-        let isWindy   = windSpeed > 7
-
-        var items: [String]
-        switch t {
-        case ..<(-10): items = ["Зимний комбез", "Термобельё", "Варежки", "Зимняя шапка"]
-        case -10..<0:  items = ["Зимняя куртка", "Перчатки", "Шапка"]
-        case 0..<5:    items = ["Тёплая куртка", "Перчатки", "Шапка"]
-        case 5..<15:   items = ["Куртка", "Кофта"]
-        case 15..<22:  items = ["Лёгкая куртка", "Футболка"]
-        default:       items = ["Лёгкая одежда", "Панамка"]
-        }
-
-        if isWindy              { items.insert("Ветровка", at: min(1, items.count)) }
-        if isSnowing            { items.append("Зимние сапоги") }
-        else if isRaining       { items.append("Дождевик") }
-
-        return items
+    var alertColor: Color {
+        hasBlockingWarning ? .red : status.color
     }
 
-    // MARK: Главный метод: из кеша + профиля → готовая рекомендация
-    // Реплицирует ClothingRecommendationEngine.effectiveTemperature — те же 8 компонент.
-
-    static func recommend(
-        weather: CachedWeather,
-        profile: ChildProfile?
-    ) -> WidgetOutfitRecommendation {
-        var effectiveTemp = weather.apparentTemperature
-        if let p = profile {
-            effectiveTemp += p.ageGroup.temperatureOffset
-            effectiveTemp += p.activityLevel.temperatureAdjustment
-            effectiveTemp += p.walkType.temperatureAdjustment
-            effectiveTemp += p.healthTemperatureAdjustment
-            effectiveTemp += p.temperaturePreferenceOffset
-            if p.usesStroller {
-                effectiveTemp += p.strollerType.effectiveTempAdjustment
-            }
-            if p.isNewbornPeriod {
-                effectiveTemp -= 1.0
-            }
-        }
-        let items = outfitItems(
-            effectiveTemp: effectiveTemp,
-            weatherCode:   weather.weatherCode,
-            windSpeed:     weather.windSpeed,
-            precipitation: weather.precipitation
-        )
-        return WidgetOutfitRecommendation(
-            temperature:          weather.temperature,
-            apparentTemperature:  weather.apparentTemperature,
-            effectiveChildTemp:   effectiveTemp,
-            cityName:             weather.cityName,
-            status:               status(for: effectiveTemp),
-            outfitItems:          items,
-            ageLabel:             profile?.ageLabel ?? "малыша",
-            updatedAt:            weather.updatedAt
-        )
+    var alertSystemImage: String {
+        hasBlockingWarning ? "exclamationmark.octagon.fill" : status.systemImage
     }
-
-    // MARK: Заглушка — когда данных ещё нет
 
     static var placeholder: WidgetOutfitRecommendation {
         WidgetOutfitRecommendation(
-            temperature:         12.0,
-            apparentTemperature: 10.0,
-            effectiveChildTemp:  7.0,
-            cityName:            "—",
-            status:              .slightlyCold,
-            outfitItems:         ["Куртка", "Кофта", "Шапка"],
-            ageLabel:            "малыша",
-            updatedAt:           Date()
+            outsideTemperature: 12,
+            apparentTemperature: 10,
+            effectiveTemperature: 8,
+            microclimateTemperature: 10,
+            cityName: "—",
+            status: .ideal,
+            outfitItems: ["Куртка", "Кофта", "Шапка"],
+            ageLabel: "малыша",
+            primaryWarning: nil,
+            hasBlockingWarning: false,
+            updatedAt: Date(),
+            contextSummary: "Облачно · Прогулочная коляска",
+            contextDetails: "Облачно · Прогулочная коляска · Спокойно",
+            weatherSource: "Open-Meteo",
+            weatherConfidence: "Высокая уверенность"
         )
     }
 }

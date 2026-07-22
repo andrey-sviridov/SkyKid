@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - WeatherView
 
 struct WeatherView: View {
-    let weather: WeatherData
+    let weather: NormalizedWeather
     let cityName: String
     var currentProvider: WeatherProvider = .openMeteo
     var onProviderChange: ((WeatherProvider, String?) -> Void)?
@@ -68,9 +68,9 @@ struct WeatherView: View {
                 showProviderSheet = true
             } label: {
                 HStack(spacing: 4) {
-                    Image(systemName: currentProvider.iconName)
+                    Image(systemName: weather.source.systemImage)
                         .font(.system(size: 9, weight: .medium))
-                    Text(currentProvider.displayName)
+                    Text(weather.source.displayName)
                         .font(.system(size: 11, weight: .medium))
                 }
                 .foregroundStyle(.secondary)
@@ -89,6 +89,12 @@ struct WeatherView: View {
 
     private var cardsSection: some View {
         VStack(spacing: 16) {
+            if weather.confidence.level != .high {
+                WeatherDataQualityCard(
+                    source: weather.source,
+                    confidence: weather.confidence
+                )
+            }
             if !weather.hourly.isEmpty {
                 HourlyForecastCard(hourly: weather.hourly)
             }
@@ -105,14 +111,31 @@ struct WeatherView: View {
     private var statsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
             StatCard(icon: "wind",               color: .teal,   title: "Ветер",
-                     value: "\(Int(weather.windSpeed.rounded())) м/с")
+                     value: displayValue(
+                        for: .windSpeed,
+                        value: "\(Int(weather.windSpeed.rounded())) м/с"
+                     ))
             StatCard(icon: "location.north.fill", color: .orange, title: "Направление",
-                     value: weather.windDirectionLabel,
+                     value: displayValue(for: .windDirection, value: weather.windDirectionLabel),
                      iconRotation: Double(weather.windDirection))
             StatCard(icon: "humidity.fill",       color: .blue,   title: "Влажность",
-                     value: "\(weather.humidity)%")
+                     value: displayValue(for: .humidity, value: "\(weather.humidity)%"))
             StatCard(icon: "cloud.rain.fill",     color: .indigo, title: "Осадки",
-                     value: String(format: "%.1f мм", weather.precipitation))
+                     value: displayValue(
+                        for: .precipitation,
+                        value: String(format: "%.1f мм", weather.precipitation)
+                     ))
+        }
+    }
+
+    private func displayValue(for field: WeatherField, value: String) -> String {
+        switch weather.status(for: field).quality {
+        case .observed:
+            return value
+        case .derived, .estimated:
+            return "~\(value)"
+        case .unavailable:
+            return "Нет данных"
         }
     }
 

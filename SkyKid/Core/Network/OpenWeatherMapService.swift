@@ -5,7 +5,7 @@ struct OpenWeatherMapService: WeatherService {
     let apiKey: String
     private static let base = "https://api.openweathermap.org/data/2.5/weather"
 
-    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData {
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather {
         var components = URLComponents(string: Self.base)!
         components.queryItems = [
             .init(name: "lat",   value: String(coordinate.latitude)),
@@ -16,15 +16,18 @@ struct OpenWeatherMapService: WeatherService {
         ]
         let (data, _) = try await URLSession.shared.data(from: components.url!)
         let root = try JSONDecoder().decode(OWMRoot.self, from: data)
-        return WeatherData(
-            temperature:         root.main.temp,
+        return try WeatherNormalizer.normalize(RawWeatherObservation(
+            source: .openWeatherMap,
+            temperature: root.main.temp,
             apparentTemperature: root.main.feels_like,
-            humidity:            root.main.humidity,
-            windSpeed:           root.wind.speed,
-            windDirection:       root.wind.deg ?? 0,
-            precipitation:       root.rain?.oneHour ?? 0,
-            weatherCode:         mapCode(root.weather.first?.id ?? 800)
-        )
+            humidity: root.main.humidity,
+            windSpeed: root.wind.speed,
+            windDirection: root.wind.deg,
+            precipitation: root.rain?.oneHour ?? root.snow?.oneHour,
+            weatherCode: root.weather.first.map { mapCode($0.id) },
+            windGust: root.wind.gust,
+            cloudCover: root.clouds?.all.map(Double.init)
+        ))
     }
 
     private func mapCode(_ id: Int) -> Int {
@@ -57,17 +60,20 @@ private struct OWMRoot: Decodable {
     let wind:    OWMWind
     let weather: [OWMWeather]
     let rain:    OWMRain?
+    let snow:    OWMRain?
+    let clouds:  OWMClouds?
 }
 
 private struct OWMMain: Decodable {
-    let temp: Double
-    let feels_like: Double
-    let humidity: Int
+    let temp: Double?
+    let feels_like: Double?
+    let humidity: Int?
 }
 
 private struct OWMWind: Decodable {
-    let speed: Double
+    let speed: Double?
     let deg: Int?
+    let gust: Double?
 }
 
 private struct OWMWeather: Decodable {
@@ -77,4 +83,8 @@ private struct OWMWeather: Decodable {
 private struct OWMRain: Decodable {
     let oneHour: Double?
     enum CodingKeys: String, CodingKey { case oneHour = "1h" }
+}
+
+private struct OWMClouds: Decodable {
+    let all: Int?
 }

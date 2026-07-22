@@ -10,20 +10,33 @@ import WidgetKit
 @Observable
 final class WeatherViewModel {
     private var service: any WeatherService
+    private let outfitUseCase: BuildOutfitRecommendationUseCase
+    private let nowProvider: @Sendable () -> Date
     private(set) var currentProvider: WeatherProvider
 
-    var weather: WeatherData?
+    var weather: NormalizedWeather?
+    private(set) var outfitRecommendation: OutfitRecommendation?
     var isLoading = false
     var error: String?
     private(set) var cityName: String = "Моё местоположение"
+    private(set) var weatherUpdatedAt: Date?
+
+    private var recommendationProfile: ChildThermalProfile?
+    private var walkContext: WalkContext?
 
     private var lastCoordinate: CLLocationCoordinate2D?
     // CLGeocoder ограничивает частоту запросов — геокодируем повторно
     // только если позиция сместилась заметно (> 1 км).
     private var geocodedLocation: CLLocation?
 
-    init(service: any WeatherService) {
+    init(
+        service: any WeatherService,
+        outfitUseCase: BuildOutfitRecommendationUseCase = BuildOutfitRecommendationUseCase(),
+        nowProvider: @escaping @Sendable () -> Date = Date.init
+    ) {
         self.service = service
+        self.outfitUseCase = outfitUseCase
+        self.nowProvider = nowProvider
         let raw = UserDefaults.standard.string(forKey: WeatherProvider.providerKey) ?? ""
         self.currentProvider = WeatherProvider(rawValue: raw) ?? .openMeteo
     }
@@ -36,7 +49,6 @@ final class WeatherViewModel {
         await resolveCityName(for: coordinate)
         do {
             let data = try await service.fetch(coordinate: coordinate)
-            weather = data
             AppGroup.saveWeather(
                 temperature:   data.temperature,
                 apparentTemp:  data.apparentTemperature,
@@ -45,23 +57,9 @@ final class WeatherViewModel {
                 precipitation: data.precipitation,
                 cityName:      cityName
             )
-            // Кешируем TOG-рекомендацию для виджета и Siri до reloadAllTimelines().
-            if let profile = AppGroup.loadProfile() {
-                let gear = GearSetup.from(profile: profile)
-                let rec  = OutfitRecommendationService.shared.recommend(
-                    weather: data, profile: profile, gearSetup: gear
-                )
-                let effectiveTemp = rec.explanation.first(where: { $0.unit == "°C" })?.value
-                    ?? data.apparentTemperature
-                AppGroup.saveTOGOutfit(CachedTOGOutfit(
-                    layers: rec.allDisplayLayers.map {
-                        CachedTOGOutfit.Layer(name: $0.name, systemImage: $0.systemImage, reason: $0.reason)
-                    },
-                    effectiveChildTemp: effectiveTemp,
-                    updatedAt: Date()
-                ))
-            }
-            WidgetCenter.shared.reloadAllTimelines()
+            weather = data
+            weatherUpdatedAt = nowProvider()
+            rebuildOutfitRecommendation()
         } catch {
             self.error = "Не удалось загрузить погоду"
         }
@@ -73,6 +71,42 @@ final class WeatherViewModel {
     func reload() async {
         guard let coordinate = lastCoordinate else { return }
         await load(coordinate: coordinate)
+    }
+
+    /// Rebuilds the single recommendation after a profile, wardrobe, or
+    /// personalization change without requesting weather again.
+    func refreshOutfitRecommendation(
+        for profile: ChildProfile?,
+        walkContext: WalkContext?
+    ) {
+        recommendationProfile = profile?.thermalProfile
+        self.walkContext = walkContext
+        rebuildOutfitRecommendation()
+    }
+
+    private func rebuildOutfitRecommendation() {
+        guard let profile = recommendationProfile else {
+            outfitRecommendation = nil
+            outfitUseCase.clearSnapshot()
+            WidgetCenter.shared.reloadAllTimelines()
+            return
+        }
+        guard let walkContext, let weather else {
+            // Keep the last valid App Group snapshot while the app is waiting
+            // for fresh weather or preparing the in-memory walk context.
+            outfitRecommendation = nil
+            return
+        }
+
+        let output = outfitUseCase.execute(
+            weather: weather,
+            profile: profile,
+            walkContext: walkContext,
+            cityName: cityName,
+            generatedAt: weatherUpdatedAt ?? nowProvider()
+        )
+        outfitRecommendation = output.recommendation
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // P1-2: обратное геокодирование — реальное название города вместо заглушки.

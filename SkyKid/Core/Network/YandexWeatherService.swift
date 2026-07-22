@@ -5,7 +5,7 @@ struct YandexWeatherService: WeatherService {
     let apiKey: String
     private static let base = "https://api.weather.yandex.ru/v2/forecast"
 
-    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData {
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather {
         var components = URLComponents(string: Self.base)!
         components.queryItems = [
             .init(name: "lat",   value: String(coordinate.latitude)),
@@ -20,20 +20,23 @@ struct YandexWeatherService: WeatherService {
         let root = try JSONDecoder().decode(YandexRoot.self, from: data)
         let fact = root.fact
 
-        return WeatherData(
-            temperature:         Double(fact.temp),
-            apparentTemperature: Double(fact.feels_like),
-            humidity:            fact.humidity,
-            windSpeed:           fact.wind_speed,
-            windDirection:       windDirDegrees(fact.wind_dir),
-            precipitation:       fact.prec_mm ?? 0,
-            weatherCode:         wmoCode(fact.condition)
-        )
+        return try WeatherNormalizer.normalize(RawWeatherObservation(
+            source: .yandex,
+            temperature: fact.temp.map(Double.init),
+            apparentTemperature: fact.feels_like.map(Double.init),
+            humidity: fact.humidity,
+            windSpeed: fact.wind_speed,
+            windDirection: fact.wind_dir.flatMap(windDirDegrees),
+            precipitation: fact.prec_mm,
+            weatherCode: fact.condition.map(wmoCode),
+            windGust: fact.wind_gust,
+            cloudCover: fact.cloudness.map { $0 * 100 }
+        ))
     }
 
     // MARK: - Helpers
 
-    private func windDirDegrees(_ dir: String) -> Int {
+    private func windDirDegrees(_ dir: String) -> Int? {
         switch dir {
         case "n":   return 0
         case "ne":  return 45
@@ -43,7 +46,7 @@ struct YandexWeatherService: WeatherService {
         case "sw":  return 225
         case "w":   return 270
         case "nw":  return 315
-        default:    return 0
+        default:    return nil
         }
     }
 
@@ -78,11 +81,13 @@ private struct YandexRoot: Decodable {
 }
 
 private struct YandexFact: Decodable {
-    let temp:       Int
-    let feels_like: Int
-    let humidity:   Int
-    let wind_speed: Double
-    let wind_dir:   String
-    let condition:  String
+    let temp:       Int?
+    let feels_like: Int?
+    let humidity:   Int?
+    let wind_speed: Double?
+    let wind_gust:  Double?
+    let wind_dir:   String?
+    let condition:  String?
     let prec_mm:    Double?
+    let cloudness:  Double?
 }

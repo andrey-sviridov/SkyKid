@@ -1,25 +1,59 @@
 # Модели данных SkyKid
 
-## WeatherData (`Core/Models/WeatherData.swift`)
+## Погодные модели
 
-| Поле | Тип | Источник |
-|---|---|---|
-| `temperature` | Double | `temperature_2m` |
-| `apparentTemperature` | Double | `apparent_temperature` |
-| `humidity` | Int | `relative_humidity_2m` |
-| `windSpeed` | Double | `wind_speed_10m` (м/с) |
-| `windDirection` | Int | `wind_direction_10m` (градусы) |
-| `precipitation` | Double | `precipitation` (мм/ч) |
-| `weatherCode` | Int | WMO код (0=ясно … 99=гроза) |
+### RawWeatherObservation (`Core/Models/RawWeatherObservation.swift`)
 
-Computed: `windDirectionLabel`, `conditionDescription`, `conditionIcon` (SF Symbols).  
-Также содержит `RadarFrame: Identifiable { id, time, path }`.
+Транспортная модель адаптеров. Все погодные значения необязательны, поэтому настоящий `0` (штиль, отсутствие осадков или UV) не смешивается с отсутствующим полем ответа. `source` хранит фактического провайдера, а `qualityOverrides` и `notes` позволяют адаптеру отметить вычисленное значение.
+
+### NormalizedWeather (`Core/Models/NormalizedWeather.swift`)
+
+Единственный погодный вход основного UI и TOG-пайплайна. Содержит температуру, ощущаемую температуру, влажность, устойчивый ветер и порыв, направление, осадки, WMO-код, UV, облачность, тип осадков и почасовой прогноз.
+
+Для каждого `WeatherField` хранится `WeatherFieldStatus`:
+
+- `source` — реальный поставщик данных;
+- `origin` — провайдер, вычисление из ответа или защитная подстановка;
+- `quality` — `observed`, `derived`, `estimated` либо `unavailable`;
+- `note` — пользовательски понятная причина подстановки.
+
+`WeatherConfidence` агрегирует качество полей в `high`, `medium` или `low`. Отсутствующий UV не позволяет выставить высокую уверенность, потому что солнечная поправка не подтверждена.
+
+### WeatherData (`Core/Models/WeatherData.swift`)
+
+Legacy-контейнер скалярных значений сохранён только для изолированного CLO-конструктора и совместимости общего кода виджета. Новые сетевые сервисы и рекомендательный движок его не используют. В этом же файле находятся `PrecipType`, `HourlyForecast` и `RadarFrame`.
+
+## ChildThermalProfile (`Core/Models/ChildThermalProfile.swift`)
+
+Постоянная часть профиля:
+
+- `name`, `gender`, `birthday`;
+- `gestationalAgeWeeks` в диапазоне 22…40;
+- `stableTraits: Set<StableThermalTrait>` — устойчивые особенности, а не самочувствие сегодня;
+- `temperaturePreferenceOffset` в диапазоне −3…+3°C;
+- вычисляемые возраст, возрастная группа и скорректированный возраст.
+
+`StableThermalTrait`: `frequentIllness`, `coldSensitive`, `heatSensitive`, `anemia`, `atopicDermatitis`, `cardioRespiratory`.
+
+## WalkContext (`Core/Models/WalkContext.swift`)
+
+Временный вход для одной планируемой прогулки:
+
+- `healthStatus` и необязательная `bodyTemperatureCelsius`;
+- `activityLevel`, `walkType`, `transportMode`;
+- капюшон, дождевик, конверт, плед и слинг под курткой;
+- `availableGarmentIDs` — снимок личного гардероба для текущего расчёта.
+
+`WalkContext` не реализует `Codable`. `WalkContextStore` хранит его только в памяти текущего запуска. Острая болезнь и выбор транспорта не попадают в `UserDefaults` и App Group.
 
 ## ChildProfile (`Core/Models/ChildProfile.swift`)
 
-- `name: String`, `gender: ChildGender (.boy/.girl)`, `birthday: Date`
-- Вычисляемые: `ageYears`, `ageMonths`, `ageLabel`, `ageGroup: AgeGroup`
-- Сохранение: `ChildProfileStore.shared.profile` → `AppGroup` (suite `group.com.skykid.app`, ключ `"child_profile"`, JSON)
+`ChildProfile` — миграционная обёртка над `ChildThermalProfile`. Схема v2 кодирует только `schemaVersion` и `thermalProfile`. При декодировании старого плоского JSON:
+
+- устойчивые особенности и срок рождения мигрируют;
+- лихорадка, ОРВИ, активность, тип прогулки и коляски намеренно отбрасываются.
+
+Сохранение: `ChildProfileStore.shared.profile` → App Group (`child_profile`, JSON v2).
 
 ### AgeGroup + температурные поправки
 
@@ -62,6 +96,48 @@ Enum-пространство имён; методы статические, о�
 
 **App Group capability** должна быть включена для обоих таргетов с ID `group.com.skykid.app`.
 
+## OutfitRecommendation
+
+`OutfitRecommendation` — единый Codable-результат для основного UI, журнала прогулок, виджета и Siri.
+
+| Поле | Описание |
+|---|---|
+| `temperatures.outside` | Измеренная наружная температура |
+| `temperatures.apparent` | Ощущаемая температура провайдера |
+| `temperatures.effective` | Поправки ветра, влажности, осадков и солнца |
+| `temperatures.microclimate` | Условия ребёнка в коляске, слинге или автокресле |
+| `layers`, `accessories` | Слои из `OutfitSolver` без UI-адаптации |
+| `missingGarments` | Необязательный для декодирования список подходящих, но отсутствующих вещей; UI показывает его как варианты замены |
+| `totalTOG`, `targetTOG` | Сухое утепление комплекта и тепловая цель |
+| `fit` | Эффективный TOG, погрешность, покрытие корпуса и уверенность |
+| `warnings`, `checkHint`, `walkWindow` | Выход safety-движка |
+
+## OutfitRecommendationSnapshot
+
+`OutfitRecommendationSnapshot` оборачивает полный `OutfitRecommendation` и добавляет `schemaVersion`, `generatedAt`, `expiresAt`, имя/возраст ребёнка, город и optional `RecommendationSnapshotContext`. Контекст содержит описание погоды, источник, уверенность, транспорт, активность и тип прогулки; optional сохраняет декодирование снимков ранней схемы v2.
+
+`generatedAt` соответствует моменту получения использованной погоды, а не любому локальному пересчёту комплекта. Поэтому смена гардероба, транспорта или персональной поправки сохраняет прежний `expiresAt` и не продлевает актуальность старого прогноза. `AppGroupRecommendationSnapshotStore` хранит снимок под ключом `outfit_recommendation_snapshot_v2`; TTL по умолчанию — два часа.
+
+## Модели персонализации
+
+`PersonalizationContext` сохраняет условия, в которых родитель оценил комплект: `microclimateTemperature`, `TempBand`, спокойный/активный сценарий, транспорт, активность, тип прогулки, одежду, целевой/фактический TOG и длительность.
+
+`PersonalizationObservation` связывает контекст с `UserFeedback`, временем, источником и стабильным `sourceID`. Быстрый отзыв использует ID текущей сессии, а журнал — `WalkLog.id`; повторная запись с тем же ID заменяет прежнее наблюдение.
+
+`PersonalizationProfileState` — Codable-схема v2:
+
+| Поле | Назначение |
+|---|---|
+| `schemaVersion` | Версия сохранённого формата |
+| `legacyOffsetsByBand` | Baseline, мигрированный из `tog_offset_v1` |
+| `observations` | Не более 80 последних контекстных оценок |
+
+`PersonalizationSummary` — read model для UI: текущая зона/сценарий, применённая поправка, число независимых направленных сигналов, подтверждения «Комфортно» и признак сохранённых данных.
+
+`PersonalOffsetStore.feedbackHistory(for:limit:)` возвращает только наблюдения выбранного профиля за допустимый срок, от новых к старым. `FeedbackHistoryItemBuilder` переводит их в presentation-модель истории, не изменяя персонализацию.
+
+`WalkLog` дополнительно хранит optional-контекст персонализации. Поля optional для обратной совместимости со старыми JSON-записями; при редактировании старой прогулки доступный контекст дополняется.
+
 ## ChildProfileStore (`Core/Models/ChildProfileStore.swift`)
 
 `final class @unchecked Sendable` — singleton только в основном таргете (не в виджете).  
@@ -71,15 +147,15 @@ Enum-пространство имён; методы статические, о�
 
 ```swift
 enum GarmentCatalog {
-    static let all: [GarmentItem]                       // 20 предметов
+    static let all: [GarmentItem]                       // единственный каталог
     static let byID: [String: GarmentItem]              // O(1) lookup
     static let byLayer: [GarmentLayer: [GarmentItem]]   // O(1) по категории
 }
 ```
 
-Типы в том же файле: `GarmentLayer` (4 слоя), `WardrobeAgeGroup` (.newborn/.active),  
-`ThermalRisk` (7 уровней + `.color` + `.symbol`), `GarmentItem` (id, name, heatValue, layer, symbol).  
-Также: `extension AgeGroup { var toWardrobeAgeGroup: WardrobeAgeGroup }`.
+`GarmentItem` хранит обе тепловые величины (`heatValue` для legacy CLO и `tog` для основного решателя), возрастную группу, назначение `GarmentUse`, `coveredZones`, анатомические слоты слоя и `exclusiveGroup`. `GarmentCompatibilityPolicy` является единственным местом проверки совместимости. Скрытых предметов с `catalogAgeGroup == nil` больше нет.
+
+`BodyZone`: корпус, руки, ноги, голова, шея, кисти и стопы. `GarmentUse` отделяет прогулочную одежду, аксессуары, утепление коляски, сон и утилитарные предметы.
 
 ## WardrobeModel (`Features/Outfit/WardrobeModel.swift`)
 

@@ -49,6 +49,12 @@ struct WalkLog: Codable, Identifiable, Hashable {
     var comfortLevel: BabyComfortLevel
     var weatherTemperature: Double
     var apparentTemperature: Double
+    var microclimateTemperature: Double?
+    var transportMode: TransportMode?
+    var activityLevel: BabyActivityLevel?
+    var walkType: WalkType?
+    var targetTOG: Double?
+    var effectiveOutfitTOG: Double?
 
     init(
         date: Date = .now,
@@ -56,7 +62,13 @@ struct WalkLog: Codable, Identifiable, Hashable {
         outfitItemIDs: [String] = [],
         comfortLevel: BabyComfortLevel,
         weatherTemperature: Double,
-        apparentTemperature: Double
+        apparentTemperature: Double,
+        microclimateTemperature: Double? = nil,
+        transportMode: TransportMode? = nil,
+        activityLevel: BabyActivityLevel? = nil,
+        walkType: WalkType? = nil,
+        targetTOG: Double? = nil,
+        effectiveOutfitTOG: Double? = nil
     ) {
         self.id = UUID()
         self.date = date
@@ -65,5 +77,11 @@ struct WalkLog: Codable, Identifiable, Hashable {
         self.comfortLevel = comfortLevel
         self.weatherTemperature = weatherTemperature
         self.apparentTemperature = apparentTemperature
+        self.microclimateTemperature = microclimateTemperature
+        self.transportMode = transportMode
+        self.activityLevel = activityLevel
+        self.walkType = walkType
+        self.targetTOG = targetTOG
+        self.effectiveOutfitTOG = effectiveOutfitTOG
     }
 }

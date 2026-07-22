@@ -144,7 +144,7 @@ enum HealthFeature: String, Codable, CaseIterable, Identifiable, Hashable {
 
 // MARK: - WalkType
 
-enum WalkType: String, Codable, CaseIterable, Identifiable {
+enum WalkType: String, Codable, CaseIterable, Identifiable, Sendable {
     case short   = "short"    // ≤ 30 мин
     case regular = "regular"  // ~ 1 час
     case long    = "long"     // 2+ часа
@@ -248,7 +248,7 @@ enum StrollerType: String, Codable, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .open:       return "baby.carriage"
+        case .open:       return "stroller"
         case .deepWinter: return "thermometer.snowflake"
         case .covered:    return "exclamationmark.triangle.fill"
         }
@@ -271,7 +271,7 @@ enum StrollerType: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - ChildGender
 
-enum ChildGender: String, Codable, CaseIterable {
+enum ChildGender: String, Codable, CaseIterable, Sendable {
     case boy = "boy"
     case girl = "girl"
 
@@ -282,135 +282,168 @@ enum ChildGender: String, Codable, CaseIterable {
 }
 
 struct ChildProfile: Equatable {
-    var name: String
-    var gender: ChildGender
-    var birthday: Date
-    /// Уровень физической активности ребёнка во время прогулки.
+    static let currentSchemaVersion = 2
+
+    var thermalProfile: ChildThermalProfile
+
+    // These compatibility fields are kept only for the isolated legacy engine
+    // and decoding old call sites. They are never persisted in schema v2 and
+    // are not consumed by the main recommendation pipeline.
     var activityLevel: ActivityLevel = .moderate
-    /// Тип прогулки — влияет на продолжительность и условия.
     var walkType: WalkType = .regular
-    /// Особенности здоровья, влияющие на чувствительность к температуре.
-    var healthFeatures: Set<HealthFeature> = []
-    /// Постоянная поправка к температуре: мёрзнет (−) / жаркий (+).
-    var temperaturePreferenceOffset: Double = 0.0
-    /// Тип коляски — влияет на тепловое сопротивление и безопасность.
     var strollerType: StrollerType = .open
-    // New fields for TOG pipeline (§4): backward compat via try? in init(from:)
-    /// Срок гестации в неделях: 40 = доношенный, < 37 = недоношенный.
-    var gestationalAgeWeeks: Int = 40
-    /// Состояния здоровья для TOG-расчёта (§4.5). Параллельно с healthFeatures.
     var healthConditions: Set<HealthCondition> = []
-    /// Активность для TOG-расчёта (§4.4). Точнее, чем ActivityLevel.
     var babyActivityLevel: BabyActivityLevel = .calmAwake
 
-    /// Ребёнок использует коляску (до 3 лет).
-    var usesStroller: Bool { ageGroup == .infant || ageGroup == .baby || ageGroup == .toddler }
+    init(name: String, gender: ChildGender, birthday: Date) {
+        thermalProfile = ChildThermalProfile(
+            name: name,
+            gender: gender,
+            birthday: birthday
+        )
+    }
 
+    // MARK: - Stable profile forwarding
 
-    /// Период новорождённости: первые 28 дней жизни.
-    /// Source: neonatology.pdf — самый критичный период терморегуляции.
-    /// Нет дрожательного термогенеза, бурый жир истощается быстро.
-    var isNewbornPeriod: Bool { ageYears == 0 && ageMonths == 0 }
+    var name: String {
+        get { thermalProfile.name }
+        set { thermalProfile.name = newValue }
+    }
 
-    /// Суммарная поправка от особенностей здоровья (°C).
+    var gender: ChildGender {
+        get { thermalProfile.gender }
+        set { thermalProfile.gender = newValue }
+    }
+
+    var birthday: Date {
+        get { thermalProfile.birthday }
+        set { thermalProfile.birthday = newValue }
+    }
+
+    var gestationalAgeWeeks: Int {
+        get { thermalProfile.gestationalAgeWeeks }
+        set { thermalProfile.gestationalAgeWeeks = min(max(newValue, 22), 40) }
+    }
+
+    var temperaturePreferenceOffset: Double {
+        get { thermalProfile.temperaturePreferenceOffset }
+        set { thermalProfile.temperaturePreferenceOffset = min(max(newValue, -3), 3) }
+    }
+
+    var stableTraits: Set<StableThermalTrait> {
+        get { thermalProfile.stableTraits }
+        set { thermalProfile.stableTraits = newValue }
+    }
+
+    // MARK: - Legacy stable-feature bridge
+
+    var healthFeatures: Set<HealthFeature> {
+        get {
+            var features: Set<HealthFeature> = []
+            if stableTraits.contains(.frequentIllness) { features.insert(.frequentIllness) }
+            if stableTraits.contains(.coldSensitive) { features.insert(.coldSensitive) }
+            if stableTraits.contains(.heatSensitive) { features.insert(.heatSensitive) }
+            if gestationalAgeWeeks < 37 { features.insert(.premature) }
+            return features
+        }
+        set {
+            stableTraits.subtract([.frequentIllness, .coldSensitive, .heatSensitive])
+            if newValue.contains(.frequentIllness) { stableTraits.insert(.frequentIllness) }
+            if newValue.contains(.coldSensitive) { stableTraits.insert(.coldSensitive) }
+            if newValue.contains(.heatSensitive) { stableTraits.insert(.heatSensitive) }
+            if newValue.contains(.premature), gestationalAgeWeeks == 40 {
+                gestationalAgeWeeks = 36
+            }
+        }
+    }
+
     var healthTemperatureAdjustment: Double {
         healthFeatures.map(\.temperatureAdjustment).reduce(0, +)
     }
 
-    var ageComponents: DateComponents {
-        Calendar.current.dateComponents([.year, .month], from: birthday, to: Date())
-    }
+    // MARK: - Age forwarding
 
-    var ageYears: Int { ageComponents.year ?? 0 }
-    var ageMonths: Int { ageComponents.month ?? 0 }
-
-    var ageLabel: String {
-        let y = ageYears
-        let m = ageMonths
-        if y == 0 {
-            return "\(m) \(monthWord(m))"
-        } else if m == 0 {
-            return "\(y) \(yearWord(y))"
-        } else {
-            return "\(y) \(yearWord(y)) \(m) \(monthWord(m))"
-        }
-    }
-
-    // MARK: TOG Pipeline Helpers
-
-    /// Хронологический возраст в полных неделях.
-    var chronologicalAgeWeeks: Int {
-        Int(max(0, Date().timeIntervalSince(birthday)) / 604_800)
-    }
-
-    /// Скорректированный возраст в неделях (§4.2): вычитает недели недоношенности.
-    /// Может быть отрицательным для глубоко недоношенных до достижения ПДР.
-    var correctedAgeWeeks: Int {
-        chronologicalAgeWeeks - (40 - gestationalAgeWeeks)
-    }
-
-    /// Хронологический возраст в полных месяцах.
-    var chronologicalAgeMonths: Int { ageYears * 12 + ageMonths }
-
-    var ageGroup: AgeGroup {
-        let totalMonths = ageYears * 12 + ageMonths
-        switch totalMonths {
-        case 0..<6:   return .infant
-        case 6..<12:  return .baby
-        case 12..<36: return .toddler
-        case 36..<72: return .preschool
-        case 72..<144: return .schoolAge
-        default:      return .teen
-        }
-    }
-
-    private func yearWord(_ n: Int) -> String {
-        let mod10 = n % 10, mod100 = n % 100
-        if mod100 >= 11 && mod100 <= 19 { return "лет" }
-        switch mod10 {
-        case 1: return "год"
-        case 2, 3, 4: return "года"
-        default: return "лет"
-        }
-    }
-
-    private func monthWord(_ n: Int) -> String {
-        let mod10 = n % 10, mod100 = n % 100
-        if mod100 >= 11 && mod100 <= 19 { return "месяцев" }
-        switch mod10 {
-        case 1: return "месяц"
-        case 2, 3, 4: return "месяца"
-        default: return "месяцев"
-        }
-    }
+    var usesStroller: Bool { thermalProfile.usesStroller }
+    var isNewbornPeriod: Bool { thermalProfile.isNewbornPeriod }
+    var ageComponents: DateComponents { thermalProfile.ageComponents }
+    var ageYears: Int { thermalProfile.ageYears }
+    var ageMonths: Int { thermalProfile.ageMonths }
+    var ageLabel: String { thermalProfile.ageLabel }
+    var chronologicalAgeWeeks: Int { thermalProfile.chronologicalAgeWeeks }
+    var correctedAgeWeeks: Int { thermalProfile.correctedAgeWeeks }
+    var chronologicalAgeMonths: Int { thermalProfile.chronologicalAgeMonths }
+    var ageGroup: AgeGroup { thermalProfile.ageGroup }
 }
 
-// MARK: - Codable (backward-compatible: новые поля имеют дефолты при отсутствии в JSON)
+// MARK: - Codable migration
 
 extension ChildProfile: Codable {
     enum CodingKeys: String, CodingKey {
-        case name, gender, birthday, activityLevel, walkType, healthFeatures,
-             temperaturePreferenceOffset, strollerType,
-             gestationalAgeWeeks, healthConditions, babyActivityLevel
+        case schemaVersion, thermalProfile
+        case name, gender, birthday, activityLevel, walkType, healthFeatures
+        case temperaturePreferenceOffset, strollerType
+        case gestationalAgeWeeks, healthConditions, babyActivityLevel
     }
 
     init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        name     = try c.decode(String.self,      forKey: .name)
-        gender   = try c.decode(ChildGender.self, forKey: .gender)
-        birthday = try c.decode(Date.self,        forKey: .birthday)
-        activityLevel               = (try? c.decode(ActivityLevel.self,       forKey: .activityLevel))               ?? .moderate
-        walkType                    = (try? c.decode(WalkType.self,             forKey: .walkType))                    ?? .regular
-        healthFeatures              = (try? c.decode(Set<HealthFeature>.self,   forKey: .healthFeatures))              ?? []
-        temperaturePreferenceOffset = (try? c.decode(Double.self,               forKey: .temperaturePreferenceOffset)) ?? 0.0
-        strollerType                = (try? c.decode(StrollerType.self,         forKey: .strollerType))                ?? .open
-        gestationalAgeWeeks         = (try? c.decode(Int.self,                  forKey: .gestationalAgeWeeks))         ?? 40
-        healthConditions            = (try? c.decode(Set<HealthCondition>.self, forKey: .healthConditions))            ?? []
-        babyActivityLevel           = (try? c.decode(BabyActivityLevel.self,    forKey: .babyActivityLevel))           ?? .calmAwake
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let thermalProfile = try container.decodeIfPresent(
+            ChildThermalProfile.self,
+            forKey: .thermalProfile
+        ) {
+            self.thermalProfile = thermalProfile
+            return
+        }
+
+        let name = try container.decode(String.self, forKey: .name)
+        let gender = try container.decode(ChildGender.self, forKey: .gender)
+        let birthday = try container.decode(Date.self, forKey: .birthday)
+        let legacyFeatures = try container.decodeIfPresent(
+            Set<HealthFeature>.self,
+            forKey: .healthFeatures
+        ) ?? []
+        let legacyConditions = try container.decodeIfPresent(
+            Set<HealthCondition>.self,
+            forKey: .healthConditions
+        ) ?? []
+        var gestationalWeeks = try container.decodeIfPresent(
+            Int.self,
+            forKey: .gestationalAgeWeeks
+        ) ?? 40
+        if legacyFeatures.contains(.premature), gestationalWeeks == 40 {
+            gestationalWeeks = 36
+        }
+
+        var traits: Set<StableThermalTrait> = []
+        if legacyFeatures.contains(.frequentIllness) { traits.insert(.frequentIllness) }
+        if legacyFeatures.contains(.coldSensitive) { traits.insert(.coldSensitive) }
+        if legacyFeatures.contains(.heatSensitive) { traits.insert(.heatSensitive) }
+        if legacyConditions.contains(.anemia) { traits.insert(.anemia) }
+        if legacyConditions.contains(.atopicDermatitis) { traits.insert(.atopicDermatitis) }
+        if legacyConditions.contains(.cardioRespiratory) { traits.insert(.cardioRespiratory) }
+
+        thermalProfile = ChildThermalProfile(
+            name: name,
+            gender: gender,
+            birthday: birthday,
+            gestationalAgeWeeks: gestationalWeeks,
+            stableTraits: traits,
+            temperaturePreferenceOffset: try container.decodeIfPresent(
+                Double.self,
+                forKey: .temperaturePreferenceOffset
+            ) ?? 0
+        )
+        // Acute illness and the previous walk setup are intentionally discarded.
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(Self.currentSchemaVersion, forKey: .schemaVersion)
+        try container.encode(thermalProfile, forKey: .thermalProfile)
     }
 }
 
-enum AgeGroup {
+enum AgeGroup: Equatable, Sendable {
     case infant      // 0–5 мес: не регулирует температуру, перегревается и мёрзнет быстро
     case baby        // 6–11 мес: начинает двигаться, но ещё очень уязвим
     case toddler     // 1–3 года: активный, но не может сообщить о дискомфорте
@@ -642,34 +675,6 @@ enum AppGroup {
         )
     }
 
-    // MARK: TOG Outfit Cache
-    // Записывается OutfitRecommendationService после каждого расчёта.
-    // Читается виджетом и Siri вместо CLO-движка — даёт персонализированный результат.
-
-    private static let togOutfitKey = "cached_tog_outfit_v1"
-
-    static func saveTOGOutfit(_ outfit: CachedTOGOutfit) {
-        guard let data = try? JSONEncoder().encode(outfit) else { return }
-        defaults.set(data, forKey: togOutfitKey)
-    }
-
-    static func loadTOGOutfit() -> CachedTOGOutfit? {
-        guard let data = defaults.data(forKey: togOutfitKey) else { return nil }
-        return try? JSONDecoder().decode(CachedTOGOutfit.self, from: data)
-    }
-}
-
-// MARK: - TOG Outfit Cache (SkyKid + SkyKidWidget targets)
-
-struct CachedTOGOutfit: Codable, Sendable {
-    struct Layer: Codable, Sendable {
-        let name: String
-        let systemImage: String
-        let reason: String
-    }
-    let layers: [Layer]
-    let effectiveChildTemp: Double
-    let updatedAt: Date
 }
 
 // MARK: - Снимок кешированных данных о погоде
@@ -704,4 +709,3 @@ extension ChildProfile {
     }
 }
 #endif
-

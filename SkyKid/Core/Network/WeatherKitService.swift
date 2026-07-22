@@ -8,7 +8,7 @@ import CoreLocation
 //   3. Раскомментировать import WeatherKit и тело fetch() ниже.
 
 struct WeatherKitService: WeatherService {
-    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData {
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather {
         // Fallback на Open-Meteo пока WeatherKit не активирован в Dev Portal
         return try await OpenMeteoService().fetch(coordinate: coordinate)
     }
@@ -19,20 +19,21 @@ import WeatherKit
 
 struct WeatherKitService: WeatherService {
 
-    func fetch(coordinate: CLLocationCoordinate2D) async throws -> WeatherData {
+    func fetch(coordinate: CLLocationCoordinate2D) async throws -> NormalizedWeather {
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
         let current = try await WeatherKit.WeatherService.shared
             .weather(for: location, including: .current)
 
-        return WeatherData(
-            temperature:         current.temperature.converted(to: .celsius).value,
+        return try WeatherNormalizer.normalize(RawWeatherObservation(
+            source: .weatherKit,
+            temperature: current.temperature.converted(to: .celsius).value,
             apparentTemperature: current.apparentTemperature.converted(to: .celsius).value,
-            humidity:            Int((current.humidity * 100).rounded()),
-            windSpeed:           current.wind.speed.converted(to: .metersPerSecond).value,
-            windDirection:       Int(current.wind.direction.value),
-            precipitation:       current.precipitationIntensity.converted(to: .metersPerSecond).value * 3_600_000,
-            weatherCode:         Self.wmoCode(for: current.condition)
-        )
+            humidity: Int((current.humidity * 100).rounded()),
+            windSpeed: current.wind.speed.converted(to: .metersPerSecond).value,
+            windDirection: Int(current.wind.direction.value),
+            precipitation: current.precipitationIntensity.converted(to: .metersPerSecond).value * 3_600_000,
+            weatherCode: Self.wmoCode(for: current.condition)
+        ))
     }
 
     private static func wmoCode(for condition: WeatherCondition) -> Int {

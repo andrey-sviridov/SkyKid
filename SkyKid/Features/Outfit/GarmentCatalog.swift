@@ -14,7 +14,7 @@ enum GarmentHaptics {
 
 // MARK: - GarmentLayer (анатомическая топология слоёв)
 
-enum GarmentLayer: String, CaseIterable, Identifiable {
+enum GarmentLayer: String, CaseIterable, Identifiable, Sendable {
     case baseFull    = "Базовый — комбинезон"   // на всё тело: слипы, ромперы, термобельё
     case baseTop     = "Базовый — верх"          // боди, футболки, распашонки
     case baseBottom  = "Базовый — низ"           // ползунки, шорты, легинсы
@@ -60,21 +60,75 @@ enum GarmentLayer: String, CaseIterable, Identifiable {
 
     /// Участвует ли слой в подборе прогулочного лука (тело), а не аксессуар/сон.
     var occupiesBody: Bool { !bodySlots.isEmpty }
+
+    var defaultCoveredZones: Set<BodyZone> {
+        switch self {
+        case .baseFull, .midFull, .outerwear:
+            return [.torso, .arms, .legs]
+        case .baseTop, .midTop:
+            return [.torso, .arms]
+        case .baseBottom, .midBottom:
+            return [.legs]
+        case .accessory, .sleepwear:
+            return []
+        }
+    }
+
+    var defaultUse: GarmentUse {
+        switch self {
+        case .accessory: return .accessory
+        case .sleepwear: return .sleep
+        default: return .outdoorClothing
+        }
+    }
+
+    var defaultExclusiveGroup: GarmentExclusiveGroup? {
+        self == .outerwear ? .outerwear : nil
+    }
 }
 
 // MARK: - BodySlot
 
 /// Анатомический слот для проверки несовместимости слоёв в солвере.
 /// «Манекен» имеет верх/низ на двух ярусах (база, утеплитель) + верхнюю одежду.
-enum BodySlot: Hashable {
+enum BodySlot: Hashable, Sendable {
     case baseTop, baseBottom
     case midTop, midBottom
     case outer
 }
 
+// MARK: - Garment thermal topology
+
+enum BodyZone: String, CaseIterable, Codable, Hashable, Sendable {
+    case torso
+    case arms
+    case legs
+    case head
+    case neck
+    case hands
+    case feet
+}
+
+enum GarmentUse: String, Codable, Sendable {
+    case outdoorClothing
+    case accessory
+    case strollerGear
+    case sleep
+    case utility
+}
+
+enum GarmentExclusiveGroup: String, Codable, Hashable, Sendable {
+    case outerwear
+    case headwear
+    case neckwear
+    case handwear
+    case socks
+    case footwear
+}
+
 // MARK: - CatalogAgeGroup
 
-enum CatalogAgeGroup: String, CaseIterable, Identifiable {
+enum CatalogAgeGroup: String, CaseIterable, Identifiable, Sendable {
     case zeroToThree   = "0–3 мес"
     case threeToSix    = "3–6 мес"
     case threeToTwelve = "3–12 мес"
@@ -94,7 +148,7 @@ enum CatalogAgeGroup: String, CaseIterable, Identifiable {
 
 // MARK: - WardrobeAgeGroup
 
-enum WardrobeAgeGroup: String, CaseIterable, Identifiable {
+enum WardrobeAgeGroup: String, CaseIterable, Identifiable, Sendable {
     case earlyInfant = "0–3 мес"
     case infant      = "3–12 мес"
     case active      = "1+ лет"
@@ -124,6 +178,16 @@ extension ChildProfile {
     var wardrobeAgeGroup: WardrobeAgeGroup {
         let totalMonths = ageYears * 12 + ageMonths
         switch totalMonths {
+        case 0..<3:  return .earlyInfant
+        case 3..<12: return .infant
+        default:     return .active
+        }
+    }
+}
+
+extension ChildThermalProfile {
+    var wardrobeAgeGroup: WardrobeAgeGroup {
+        switch chronologicalAgeMonths {
         case 0..<3:  return .earlyInfant
         case 3..<12: return .infant
         default:     return .active
@@ -169,15 +233,47 @@ enum ThermalRisk: Equatable {
 
 // MARK: - GarmentItem
 
-struct GarmentItem: Identifiable, Hashable {
+struct GarmentItem: Identifiable, Hashable, Sendable {
     let id: String
     let name: String
     let heatValue: Double          // CLO-analogue (WardrobeModel)
     let tog: Double                // TOG value (OutfitSolver §5.1)
     let layer: GarmentLayer
     let symbol: String
-    var catalogAgeGroup: CatalogAgeGroup? = nil   // nil = legacy OutfitSolver item
-    var features: [String] = []
+    let catalogAgeGroup: CatalogAgeGroup?
+    let features: [String]
+    let coveredZones: Set<BodyZone>
+    let exclusiveGroup: GarmentExclusiveGroup?
+    let use: GarmentUse
+    let recommendationAgeGroups: Set<WardrobeAgeGroup>
+
+    init(
+        id: String,
+        name: String,
+        heatValue: Double,
+        tog: Double,
+        layer: GarmentLayer,
+        symbol: String,
+        catalogAgeGroup: CatalogAgeGroup? = .universal,
+        features: [String] = [],
+        coveredZones: Set<BodyZone>? = nil,
+        exclusiveGroup: GarmentExclusiveGroup? = nil,
+        use: GarmentUse? = nil,
+        recommendationAgeGroups: Set<WardrobeAgeGroup> = []
+    ) {
+        self.id = id
+        self.name = name
+        self.heatValue = heatValue
+        self.tog = tog
+        self.layer = layer
+        self.symbol = symbol
+        self.catalogAgeGroup = catalogAgeGroup
+        self.features = features
+        self.coveredZones = coveredZones ?? layer.defaultCoveredZones
+        self.exclusiveGroup = exclusiveGroup ?? layer.defaultExclusiveGroup
+        self.use = use ?? layer.defaultUse
+        self.recommendationAgeGroups = recommendationAgeGroups
+    }
 
     var imageAssetName: String { "garment_\(id)" }
 
@@ -318,38 +414,55 @@ struct GarmentPhotoPreviewSheet: View {
 
 enum GarmentCatalog {
 
-    static let all: [GarmentItem] = solverItems + catalogItems
+    /// Единственный каталог для решателя, «Моего гардероба» и Конструктора.
+    /// В нём нет скрытых дублей, которые пользователь не может отключить.
+    static let all: [GarmentItem] = catalogItems
 
-    // ── Внутренние предметы для алгоритма подбора ─────────────────────────────
-    // catalogAgeGroup == nil → не отображаются в пользовательском каталоге
-    static let solverItems: [GarmentItem] = [
-        .init(id: "diaper",      name: "Подгузник",             heatValue: 0.2,  tog: 0.10, layer: .baseFull,  symbol: "figure.child"),
-        .init(id: "slip",        name: "Хлопковый слип / боди", heatValue: 1.5,  tog: 0.60, layer: .baseFull,  symbol: "tshirt.fill"),
-        .init(id: "thermals",    name: "Термобельё",            heatValue: 2.0,  tog: 0.80, layer: .baseFull,  symbol: "thermometer.medium"),
-        .init(id: "thin_socks",  name: "Носочки тонкие",        heatValue: 0.3,  tog: 0.15, layer: .accessory, symbol: "oval.fill"),
-        .init(id: "warm_socks",  name: "Носочки тёплые",        heatValue: 0.6,  tog: 0.30, layer: .accessory, symbol: "capsule.fill"),
-        .init(id: "scratch",     name: "Царапки",               heatValue: 0.2,  tog: 0.10, layer: .accessory, symbol: "sparkles"),
-        .init(id: "fleece",      name: "Флисовый комбез",       heatValue: 3.5,  tog: 1.20, layer: .midFull,   symbol: "wind"),
-        .init(id: "sweater",     name: "Свитер",                heatValue: 3.0,  tog: 0.80, layer: .midTop,    symbol: "hexagon.fill"),
-        .init(id: "pants",       name: "Брюки хлопковые",       heatValue: 1.0,  tog: 0.40, layer: .midBottom, symbol: "rectangle.fill"),
-        .init(id: "windbreaker", name: "Ветровка",              heatValue: 1.5,  tog: 0.50, layer: .outerwear, symbol: "tornado"),
-        .init(id: "demi",        name: "Демисезонный комбез",   heatValue: 6.0,  tog: 2.25, layer: .outerwear, symbol: "cloud.fill"),
-        .init(id: "winter",      name: "Зимний комбез 250г",    heatValue: 10.0, tog: 3.50, layer: .outerwear, symbol: "snowflake"),
-        .init(id: "thin_hat",    name: "Тонкая шапочка",        heatValue: 0.8,  tog: 0.20, layer: .accessory, symbol: "moon.fill"),
-        .init(id: "warm_hat",    name: "Тёплая шапка",          heatValue: 2.0,  tog: 0.50, layer: .accessory, symbol: "moon.stars.fill"),
-        .init(id: "mittens",     name: "Варежки",               heatValue: 0.5,  tog: 0.30, layer: .accessory, symbol: "hand.raised.fill"),
-        .init(id: "booties",     name: "Пинетки",               heatValue: 1.0,  tog: 0.40, layer: .accessory, symbol: "diamond.fill"),
-        .init(id: "bib",         name: "Слюнявчик",             heatValue: 0.0,  tog: 0.00, layer: .accessory, symbol: "drop.fill"),
-    ]
-
-    // ── Пользовательский каталог (отображается в Конструкторе) ───────────────
     static let catalogItems: [GarmentItem] = [
+
+        // Базовые и возрастные аксессуары ────────────────────────────────────
+        .init(id: "diaper", name: "Подгузник",
+              heatValue: 0.20, tog: 0.10, layer: .baseFull, symbol: "figure.child",
+              catalogAgeGroup: .universal, coveredZones: [], use: .utility),
+
+        .init(id: "thin_socks", name: "Носочки тонкие",
+              heatValue: 0.30, tog: 0.15, layer: .accessory, symbol: "oval.fill",
+              catalogAgeGroup: .zeroToThree, coveredZones: [.feet], exclusiveGroup: .socks),
+
+        .init(id: "warm_socks", name: "Носочки тёплые",
+              heatValue: 0.60, tog: 0.30, layer: .accessory, symbol: "capsule.fill",
+              catalogAgeGroup: .zeroToThree, coveredZones: [.feet], exclusiveGroup: .socks),
+
+        .init(id: "scratch", name: "Царапки",
+              heatValue: 0.20, tog: 0.10, layer: .accessory, symbol: "sparkles",
+              catalogAgeGroup: .zeroToThree, coveredZones: [.hands], exclusiveGroup: .handwear),
+
+        .init(id: "thin_hat", name: "Тонкая шапочка",
+              heatValue: 0.80, tog: 0.20, layer: .accessory, symbol: "moon.fill",
+              catalogAgeGroup: .zeroToThree, coveredZones: [.head], exclusiveGroup: .headwear),
+
+        .init(id: "warm_hat", name: "Тёплая шапка",
+              heatValue: 2.00, tog: 0.50, layer: .accessory, symbol: "moon.stars.fill",
+              catalogAgeGroup: .zeroToThree, coveredZones: [.head], exclusiveGroup: .headwear),
+
+        .init(id: "mittens", name: "Варежки",
+              heatValue: 0.50, tog: 0.30, layer: .accessory, symbol: "hand.raised.fill",
+              catalogAgeGroup: .universal, coveredZones: [.hands], exclusiveGroup: .handwear),
+
+        .init(id: "booties", name: "Пинетки",
+              heatValue: 1.00, tog: 0.40, layer: .accessory, symbol: "diamond.fill",
+              catalogAgeGroup: .zeroToThree, coveredZones: [.feet], exclusiveGroup: .footwear),
+
+        .init(id: "bib", name: "Слюнявчик",
+              heatValue: 0.00, tog: 0.00, layer: .accessory, symbol: "drop.fill",
+              catalogAgeGroup: .universal, coveredZones: [.torso], use: .utility),
 
         // 0–3 мес ─────────────────────────────────────────────────────────────
         .init(id: "bodi_km_kr", name: "Боди-кимоно (кор. рукав)",
               heatValue: 0.41, tog: 0.28, layer: .baseTop, symbol: "tshirt",
               catalogAgeGroup: .zeroToThree,
-              features: ["полный запах", "без штанин", "швы наружу"]),
+              features: ["полный запах", "без штанин", "швы наружу"],
+              recommendationAgeGroups: [.earlyInfant]),
 
         .init(id: "bodi_km_dr", name: "Боди-кимоно (дл. рукав)",
               heatValue: 0.60, tog: 0.40, layer: .baseTop, symbol: "tshirt.fill",
@@ -385,7 +498,8 @@ enum GarmentCatalog {
         .init(id: "bodi_short", name: "Боди, короткий рукав",
               heatValue: 0.38, tog: 0.26, layer: .baseTop, symbol: "tshirt",
               catalogAgeGroup: .threeToTwelve,
-              features: ["кор. рукав", "кнопки снизу"]),
+              features: ["кор. рукав", "кнопки снизу"],
+              recommendationAgeGroups: [.infant]),
 
         .init(id: "bodi_long", name: "Боди, длинный рукав",
               heatValue: 0.56, tog: 0.38, layer: .baseTop, symbol: "tshirt.fill",
@@ -395,7 +509,8 @@ enum GarmentCatalog {
         .init(id: "pesochnik", name: "Песочник / Ромпер летний",
               heatValue: 0.64, tog: 0.43, layer: .baseFull, symbol: "figure.child",
               catalogAgeGroup: .threeToTwelve,
-              features: ["кор. рукав", "короткие шорты"]),
+              features: ["кор. рукав", "короткие шорты"],
+              recommendationAgeGroups: [.infant]),
 
         .init(id: "slip_open", name: "Слип с открытыми ножками",
               heatValue: 0.98, tog: 0.65, layer: .baseFull, symbol: "figure.child",
@@ -425,17 +540,17 @@ enum GarmentCatalog {
         .init(id: "noski_thin", name: "Носочки тонкие",
               heatValue: 0.12, tog: 0.08, layer: .accessory, symbol: "oval.fill",
               catalogAgeGroup: .threeToTwelve,
-              features: ["на стопу"]),
+              features: ["на стопу"], coveredZones: [.feet], exclusiveGroup: .socks),
 
         .init(id: "shapka_trik", name: "Шапочка трикотажная",
               heatValue: 0.23, tog: 0.15, layer: .accessory, symbol: "moon.fill",
               catalogAgeGroup: .threeToTwelve,
-              features: ["без завязок"]),
+              features: ["без завязок"], coveredZones: [.head], exclusiveGroup: .headwear),
 
         .init(id: "t_shirt", name: "Футболка",
               heatValue: 0.32, tog: 0.22, layer: .baseTop, symbol: "tshirt",
               catalogAgeGroup: .threeToTwelve,
-              features: ["кор. рукав"]),
+              features: ["кор. рукав"], recommendationAgeGroups: [.active]),
 
         .init(id: "longsleeve", name: "Лонгслив (тонкая кофта)",
               heatValue: 0.49, tog: 0.33, layer: .baseTop, symbol: "tshirt.fill",
@@ -470,12 +585,13 @@ enum GarmentCatalog {
         .init(id: "noski_thick", name: "Носки махровые / плотные",
               heatValue: 0.23, tog: 0.15, layer: .accessory, symbol: "capsule.fill",
               catalogAgeGroup: .threeToTwelve,
-              features: ["утепленные"]),
+              features: ["утепленные"], coveredZones: [.feet], exclusiveGroup: .socks),
 
         .init(id: "pinetki_warm", name: "Пинетки утеплённые",
               heatValue: 0.56, tog: 0.38, layer: .accessory, symbol: "diamond.fill",
               catalogAgeGroup: .threeToTwelve,
-              features: ["для коляски", "замена обуви"]),
+              features: ["для коляски", "замена обуви"],
+              coveredZones: [.feet], exclusiveGroup: .footwear),
 
         // Универсальное ───────────────────────────────────────────────────────
         .init(id: "fleece_overall", name: "Флисовый комбинезон (поддёва)",
@@ -501,7 +617,7 @@ enum GarmentCatalog {
         .init(id: "fur_footmuff", name: "Меховой конверт в коляску (овчина/пух)",
               heatValue: 6.00, tog: 4.00, layer: .outerwear, symbol: "cloud.fill",
               catalogAgeGroup: .universal,
-              features: ["для коляски", "сильный мороз"]),
+              features: ["для коляски", "сильный мороз"], use: .strollerGear),
 
         .init(id: "windbreaker_overall", name: "Ветровочный комбез (без подклада)",
               heatValue: 0.75, tog: 0.50, layer: .outerwear, symbol: "tornado",
@@ -511,22 +627,24 @@ enum GarmentCatalog {
         .init(id: "balaclava_hat", name: "Шапка-шлем (зимняя)",
               heatValue: 1.20, tog: 0.80, layer: .accessory, symbol: "moon.stars.fill",
               catalogAgeGroup: .universal,
-              features: ["закрывает шею и уши"]),
+              features: ["закрывает шею и уши"],
+              coveredZones: [.head, .neck], exclusiveGroup: .headwear),
 
         .init(id: "snood", name: "Манишка / Снуд флисовый",
               heatValue: 0.45, tog: 0.30, layer: .accessory, symbol: "oval.fill",
               catalogAgeGroup: .universal,
-              features: ["защита шеи и груди"]),
+              features: ["защита шеи и груди"],
+              coveredZones: [.neck], exclusiveGroup: .neckwear),
 
         .init(id: "wool_socks", name: "Шерстяные носки",
               heatValue: 0.75, tog: 0.50, layer: .accessory, symbol: "capsule.fill",
               catalogAgeGroup: .universal,
-              features: ["мериносовая шерсть"]),
+              features: ["мериносовая шерсть"], coveredZones: [.feet], exclusiveGroup: .socks),
 
         .init(id: "sun_hat", name: "Панамка / Кепка",
               heatValue: 0.15, tog: 0.10, layer: .accessory, symbol: "sun.max.fill",
               catalogAgeGroup: .universal,
-              features: ["защита от солнца"]),
+              features: ["защита от солнца"], coveredZones: [.head], exclusiveGroup: .headwear),
 
         // Для сна ───────────────────────────────────────────────────────────
         .init(id: "pelenka_thin", name: "Пелёнка тонкая (муслин)",
@@ -574,6 +692,14 @@ enum GarmentCatalog {
         switch id {
         case "bodi_st_kr", "bodi_kr": return "bodi_short"
         case "bodi_st_dr", "bodi_dr": return "bodi_long"
+        case "slip": return "slip_closed"
+        case "thermals": return "slip_thick"
+        case "fleece": return "fleece_overall"
+        case "sweater": return "hoodie_thick"
+        case "pants": return "jeans"
+        case "windbreaker": return "windbreaker_overall"
+        case "demi": return "demi_overall"
+        case "winter": return "winter_overall"
         default: return id
         }
     }
