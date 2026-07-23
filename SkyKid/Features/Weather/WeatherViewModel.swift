@@ -18,7 +18,7 @@ final class WeatherViewModel {
     private(set) var outfitRecommendation: OutfitRecommendation?
     var isLoading = false
     var error: String?
-    private(set) var cityName: String = "Моё местоположение"
+    private(set) var cityName: String = L10n.text("Моё местоположение")
     private(set) var weatherUpdatedAt: Date?
 
     private var recommendationProfile: ChildThermalProfile?
@@ -61,7 +61,7 @@ final class WeatherViewModel {
             weatherUpdatedAt = nowProvider()
             rebuildOutfitRecommendation()
         } catch {
-            self.error = "Не удалось загрузить погоду"
+            self.error = L10n.text("Не удалось загрузить погоду")
         }
         isLoading = false
     }
@@ -81,6 +81,16 @@ final class WeatherViewModel {
     ) {
         recommendationProfile = profile?.thermalProfile
         self.walkContext = walkContext
+        rebuildOutfitRecommendation()
+    }
+
+    func refreshLocalization() {
+        if geocodedLocation == nil {
+            cityName = L10n.text("Моё местоположение")
+        }
+        if error != nil {
+            error = L10n.text("Не удалось загрузить погоду")
+        }
         rebuildOutfitRecommendation()
     }
 

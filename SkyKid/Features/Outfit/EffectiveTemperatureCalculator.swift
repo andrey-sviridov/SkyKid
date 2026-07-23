@@ -188,32 +188,40 @@ private extension EffectiveTemperatureCalculator {
         humidity: Double
     ) -> [CalcStep] {
         var steps = [CalcStep(
-            label: "Итог внешней среды (§2)",
+            label: L10n.text("Итог внешней среды (§2)"),
             value: effects.effectiveTemperature,
             unit: "°C",
-            note: "Все погодные вклады рассчитаны один раз"
+            note: L10n.text("Все погодные вклады рассчитаны один раз")
         )]
 
         appendStep(
-            label: "Ветер (§2.1)",
+            label: L10n.text("Ветер (§2.1)"),
             delta: effects.windDelta,
-            note: "V_calc = \(String(format: "%.1f", calculatedWind)) км/ч",
+            note: L10n.format("V_calc = %.1f км/ч", calculatedWind),
             to: &steps
         )
         appendStep(
-            label: "Тепловой индекс (§2.2)",
+            label: L10n.text("Тепловой индекс (§2.2)"),
             delta: effects.heatDelta,
             note: "RH = \(Int(humidity))%",
             to: &steps
         )
         appendStep(
-            label: "Влажность (§2.3)",
+            label: L10n.text("Влажность (§2.3)"),
             delta: effects.humidityDelta,
             note: "RH = \(Int(humidity))%",
             to: &steps
         )
-        appendStep(label: "Осадки (§2.4)", delta: effects.precipitationDelta, to: &steps)
-        appendStep(label: "Солнце (§2.5)", delta: effects.solarDelta, to: &steps)
+        appendStep(
+            label: L10n.text("Осадки (§2.4)"),
+            delta: effects.precipitationDelta,
+            to: &steps
+        )
+        appendStep(
+            label: L10n.text("Солнце (§2.5)"),
+            delta: effects.solarDelta,
+            to: &steps
+        )
         return steps
     }
 

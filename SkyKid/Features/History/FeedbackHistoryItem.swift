@@ -33,9 +33,9 @@ enum FeedbackHistoryItemBuilder {
 
     private static func title(for feedback: UserFeedback) -> String {
         switch feedback {
-        case .tooCold:     return "Ребёнку было холодно"
-        case .comfortable: return "Ребёнку было комфортно"
-        case .tooWarm:     return "Ребёнку было жарко"
+        case .tooCold:     return L10n.text("Ребёнку было холодно")
+        case .comfortable: return L10n.text("Ребёнку было комфортно")
+        case .tooWarm:     return L10n.text("Ребёнку было жарко")
         }
     }
 
@@ -43,9 +43,9 @@ enum FeedbackHistoryItemBuilder {
         for source: PersonalizationFeedbackSource
     ) -> String {
         switch source {
-        case .outfitScreen:     return "Быстрый отзыв"
-        case .walkLog:          return "Журнал прогулки"
-        case .compatibilityAPI: return "Ранее сохранённый отзыв"
+        case .outfitScreen:     return L10n.text("Быстрый отзыв")
+        case .walkLog:          return L10n.text("Журнал прогулки")
+        case .compatibilityAPI: return L10n.text("Ранее сохранённый отзыв")
         }
     }
 
@@ -53,6 +53,11 @@ enum FeedbackHistoryItemBuilder {
         for context: PersonalizationContext
     ) -> String {
         let temperature = Int(context.microclimateTemperature.rounded())
-        return "\(context.transportMode.walkLabel) · \(context.activityLevel.label) · около \(temperature)°C"
+        return L10n.format(
+            "%@ · %@ · около %lld°C",
+            context.transportMode.walkLabel,
+            context.activityLevel.label,
+            temperature
+        )
     }
 }

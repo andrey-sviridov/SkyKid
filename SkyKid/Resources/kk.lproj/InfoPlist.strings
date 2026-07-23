@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "SkyKid";
+"CFBundleName" = "SkyKid";
+"NSLocationWhenInUseUsageDescription" = "SkyKid маңайыңыздағы ауа райы мен жауын-шашынды көрсету үшін геолокацияны пайдаланады.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SkyKid ауа райын жаңартып отыру үшін геолокацияны пайдаланады.";

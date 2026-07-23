@@ -50,23 +50,36 @@ enum TOGCalculator {
 
         // §4.1 Base curve
         let TOG_base = baseTOG(T)
-        steps.append(CalcStep(label: "Базовый TOG (§4.1)",
-                               value: TOG_base, unit: "TOG",
-                               note: "T_micro = \(String(format:"%.1f", T))°C"))
+        steps.append(CalcStep(
+            label: L10n.text("Базовый TOG (§4.1)"),
+            value: TOG_base,
+            unit: "TOG",
+            note: L10n.format("T_micro = %.1f°C", T)
+        ))
 
         // §4.2 Age Adjustment
         let dAge = ageDelta(correctedWeeks: profile.correctedAgeWeeks, T_micro: T)
         if dAge != 0 {
-            steps.append(CalcStep(label: "Возрастная поправка (§4.2)",
-                                   value: dAge, unit: "TOG",
-                                   note: "Скорр. возраст \(profile.correctedAgeWeeks) нед."))
+            steps.append(CalcStep(
+                label: L10n.text("Возрастная поправка (§4.2)"),
+                value: dAge,
+                unit: "TOG",
+                note: L10n.format(
+                    "Скорр. возраст %lld нед.",
+                    profile.correctedAgeWeeks
+                )
+            ))
         }
 
         // §4.3 Prematurity
         let dPreterm = pretermDelta(profile: profile)
         if dPreterm != 0 {
-            steps.append(CalcStep(label: "Недоношенность (§4.3)",
-                                   value: dPreterm, unit: "TOG", note: nil))
+            steps.append(CalcStep(
+                label: L10n.text("Недоношенность (§4.3)"),
+                value: dPreterm,
+                unit: "TOG",
+                note: nil
+            ))
         }
 
         // §4.4 Activity
@@ -75,9 +88,12 @@ enum TOGCalculator {
             walkType: input.walkContext.walkType
         )
         if dActivity != 0 {
-            steps.append(CalcStep(label: "Активность (§4.4)",
-                                   value: dActivity, unit: "TOG",
-                                   note: input.walkContext.activityLevel.label))
+            steps.append(CalcStep(
+                label: L10n.text("Активность (§4.4)"),
+                value: dActivity,
+                unit: "TOG",
+                note: input.walkContext.activityLevel.label
+            ))
         }
 
         // §4.5 Health
@@ -86,8 +102,12 @@ enum TOGCalculator {
             walkContext: input.walkContext
         )
         if dHealth != 0 {
-            steps.append(CalcStep(label: "Здоровье (§4.5)",
-                                   value: dHealth, unit: "TOG", note: nil))
+            steps.append(CalcStep(
+                label: L10n.text("Здоровье (§4.5)"),
+                value: dHealth,
+                unit: "TOG",
+                note: nil
+            ))
         }
 
         var TOG_required = TOG_base + dAge + dPreterm + dActivity + dHealth
@@ -95,22 +115,33 @@ enum TOGCalculator {
         // §8 Personal Offset
         if input.personalOffset != 0 {
             TOG_required += input.personalOffset
-            steps.append(CalcStep(label: "Персональная поправка (§8)",
-                                   value: input.personalOffset, unit: "TOG", note: nil))
+            steps.append(CalcStep(
+                label: L10n.text("Персональная поправка (§8)"),
+                value: input.personalOffset,
+                unit: "TOG",
+                note: nil
+            ))
         }
 
         // §4.5 Fever hard cap — safety rules always win over personalization.
         if feverActive {
             TOG_required = min(TOG_required, TOG_base)
-            steps.append(CalcStep(label: "Ограничение при температуре (§4.5)",
-                                   value: TOG_required, unit: "TOG",
-                                   note: "Применено после персональной поправки"))
+            steps.append(CalcStep(
+                label: L10n.text("Ограничение при температуре (§4.5)"),
+                value: TOG_required,
+                unit: "TOG",
+                note: L10n.text("Применено после персональной поправки")
+            ))
         }
 
         // §4.6 Clamp
         TOG_required = min(max(TOG_required, OutfitConfig.TOG.minTOG), OutfitConfig.TOG.maxTOG)
-        steps.append(CalcStep(label: "Итоговый TOG_required (§4.6)",
-                               value: TOG_required, unit: "TOG", note: nil))
+        steps.append(CalcStep(
+            label: L10n.text("Итоговый TOG_required (§4.6)"),
+            value: TOG_required,
+            unit: "TOG",
+            note: nil
+        ))
 
         return Output(TOG_required: TOG_required, TOG_base: TOG_base, steps: steps)
     }

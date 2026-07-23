@@ -105,7 +105,7 @@ final class OutfitRecommendationService {
             layers: solverOutput.layers,
             accessories: solverOutput.accessories,
             strollerSetup: microOutput.strollerAdvice ?? StrollerAdvice(
-                recommendation: "Поднимите капюшон при ветре или осадках",
+                recommendation: L10n.text("Поднимите капюшон при ветре или осадках"),
                 isSafetyWarning: false
             ),
             totalTOG: solverOutput.totalTOG,
@@ -131,7 +131,10 @@ final class OutfitRecommendationService {
         return SafetyWarning(
             code: .weatherDataQuality,
             severity: severity,
-            message: "\(weather.confidence.summary) Проверьте ребёнка через 15–20 минут.",
+            message: L10n.format(
+                "%@ Проверьте ребёнка через 15–20 минут.",
+                weather.confidence.summary
+            ),
             systemImage: "exclamationmark.circle.fill"
         )
     }

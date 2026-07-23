@@ -1,6 +1,6 @@
 # Политики безопасности SkyKid
 
-Дата последней сверки источников: 22 июля 2026 года.
+Дата последней технической сверки источников: 23 июля 2026 года.
 
 ## Граница ответственности
 
@@ -21,10 +21,13 @@ SkyKid помогает подготовить одежду и показыва�
 
 ## Источники пользовательских формулировок
 
-- Лихорадка у ребёнка младше трёх месяцев: температура 38°C и выше требует немедленной связи с врачом — [American Academy of Pediatrics, Fever and Your Baby](https://www.healthychildren.org/English/health-issues/conditions/fever/Pages/Fever-and-Your-Baby.aspx).
-- Проверка перегрева: ориентироваться на живот или заднюю поверхность шеи, не на прохладные кисти и стопы; при потливости или горячей коже убрать одежду — [NHS, How to dress a newborn baby](https://www.nhs.uk/best-start-in-life/baby/baby-basics/caring-for-your-baby/how-to-dress-a-newborn/).
-- Защита младенцев от солнца: детей младше шести месяцев по возможности держать вне прямого солнца; использовать тень, одежду и широкополую панаму — [American Academy of Pediatrics, Protect kids’ skin from sunburn](https://www.healthychildren.org/English/tips-tools/ask-the-pediatrician/Pages/whats-the-best-way-to-protect-kids-skin-from-sunburn.aspx).
+- Лихорадка у ребёнка младше трёх месяцев: температура 38°C и выше требует немедленной связи с врачом — [American Academy of Pediatrics, Fever and Your Baby](https://www.healthychildren.org/English/health-issues/conditions/fever/Pages/Fever-and-Your-Baby.aspx) и [NHS, How to take your baby's temperature](https://www.nhs.uk/baby/health/how-to-take-your-babys-temperature/).
+- Проверка перегрева: ориентироваться на живот или заднюю поверхность шеи, не на прохладные кисти и стопы; при потливости или горячей коже убрать одежду — [NHS, How to dress a newborn baby](https://www.nhs.uk/best-start-in-life/baby/baby-basics/caring-for-your-baby/how-to-dress-a-newborn/) и [Wirral University Teaching Hospital NHS Foundation Trust, Temperature](https://www.wuth.nhs.uk/maternity-services/going-home-advice-from-neonatal-unit/temperature/).
+- Защита младенцев от солнца: детей младше шести месяцев держать в тени и вне прямого солнца; использовать лёгкую закрывающую одежду и широкополую панаму — [American Academy of Pediatrics, Baby Sunburn Prevention Tips](https://www.healthychildren.org/English/ages-stages/baby/bathing-skin-care/Pages/Baby-Sunburn-Prevention.aspx).
+- Защита детей от жары: использовать свободную лёгкую одежду и не оставлять ребёнка в припаркованном автомобиле — [CDC, Infants and Children and Heat](https://www.cdc.gov/heat-health/risk-factors/infants-and-children.html).
 - Автокресло: объёмная верхняя одежда ухудшает прилегание ремней; тепло добавляется тонкими слоями и пледом поверх пристёгнутых ремней — [NHTSA, Keep Your Little Ones Warm and Safe in Their Car Seats](https://www.nhtsa.gov/keep-your-little-ones-warm-and-safe-their-car-seats).
+
+Техническая сверка подтверждает смысл этих пользовательских действий, но не подтверждает собственные числа SkyKid: возрастные границы погоды, 10–15 минут до проверки, TOG-кривую, коэффициенты микроклимата и пороги дождевика.
 
 ## Реализация
 
@@ -43,3 +46,17 @@ SkyKid помогает подготовить одежду и показыва�
 2. проверка региональных маршрутов неотложной помощи;
 3. отдельная валидация продуктовых порогов холода, жары, ветра и TOG на целевой возрастной группе;
 4. повторная редактура после любого изменения этих порогов.
+
+Пакет для рецензента сохранён в `docs/clinical-review.md`. Машиночитаемый статус находится в `docs/clinical-review-status.plist`.
+
+## Release gate
+
+Release-сборка основного приложения запускает `scripts/validate-clinical-release.sh` и останавливается, пока:
+
+- статус не равен `approved`;
+- не заполнены имя, лицензия и юрисдикция рецензента;
+- не выбран целевой регион релиза;
+- не указаны дата, commit и digest проверенных политик;
+- digest текущих safety-файлов не совпадает с письменно согласованной версией.
+
+Debug-сборка остаётся доступной для разработки и клинической проверки. Любое изменение файла из `docs/clinical-policy-inputs.xcfilelist` требует нового digest и повторного согласования.

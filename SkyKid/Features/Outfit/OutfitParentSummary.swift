@@ -53,18 +53,22 @@ enum OutfitParentSummaryBuilder {
 
     private static func outfitText(from layers: [RecommendedLayer]) -> String {
         guard !layers.isEmpty else {
-            return "Дополнительные слои на корпус не нужны"
+            return L10n.text("Дополнительные слои на корпус не нужны")
         }
 
         let names = layers.map(\.name)
         guard names.count > 4 else { return joined(names) }
-        return "\(joined(Array(names.prefix(3)))) и ещё \(names.count - 3)"
+        return L10n.format(
+            "%@ и ещё %lld",
+            joined(Array(names.prefix(3))),
+            names.count - 3
+        )
     }
 
     private static func joined(_ values: [String]) -> String {
-        guard let last = values.last else { return "" }
-        guard values.count > 1 else { return last }
-        return values.dropLast().joined(separator: ", ") + " и " + last
+        let formatter = ListFormatter()
+        formatter.locale = L10n.locale
+        return formatter.string(from: values) ?? values.joined(separator: ", ")
     }
 
     // MARK: - Reason
@@ -80,13 +84,18 @@ enum OutfitParentSummaryBuilder {
             walkContext.activityLevel.label.lowercased()
         ]
         if weather.windSpeed >= 7 {
-            factors.append("ветер")
+            factors.append(L10n.text("ветер"))
         }
         if weather.precipitation > 0.1 {
-            factors.append("осадки")
+            factors.append(L10n.text("осадки"))
         }
 
-        return "На улице \(rounded(temperatures.outside))°, в условиях ребёнка около \(rounded(temperatures.microclimate))°. Учтены \(joined(factors))."
+        return L10n.format(
+            "На улице %lld°, в условиях ребёнка около %lld°. Учтены %@.",
+            rounded(temperatures.outside),
+            rounded(temperatures.microclimate),
+            joined(factors)
+        )
     }
 
     private static func rounded(_ value: Double) -> Int {
@@ -138,35 +147,39 @@ enum OutfitParentSummaryBuilder {
         weather: NormalizedWeather
     ) -> String {
         if weather.confidence.level == .low {
-            return "Не все погодные данные доступны — проверьте ребёнка раньше."
+            return L10n.text("Не все погодные данные доступны — проверьте ребёнка раньше.")
         }
         if recommendation.fit?.confidence == .low {
-            return "Доступный гардероб не полностью совпадает с тепловой целью."
+            return L10n.text("Доступный гардероб не полностью совпадает с тепловой целью.")
         }
         switch confidence {
         case .high:
-            return "Погодные данные и доступный комплект хорошо согласуются с расчётом."
+            return L10n.text("Погодные данные и доступный комплект хорошо согласуются с расчётом.")
         case .medium:
-            return "Комплект близок к расчётной цели, но нужна обычная проверка на прогулке."
+            return L10n.text("Комплект близок к расчётной цели, но нужна обычная проверка на прогулке.")
         case .low:
-            return "Используйте рекомендацию осторожно и проверьте ребёнка раньше."
+            return L10n.text("Используйте рекомендацию осторожно и проверьте ребёнка раньше.")
         }
     }
 
     // MARK: - Age range
 
     static func ageContext(for profile: ChildThermalProfile) -> String {
-        "Возраст: \(profile.ageLabel) · группа \(ageRange(for: profile.ageGroup))"
+        L10n.format(
+            "Возраст: %@ · группа %@",
+            profile.ageLabel,
+            ageRange(for: profile.ageGroup)
+        )
     }
 
     private static func ageRange(for ageGroup: AgeGroup) -> String {
         switch ageGroup {
-        case .infant:    return "0–5 месяцев"
-        case .baby:      return "6–11 месяцев"
-        case .toddler:   return "1–3 года"
-        case .preschool: return "3–6 лет"
-        case .schoolAge: return "6–12 лет"
-        case .teen:      return "12+ лет"
+        case .infant:    return L10n.text("0–5 месяцев")
+        case .baby:      return L10n.text("6–11 месяцев")
+        case .toddler:   return L10n.text("1–3 года")
+        case .preschool: return L10n.text("3–6 лет")
+        case .schoolAge: return L10n.text("6–12 лет")
+        case .teen:      return L10n.text("12+ лет")
         }
     }
 }

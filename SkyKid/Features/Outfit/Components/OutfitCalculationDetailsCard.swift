@@ -51,7 +51,11 @@ struct OutfitCalculationDetailsCard: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Как получилась рекомендация")
                         .font(.subheadline.weight(.semibold))
-                    Text(isExpanded ? "Скрыть температуры и этапы" : "Показать температуры и этапы")
+                    Text(
+                        isExpanded
+                            ? L10n.text("Скрыть температуры и этапы")
+                            : L10n.text("Показать температуры и этапы")
+                    )
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -65,18 +69,42 @@ struct OutfitCalculationDetailsCard: View {
             .frame(minHeight: 52)
         }
         .buttonStyle(.plain)
-        .accessibilityValue(isExpanded ? "Развёрнуто" : "Свёрнуто")
-        .accessibilityHint(isExpanded ? "Скрывает подробный расчёт" : "Показывает подробный расчёт")
+        .accessibilityValue(
+            isExpanded
+                ? L10n.text("Развёрнуто")
+                : L10n.text("Свёрнуто")
+        )
+        .accessibilityHint(
+            isExpanded
+                ? L10n.text("Скрывает подробный расчёт")
+                : L10n.text("Показывает подробный расчёт")
+        )
     }
 
     // MARK: - Temperatures
 
     private var temperatureSection: some View {
         VStack(spacing: 9) {
-            detailRow("На улице", value: recommendation.temperatures.outside, unit: "°C")
-            detailRow("По данным сервиса ощущается", value: recommendation.temperatures.apparent, unit: "°C")
-            detailRow("После погоды", value: recommendation.temperatures.effective, unit: "°C")
-            detailRow("В условиях ребёнка", value: recommendation.temperatures.microclimate, unit: "°C")
+            detailRow(
+                L10n.text("На улице"),
+                value: recommendation.temperatures.outside,
+                unit: "°C"
+            )
+            detailRow(
+                L10n.text("По данным сервиса ощущается"),
+                value: recommendation.temperatures.apparent,
+                unit: "°C"
+            )
+            detailRow(
+                L10n.text("После погоды"),
+                value: recommendation.temperatures.effective,
+                unit: "°C"
+            )
+            detailRow(
+                L10n.text("В условиях ребёнка"),
+                value: recommendation.temperatures.microclimate,
+                unit: "°C"
+            )
 
             Divider()
 
@@ -106,7 +134,9 @@ struct OutfitCalculationDetailsCard: View {
             Text(title)
                 .foregroundStyle(.secondary)
             Spacer()
-            Text("\(value.formatted(.number.precision(.fractionLength(0))))\(unit)")
+            Text(
+                "\(value.formatted(.number.precision(.fractionLength(0)).locale(L10n.locale)))\(unit)"
+            )
                 .monospacedDigit()
         }
         .font(.caption)
@@ -127,7 +157,9 @@ struct OutfitCalculationDetailsCard: View {
                         Text(step.label)
                             .font(.caption)
                         Spacer(minLength: 8)
-                        Text("\(step.value.formatted(.number.precision(.fractionLength(1)))) \(step.unit)")
+                        Text(
+                            "\(step.value.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale))) \(step.unit)"
+                        )
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }

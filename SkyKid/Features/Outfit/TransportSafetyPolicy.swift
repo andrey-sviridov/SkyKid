@@ -24,7 +24,7 @@ private extension TransportSafetyPolicy {
             return [SafetyWarning(
                 code: .rainCoverGreenhouse,
                 severity: .danger,
-                message: "Под дождевиком может быстро накапливаться тепло. Снимите его вне дождя, уйдите в тень, восстановите вентиляцию и проверьте шею или верх спины ребёнка.",
+                message: L10n.text("Под дождевиком может быстро накапливаться тепло. Снимите его вне дождя, уйдите в тень, восстановите вентиляцию и проверьте живот или заднюю поверхность шеи ребёнка."),
                 systemImage: "exclamationmark.triangle.fill"
             )]
         }
@@ -33,7 +33,7 @@ private extension TransportSafetyPolicy {
             return [SafetyWarning(
                 code: .rainCoverVentilation,
                 severity: .caution,
-                message: "Используйте дождевик только во время осадков, не закрывайте вентиляционные секции и регулярно проверяйте ребёнка.",
+                message: L10n.text("Используйте дождевик только во время осадков, не закрывайте вентиляционные секции и регулярно проверяйте ребёнка."),
                 systemImage: "wind.snow"
             )]
         }
@@ -41,7 +41,7 @@ private extension TransportSafetyPolicy {
         return [SafetyWarning(
             code: .rainCoverVentilation,
             severity: .info,
-            message: "Дождевик уменьшает движение воздуха. Используйте его только во время осадков и не закрывайте штатную вентиляцию.",
+            message: L10n.text("Дождевик уменьшает движение воздуха. Используйте его только во время осадков и не закрывайте штатную вентиляцию."),
             systemImage: "cloud.rain.fill"
         )]
     }
@@ -60,7 +60,7 @@ private extension TransportSafetyPolicy {
         return [SafetyWarning(
             code: .carSeatBulkyCoatWarning,
             severity: .caution,
-            message: "Не надевайте объёмную куртку или комбинезон под ремни автокресла. Используйте тонкие слои, затяните ремни по инструкции, а плед положите поверх пристёгнутых ремней.",
+            message: L10n.text("Не надевайте объёмную куртку или комбинезон под ремни автокресла. Используйте тонкие слои, затяните ремни по инструкции, а плед положите поверх пристёгнутых ремней."),
             systemImage: "car.fill"
         )]
     }
@@ -78,7 +78,7 @@ private extension TransportSafetyPolicy {
         return [SafetyWarning(
             code: .faceVentilationRisk,
             severity: .danger,
-            message: "Перед выходом откройте лицо ребёнка и обеспечьте приток воздуха: дождевик и поднятый капюшон не должны создавать закрытый карман.",
+            message: L10n.text("Перед выходом откройте лицо ребёнка и обеспечьте приток воздуха: дождевик и поднятый капюшон не должны создавать закрытый карман."),
             systemImage: "zzz"
         )]
     }

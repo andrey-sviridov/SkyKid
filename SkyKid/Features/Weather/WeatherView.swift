@@ -110,20 +110,27 @@ struct WeatherView: View {
 
     private var statsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
-            StatCard(icon: "wind",               color: .teal,   title: "Ветер",
+            StatCard(icon: "wind", color: .teal, title: L10n.text("Ветер"),
                      value: displayValue(
                         for: .windSpeed,
-                        value: "\(Int(weather.windSpeed.rounded())) м/с"
+                        value: L10n.format(
+                            "%lld м/с",
+                            Int(weather.windSpeed.rounded())
+                        )
                      ))
-            StatCard(icon: "location.north.fill", color: .orange, title: "Направление",
+            StatCard(
+                icon: "location.north.fill",
+                color: .orange,
+                title: L10n.text("Направление"),
                      value: displayValue(for: .windDirection, value: weather.windDirectionLabel),
-                     iconRotation: Double(weather.windDirection))
-            StatCard(icon: "humidity.fill",       color: .blue,   title: "Влажность",
+                iconRotation: Double(weather.windDirection)
+            )
+            StatCard(icon: "humidity.fill", color: .blue, title: L10n.text("Влажность"),
                      value: displayValue(for: .humidity, value: "\(weather.humidity)%"))
-            StatCard(icon: "cloud.rain.fill",     color: .indigo, title: "Осадки",
+            StatCard(icon: "cloud.rain.fill", color: .indigo, title: L10n.text("Осадки"),
                      value: displayValue(
                         for: .precipitation,
-                        value: String(format: "%.1f мм", weather.precipitation)
+                        value: L10n.format("%.1f мм", weather.precipitation)
                      ))
         }
     }
@@ -135,7 +142,7 @@ struct WeatherView: View {
         case .derived, .estimated:
             return "~\(value)"
         case .unavailable:
-            return "Нет данных"
+            return L10n.text("Нет данных")
         }
     }
 

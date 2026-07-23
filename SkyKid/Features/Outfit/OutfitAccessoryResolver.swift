@@ -76,14 +76,14 @@ enum OutfitAccessoryResolver {
                 targetTOG = 0.15
             }
             let reason = request.temperature < 20
-                ? "Защита головы при прохладной погоде"
-                : "Для малыша младше месяца"
+                ? L10n.text("Защита головы при прохладной погоде")
+                : L10n.text("Для малыша младше месяца")
             result.append(Requirement(zone: .head, targetTOG: targetTOG, reason: reason))
         } else if request.uvIndex >= 3, request.heatIndex >= 18 {
             result.append(Requirement(
                 zone: .head,
                 targetTOG: 0.1,
-                reason: "Лёгкая защита головы от солнца"
+                reason: L10n.text("Лёгкая защита головы от солнца")
             ))
         }
 
@@ -91,12 +91,12 @@ enum OutfitAccessoryResolver {
             result.append(Requirement(
                 zone: .hands,
                 targetTOG: 0.3,
-                reason: "Защита рук при температуре ниже +5°C"
+                reason: L10n.text("Защита рук при температуре ниже +5°C")
             ))
             result.append(Requirement(
                 zone: .feet,
                 targetTOG: 0.4,
-                reason: "Дополнительная защита стоп при температуре ниже +5°C"
+                reason: L10n.text("Дополнительная защита стоп при температуре ниже +5°C")
             ))
         }
 

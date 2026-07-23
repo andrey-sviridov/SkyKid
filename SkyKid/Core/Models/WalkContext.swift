@@ -11,9 +11,9 @@ enum CurrentHealthStatus: String, Codable, CaseIterable, Identifiable, Sendable 
 
     var label: String {
         switch self {
-        case .well:              return "Чувствует себя хорошо"
-        case .coldWithoutFever:  return "ОРВИ без температуры"
-        case .fever:             return "Есть температура"
+        case .well:              return L10n.text("Чувствует себя хорошо")
+        case .coldWithoutFever:  return L10n.text("ОРВИ без температуры")
+        case .fever:             return L10n.text("Есть температура")
         }
     }
 

@@ -137,21 +137,21 @@ private struct StatsHeaderCard: View {
         HStack(spacing: 0) {
             statCell(
                 value: "\(store.recentCount)",
-                label: "За 7 дней",
+                label: L10n.text("За 7 дней"),
                 icon: "figure.walk",
                 color: .blue
             )
             Divider().frame(height: 46)
             statCell(
                 value: avgDuration,
-                label: "Средняя\nдлительность",
+                label: L10n.text("Средняя\nдлительность"),
                 icon: "clock",
                 color: .teal
             )
             Divider().frame(height: 46)
             statCell(
                 value: "\(store.totalCount)",
-                label: "Всего\nзаписей",
+                label: L10n.text("Всего\nзаписей"),
                 icon: "list.bullet.clipboard",
                 color: .purple
             )
@@ -180,7 +180,7 @@ private struct StatsHeaderCard: View {
     private var avgDuration: String {
         guard !store.logs.isEmpty else { return "—" }
         let avg = store.logs.map(\.durationMinutes).reduce(0, +) / store.logs.count
-        return avg >= 60 ? "\(avg / 60)ч \(avg % 60)м" : "\(avg) мин"
+        return WalkDurationFormatter.string(minutes: avg)
     }
 
 }
@@ -270,9 +270,7 @@ private struct WalkLogRow: View {
     }
 
     private var durationBadge: some View {
-        let d = log.durationMinutes
-        let text = d >= 60 ? "\(d / 60)ч \(d % 60 > 0 ? "\(d % 60)м" : "")" : "\(d) мин"
-        return Text(text)
+        Text(WalkDurationFormatter.string(minutes: log.durationMinutes))
             .font(.caption.weight(.medium))
             .foregroundStyle(.secondary)
             .padding(.horizontal, 8)
@@ -325,7 +323,11 @@ struct LogWalkSheet: View {
                 .padding(.vertical, 16)
             }
             .skyKidBackground()
-            .navigationTitle(isEditing ? "Редактировать прогулку" : "Записать прогулку")
+            .navigationTitle(
+                isEditing
+                    ? L10n.text("Редактировать прогулку")
+                    : L10n.text("Записать прогулку")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -557,7 +559,7 @@ private struct DurationPickerCard: View {
     }
 
     private func durationLabel(_ mins: Int) -> String {
-        mins >= 60 ? "\(mins / 60) ч \(mins % 60 > 0 ? "\(mins % 60) мин" : "")" : "\(mins) мин"
+        WalkDurationFormatter.string(minutes: mins)
     }
 }
 
@@ -572,7 +574,7 @@ private struct ComfortLevelCard: View {
                 Label("Как чувствовал себя малыш?", systemImage: "hand.raised.circle.fill")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Text("Проверьте шею и верх спины: кожа должна быть тёплой и сухой. Холодные кисти сами по себе не означают, что ребёнок замёрз.")
+                Text("Проверьте живот или заднюю поверхность шеи: кожа должна быть тёплой и сухой. Холодные кисти и стопы сами по себе не означают, что ребёнок замёрз.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -664,7 +666,7 @@ private struct OutfitSummaryCard: View {
 
             Picker("", selection: $mode) {
                 ForEach(PickMode.allCases, id: \.self) { m in
-                    Text(m.rawValue).tag(m)
+                    Text(L10n.text(m.rawValue)).tag(m)
                 }
             }
             .pickerStyle(.segmented)
@@ -675,9 +677,11 @@ private struct OutfitSummaryCard: View {
             }
 
             if displayItems.isEmpty {
-                Text(mode == .auto
-                     ? "Нет данных о погоде или профиле ребёнка"
-                     : "В гардеробе нет вещей для этого возраста")
+                Text(
+                    mode == .auto
+                        ? L10n.text("Нет данных о погоде или профиле ребёнка")
+                        : L10n.text("В гардеробе нет вещей для этого возраста")
+                )
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             } else {
@@ -778,15 +782,30 @@ private struct WalkLogDetailView: View {
 
     private var infoCard: some View {
         VStack(spacing: 0) {
-            infoRow(icon: "calendar",          label: "Дата",
-                    value: log.date.formatted(.dateTime.day().month(.wide).year()))
+            infoRow(icon: "calendar", label: L10n.text("Дата"),
+                    value: log.date.formatted(
+                        .dateTime
+                            .day()
+                            .month(.wide)
+                            .year()
+                            .locale(L10n.locale)
+                    ))
             Divider().padding(.leading, 52)
-            infoRow(icon: "clock",             label: "Время",
-                    value: log.date.formatted(.dateTime.hour().minute()))
+            infoRow(icon: "clock", label: L10n.text("Время"),
+                    value: log.date.formatted(
+                        .dateTime
+                            .hour()
+                            .minute()
+                            .locale(L10n.locale)
+                    ))
             Divider().padding(.leading, 52)
-            infoRow(icon: "timer",             label: "Длительность", value: durationString)
+            infoRow(
+                icon: "timer",
+                label: L10n.text("Длительность"),
+                value: durationString
+            )
             Divider().padding(.leading, 52)
-            infoRow(icon: "thermometer.medium", label: "Температура",
+            infoRow(icon: "thermometer.medium", label: L10n.text("Температура"),
                     value: "\(Int(log.weatherTemperature.rounded()))°C")
         }
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -856,9 +875,21 @@ private struct WalkLogDetailView: View {
     }
 
     private var durationString: String {
-        let d = log.durationMinutes
-        if d >= 60 { return d % 60 == 0 ? "\(d / 60) ч" : "\(d / 60) ч \(d % 60) мин" }
-        return "\(d) мин"
+        WalkDurationFormatter.string(minutes: log.durationMinutes)
+    }
+}
+
+// MARK: - WalkDurationFormatter
+
+private enum WalkDurationFormatter {
+    static func string(minutes: Int) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = minutes >= 60 ? [.hour, .minute] : [.minute]
+        formatter.unitsStyle = .abbreviated
+        formatter.zeroFormattingBehavior = [.dropLeading, .dropTrailing]
+
+        return formatter.string(from: TimeInterval(minutes * 60))
+            ?? L10n.format("%lld мин", minutes)
     }
 }
 

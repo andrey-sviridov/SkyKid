@@ -53,7 +53,7 @@ struct ClothingCalculatorView: View {
                         action: { model.autoSelect() }
                     )
 
-                    PediatricNoteCard()
+                    ComfortCheckCard()
 
                     PinnedItemsCard(model: model)
 
@@ -162,7 +162,7 @@ struct WeatherControlsCard: View {
                 }
 
                 Picker("Возраст", selection: $model.ageGroup) {
-                    ForEach(WardrobeAgeGroup.allCases) { g in Text(g.rawValue).tag(g) }
+                    ForEach(WardrobeAgeGroup.allCases) { g in Text(g.displayName).tag(g) }
                 }
                 .pickerStyle(.segmented)
 
@@ -216,11 +216,24 @@ struct RiskMeterCard: View {
             Divider()
 
             HStack(spacing: 0) {
-                heatStat(value: currentHeat,  label: "Текущее\nтепло",  color: riskLevel.color)
+                heatStat(
+                    value: currentHeat,
+                    label: L10n.text("Текущее\nтепло"),
+                    color: riskLevel.color
+                )
                 Divider().frame(height: 46)
-                heatStat(value: requiredHeat, label: "Нужно\nтепла",    color: .primary)
+                heatStat(
+                    value: requiredHeat,
+                    label: L10n.text("Нужно\nтепла"),
+                    color: .primary
+                )
                 Divider().frame(height: 46)
-                heatStat(value: deviation,    label: "Разница",          color: riskLevel.color, sign: true)
+                heatStat(
+                    value: deviation,
+                    label: L10n.text("Разница"),
+                    color: riskLevel.color,
+                    sign: true
+                )
             }
         }
         .skyKidCard()
@@ -367,31 +380,6 @@ struct AutoSelectButton: View {
     }
 }
 
-// MARK: – PediatricNoteCard ───────────────────────────────────────────────
-
-struct PediatricNoteCard: View {
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "hand.raised.circle.fill")
-                .font(.title3)
-                .symbolRenderingMode(.multicolor)
-                .foregroundStyle(.teal)
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Совет педиатра")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.teal)
-                Text("Холодные ручки и носик — это нормально. Проверяйте температуру по задней части шеи малыша.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.teal.opacity(0.09), in: RoundedRectangle(cornerRadius: 12))
-    }
-}
-
 // MARK: – ClothingConstructorSection ─────────────────────────────────────
 
 // MARK: – PinnedItemsCard ─────────────────────────────────────────────────
@@ -506,7 +494,7 @@ struct EditPinnedItemsSheet: View {
                         .listRowBackground(Color.clear)
                 }
                 ForEach(itemsByLayer, id: \.0) { layer, items in
-                    Section(layer.rawValue) {
+                    Section(layer.displayName) {
                         ForEach(items) { item in
                             let pinned = model.isPinned(item)
                             Button {
@@ -640,7 +628,7 @@ struct ClothingConstructorSection: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: layer.icon).font(.caption)
-                Text(layer.rawValue).font(.subheadline.weight(.semibold))
+                Text(layer.displayName).font(.subheadline.weight(.semibold))
                 Spacer()
                 if selCount > 0 {
                     Text("\(selCount) выбрано")
@@ -786,12 +774,24 @@ struct TemperatureNoWalkCard: View {
                     .symbolEffect(.pulse)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(isHot ? "Слишком жарко для прогулки" : "Слишком холодно для прогулки")
+                    Text(
+                        isHot
+                            ? L10n.text("Слишком жарко для прогулки")
+                            : L10n.text("Слишком холодно для прогулки")
+                    )
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    Text(isHot
-                         ? "При \(Int(temperature.rounded()))° прогулка опасна для ребёнка."
-                         : "При \(Int(temperature.rounded()))° высок риск переохлаждения.")
+                    Text(
+                        isHot
+                            ? L10n.format(
+                                "При %lld° прогулка опасна для ребёнка.",
+                                Int(temperature.rounded())
+                            )
+                            : L10n.format(
+                                "При %lld° высок риск переохлаждения.",
+                                Int(temperature.rounded())
+                            )
+                    )
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -801,9 +801,15 @@ struct TemperatureNoWalkCard: View {
 
             Divider()
 
-            Text(isHot
-                 ? "Перенесите выход на более прохладное время. Для младенца — тень и обычные кормления чаще."
-                 : "Прогулку лучше перенести. Одежда не отменяет риск от экстремального холода.")
+            Text(
+                isHot
+                    ? L10n.text(
+                        "Перенесите выход на более прохладное время. Для младенца — тень и обычные кормления чаще."
+                    )
+                    : L10n.text(
+                        "Прогулку лучше перенести. Одежда не отменяет риск от экстремального холода."
+                    )
+            )
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)

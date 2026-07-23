@@ -19,7 +19,7 @@ enum WeatherProvider: String, CaseIterable, Identifiable {
         case .openWeatherMap: return "OpenWeatherMap"
         case .weatherAPI:     return "WeatherAPI.com"
         case .gismeteo:       return "Gismeteo"
-        case .yandex:         return "Яндекс Погода"
+        case .yandex:         return L10n.text("Яндекс Погода")
         }
     }
 
@@ -37,17 +37,17 @@ enum WeatherProvider: String, CaseIterable, Identifiable {
     var description: String {
         switch self {
         case .openMeteo:
-            return "Бесплатно, без ключа. Модель ECMWF высокого разрешения."
+            return L10n.text("Бесплатно, без ключа. Модель ECMWF высокого разрешения.")
         case .weatherKit:
-            return "Тот же источник, что в «Погоде» на iPhone. Бесплатно до 500K запросов/мес. Ключ не нужен — достаточно App ID."
+            return L10n.text("Тот же источник, что в «Погоде» на iPhone. Бесплатно до 500K запросов/мес. Ключ не нужен — достаточно App ID.")
         case .openWeatherMap:
-            return "Бесплатный API-ключ. Глобальное покрытие, стандарт индустрии."
+            return L10n.text("Бесплатный API-ключ. Глобальное покрытие, стандарт индустрии.")
         case .weatherAPI:
-            return "Бесплатный ключ (1M запросов/мес). Точный feelsLike и мгновенные осадки."
+            return L10n.text("Бесплатный ключ (1M запросов/мес). Точный feelsLike и мгновенные осадки.")
         case .gismeteo:
-            return "Российский сервис. Требует коммерческий API-ключ: partner.gismeteo.ru"
+            return L10n.text("Российский сервис. Требует коммерческий API-ключ: partner.gismeteo.ru")
         case .yandex:
-            return "Яндекс Погода. Требует API-ключ тарифа «Погода»: developer.tech.yandex.ru"
+            return L10n.text("Яндекс Погода. Требует API-ключ тарифа «Погода»: developer.tech.yandex.ru")
         }
     }
 

@@ -11,19 +11,19 @@ struct ParentOutfitSummaryCard: View {
         VStack(alignment: .leading, spacing: 16) {
             header
             answerRow(
-                title: "Что надеть",
+                title: L10n.text("Что надеть"),
                 text: summary.outfit,
                 systemImage: "hanger",
                 tint: .indigo
             )
             answerRow(
-                title: "Почему",
+                title: L10n.text("Почему"),
                 text: summary.reason,
                 systemImage: "cloud.sun.fill",
                 tint: .blue
             )
             answerRow(
-                title: "Что проверить",
+                title: L10n.text("Что проверить"),
                 text: summary.check,
                 systemImage: "hand.raised.fill",
                 tint: .teal
@@ -41,38 +41,52 @@ struct ParentOutfitSummaryCard: View {
     // MARK: - Header
 
     private var header: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Рекомендация для ребёнка")
+                .font(.headline)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
+                .minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            headerMetadata
+        }
+    }
+
+    private var headerMetadata: some View {
         let layout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
-            : AnyLayout(HStackLayout(alignment: .top, spacing: 10))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 10))
 
         return layout {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Рекомендация для ребёнка")
-                    .font(.headline)
-                Text(summary.ageContext)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(summary.ageContext)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Spacer(minLength: 4)
 
             confidenceBadge
+                .frame(
+                    maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil,
+                    alignment: .leading
+                )
         }
     }
 
     private var confidenceBadge: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Label(confidenceLabel, systemImage: confidenceImage)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(confidenceTint)
-            Text(summary.confidenceReason)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Уверенность: \(confidenceLabel). \(summary.confidenceReason)")
+        Label(confidenceLabel, systemImage: confidenceImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(confidenceTint)
+            .fixedSize(horizontal: true, vertical: false)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(
+                L10n.format(
+                    "Уверенность: %@. %@",
+                    confidenceLabel,
+                    summary.confidenceReason
+                )
+            )
     }
 
     // MARK: - Answer rows
@@ -106,9 +120,9 @@ struct ParentOutfitSummaryCard: View {
 
     private var confidenceLabel: String {
         switch summary.confidence {
-        case .high:   return "Высокая уверенность"
-        case .medium: return "Средняя уверенность"
-        case .low:    return "Низкая уверенность"
+        case .high:   return L10n.text("Высокая уверенность")
+        case .medium: return L10n.text("Средняя уверенность")
+        case .low:    return L10n.text("Низкая уверенность")
         }
     }
 

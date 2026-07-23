@@ -197,7 +197,7 @@ let output = BuildOutfitRecommendationUseCase().execute(
 - `RiskMeterCard`: прогресс-бар CLO · отклонение · метка риска
 - `AlertCard`: экстремальная жара (≥ 30°C) и мороз (≤ −10°C)
 - `AutoSelectButton`: жадный авто-выбор одежды
-- `PediatricNoteCard`: медицинская подсказка
+- `ComfortCheckCard`: нейтральная подсказка проверки комфорта без ложной атрибуции педиатру
 - `ClothingConstructorSection`: `LazyVGrid` из `GarmentCard`
 
 **Инициализация:** `weather.apparentTemperature` → начальная температура слайдера
@@ -636,5 +636,5 @@ SkyKidWidget
 | UI выбора погодного провайдера + ввод API-ключа | Средний |
 | Reverse geocoding (CLGeocoder) вместо «Моё местоположение» | Низкий |
 | Обработка ошибок в UI (`WeatherViewModel.error`) | Низкий |
-| Локализация строк приложения | Будущее |
+| Нативная и клиническая вычитка локализаций | Перед релизом |
 | AssistantSchemas (Apple Intelligence, iOS 18.2+) | Будущее |

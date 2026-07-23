@@ -18,18 +18,18 @@ enum WeatherField: String, CaseIterable, Hashable, Sendable {
 
     var displayName: String {
         switch self {
-        case .temperature:         return "температура"
-        case .apparentTemperature: return "ощущаемая температура"
-        case .humidity:            return "влажность"
-        case .windSpeed:           return "ветер"
-        case .windGust:            return "порывы ветра"
-        case .windDirection:       return "направление ветра"
-        case .precipitation:       return "количество осадков"
-        case .precipitationType:   return "тип осадков"
-        case .weatherCode:         return "условия погоды"
-        case .uvIndex:             return "UV-индекс"
-        case .cloudCover:          return "облачность"
-        case .hourlyForecast:      return "почасовой прогноз"
+        case .temperature:         return L10n.text("температура")
+        case .apparentTemperature: return L10n.text("ощущаемая температура")
+        case .humidity:            return L10n.text("влажность")
+        case .windSpeed:           return L10n.text("ветер")
+        case .windGust:            return L10n.text("порывы ветра")
+        case .windDirection:       return L10n.text("направление ветра")
+        case .precipitation:       return L10n.text("количество осадков")
+        case .precipitationType:   return L10n.text("тип осадков")
+        case .weatherCode:         return L10n.text("условия погоды")
+        case .uvIndex:             return L10n.text("UV-индекс")
+        case .cloudCover:          return L10n.text("облачность")
+        case .hourlyForecast:      return L10n.text("почасовой прогноз")
         }
     }
 }
@@ -82,9 +82,9 @@ enum WeatherConfidenceLevel: String, Equatable, Sendable {
 
     var label: String {
         switch self {
-        case .high:   return "Высокая уверенность"
-        case .medium: return "Средняя уверенность"
-        case .low:    return "Низкая уверенность"
+        case .high:   return L10n.text("Высокая уверенность")
+        case .medium: return L10n.text("Средняя уверенность")
+        case .low:    return L10n.text("Низкая уверенность")
         }
     }
 }
@@ -96,10 +96,13 @@ struct WeatherConfidence: Equatable, Sendable {
 
     var summary: String {
         guard !issues.isEmpty else {
-            return "Все важные поля получены от погодного сервиса."
+            return L10n.text("Все важные поля получены от погодного сервиса.")
         }
         let names = issues.prefix(3).map { $0.field.displayName }
-        return "Неполные данные: \(names.joined(separator: ", ")). Расчёт использует осторожные замены."
+        return L10n.format(
+            "Неполные данные: %@. Расчёт использует осторожные замены.",
+            names.joined(separator: ", ")
+        )
     }
 }
 
@@ -131,13 +134,14 @@ struct NormalizedWeather: Equatable, Sendable {
             source: source,
             origin: .safetyFallback,
             quality: .unavailable,
-            note: "Нет метаданных"
+            note: L10n.text("Нет метаданных")
         )
     }
 
     var windDirectionLabel: String {
-        let directions = ["С", "ССВ", "СВ", "ВСВ", "В", "ВЮВ", "ЮВ", "ЮЮВ",
-                          "Ю", "ЮЮЗ", "ЮЗ", "ЗЮЗ", "З", "ЗСЗ", "СЗ", "ССЗ"]
+        let directions = L10n.text("С,ССВ,СВ,ВСВ,В,ВЮВ,ЮВ,ЮЮВ,Ю,ЮЮЗ,ЮЗ,ЗЮЗ,З,ЗСЗ,СЗ,ССЗ")
+            .split(separator: ",")
+            .map(String.init)
         let index = Int((Double(windDirection) / 22.5).rounded()) % 16
         return directions[index]
     }
@@ -201,7 +205,7 @@ extension NormalizedWeather {
                 source: .manual,
                 origin: .derivedFromProvider,
                 quality: .derived,
-                note: "Порыв приравнен к устойчивому ветру"
+                note: L10n.text("Порыв приравнен к устойчивому ветру")
             )
         }
         self.init(

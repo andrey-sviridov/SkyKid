@@ -61,22 +61,23 @@ struct WeatherData: Equatable, Sendable {
     var hourly: [HourlyForecast] = []
 
     var windDirectionLabel: String {
-        let directions = ["С", "ССВ", "СВ", "ВСВ", "В", "ВЮВ", "ЮВ", "ЮЮВ",
-                          "Ю", "ЮЮЗ", "ЮЗ", "ЗЮЗ", "З", "ЗСЗ", "СЗ", "ССЗ"]
+        let directions = L10n.text("С,ССВ,СВ,ВСВ,В,ВЮВ,ЮВ,ЮЮВ,Ю,ЮЮЗ,ЮЗ,ЗЮЗ,З,ЗСЗ,СЗ,ССЗ")
+            .split(separator: ",")
+            .map(String.init)
         let index = Int((Double(windDirection) / 22.5).rounded()) % 16
         return directions[index]
     }
 
     var conditionDescription: String {
         switch weatherCode {
-        case 0: return "Ясно"
-        case 1, 2, 3: return "Облачно"
-        case 45, 48: return "Туман"
-        case 51, 53, 55: return "Морось"
-        case 61, 63, 65: return "Дождь"
-        case 71, 73, 75, 77: return "Снег"
-        case 80, 81, 82: return "Ливень"
-        case 95, 96, 99: return "Гроза"
+        case 0: return L10n.text("Ясно")
+        case 1, 2, 3: return L10n.text("Облачно")
+        case 45, 48: return L10n.text("Туман")
+        case 51, 53, 55: return L10n.text("Морось")
+        case 61, 63, 65: return L10n.text("Дождь")
+        case 71, 73, 75, 77: return L10n.text("Снег")
+        case 80, 81, 82: return L10n.text("Ливень")
+        case 95, 96, 99: return L10n.text("Гроза")
         default: return "—"
         }
     }

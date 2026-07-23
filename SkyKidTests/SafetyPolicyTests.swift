@@ -131,6 +131,23 @@ final class SafetyPolicyTests: XCTestCase {
         XCTAssertFalse(message.contains("без крема"))
     }
 
+    func test_highUVGuidanceUsesReviewedPeakWindow() {
+        let profile = makeProfile(ageMonths: 8)
+        let result = WeatherSafetyPolicy.evaluate(
+            makeContext(
+                profile: profile,
+                weather: makeWeather(uvIndex: 7)
+            ),
+            limits: AgeSafetyPolicy.limits(for: profile)
+        )
+        let message = result.warnings
+            .first(where: { $0.code == .walkTimeWarning })?
+            .message ?? ""
+
+        XCTAssertTrue(message.contains("10:00–16:00"))
+        XCTAssertFalse(message.contains("11:00–16:00"))
+    }
+
     func test_carSeatWarningUsesHarnessActionInsteadOfInventedTOGLimit() {
         let profile = makeProfile(ageMonths: 4)
         var walkContext = makeWalkContext(for: profile)
@@ -151,7 +168,8 @@ final class SafetyPolicyTests: XCTestCase {
     func test_thermalCheckHintContainsObservationAndLayerActions() {
         let hint = ThermalComfortCheckPolicy.instruction
 
-        XCTAssertTrue(hint.contains("верх спины"))
+        XCTAssertTrue(hint.contains("живот"))
+        XCTAssertTrue(hint.contains("заднюю поверхность шеи"))
         XCTAssertTrue(hint.contains("снимите один лёгкий слой"))
         XCTAssertTrue(hint.contains("добавьте слой"))
     }

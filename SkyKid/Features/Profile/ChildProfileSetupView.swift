@@ -38,7 +38,7 @@ struct ChildProfileSetupView: View {
             }
             .scrollDismissesKeyboard(.immediately)
             .skyKidBackground()
-            .navigationTitle(isEditing ? "Данные ребёнка" : "")
+            .navigationTitle(isEditing ? L10n.text("Данные ребёнка") : "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if isEditing {
@@ -212,7 +212,8 @@ struct ChildProfileSetupView: View {
     // MARK: - Preview card
 
     private var previewCard: some View {
-        let dummy = ChildProfile(name: name.isEmpty ? "Малыш" : name,
+        let placeholderName = L10n.text("Малыш")
+        let dummy = ChildProfile(name: name.isEmpty ? placeholderName : name,
                                  gender: gender, birthday: birthday)
         return HStack(spacing: 16) {
             ZStack {
@@ -222,7 +223,7 @@ struct ChildProfileSetupView: View {
                 Text(gender.emoji).font(.system(size: 28))
             }
             VStack(alignment: .leading, spacing: 4) {
-                Text(name.isEmpty ? "Малыш" : name).font(.headline)
+                Text(name.isEmpty ? placeholderName : name).font(.headline)
                 Text(dummy.ageLabel + " · " + dummy.ageGroup.description)
                     .font(.subheadline).foregroundStyle(.secondary)
                 if !stableTraits.isEmpty || tempOffset != 0 {
@@ -245,7 +246,11 @@ struct ChildProfileSetupView: View {
 
     private var saveButton: some View {
         Button(action: save) {
-            Text(isEditing ? "Сохранить изменения" : "Начать")
+            Text(
+                isEditing
+                    ? L10n.text("Сохранить изменения")
+                    : L10n.text("Начать")
+            )
                 .font(.body.weight(.semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 17)
@@ -319,7 +324,7 @@ struct ChildProfileSetupView: View {
     }
 
     private var tempOffsetLabel: String {
-        if tempOffset == 0 { return "Нейтрально" }
+        if tempOffset == 0 { return L10n.text("Нейтрально") }
         let sign = tempOffset > 0 ? "+" : ""
         return "\(sign)\(Int(tempOffset * 2) % 2 == 0 ? String(Int(tempOffset)) : String(format: "%.1f", tempOffset))°"
     }
@@ -327,10 +332,14 @@ struct ChildProfileSetupView: View {
     private var previewHint: String {
         var parts: [String] = []
         if tempOffset != 0 {
-            parts.append(tempOffset < 0 ? "мёрзнет" : "жаркий")
+            parts.append(
+                tempOffset < 0
+                    ? L10n.text("мёрзнет")
+                    : L10n.text("жаркий")
+            )
         }
         if !stableTraits.isEmpty {
-            parts.append("\(stableTraits.count) особ.")
+            parts.append(L10n.format("%lld особ.", stableTraits.count))
         }
         return parts.joined(separator: " · ")
     }

@@ -26,6 +26,7 @@ enum GarmentLayer: String, CaseIterable, Identifiable, Sendable {
     case sleepwear   = "Для сна"                 // спальные мешки, пелёнки, одеяла
 
     var id: String { rawValue }
+    var displayName: String { L10n.text(rawValue) }
 
     var icon: String {
         switch self {
@@ -136,6 +137,7 @@ enum CatalogAgeGroup: String, CaseIterable, Identifiable, Sendable {
     case universal     = "Универсальное"
 
     var id: String { rawValue }
+    var displayName: String { L10n.text(rawValue) }
 
     func matches(_ group: WardrobeAgeGroup) -> Bool {
         switch group {
@@ -154,12 +156,13 @@ enum WardrobeAgeGroup: String, CaseIterable, Identifiable, Sendable {
     case active      = "1+ лет"
 
     var id: String { rawValue }
+    var displayName: String { L10n.text(rawValue) }
 
     var subtitle: String {
         switch self {
-        case .earlyInfant: return "Лежит в коляске — нет мышечного тепла"
-        case .infant:      return "В коляске или начинает ползать"
-        case .active:      return "Ходит/двигается — генерирует тепло"
+        case .earlyInfant: return L10n.text("Лежит в коляске — нет мышечного тепла")
+        case .infant:      return L10n.text("В коляске или начинает ползать")
+        case .active:      return L10n.text("Ходит/двигается — генерирует тепло")
         }
     }
 }
@@ -235,17 +238,26 @@ enum ThermalRisk: Equatable {
 
 struct GarmentItem: Identifiable, Hashable, Sendable {
     let id: String
-    let name: String
     let heatValue: Double          // CLO-analogue (WardrobeModel)
     let tog: Double                // TOG value (OutfitSolver §5.1)
     let layer: GarmentLayer
     let symbol: String
     let catalogAgeGroup: CatalogAgeGroup?
-    let features: [String]
     let coveredZones: Set<BodyZone>
     let exclusiveGroup: GarmentExclusiveGroup?
     let use: GarmentUse
     let recommendationAgeGroups: Set<WardrobeAgeGroup>
+
+    private let nameLocalizationKey: String
+    private let featureLocalizationKeys: [String]
+
+    var name: String {
+        L10n.text(nameLocalizationKey)
+    }
+
+    var features: [String] {
+        featureLocalizationKeys.map(L10n.text)
+    }
 
     init(
         id: String,
@@ -262,13 +274,13 @@ struct GarmentItem: Identifiable, Hashable, Sendable {
         recommendationAgeGroups: Set<WardrobeAgeGroup> = []
     ) {
         self.id = id
-        self.name = name
+        self.nameLocalizationKey = name
         self.heatValue = heatValue
         self.tog = tog
         self.layer = layer
         self.symbol = symbol
         self.catalogAgeGroup = catalogAgeGroup
-        self.features = features
+        self.featureLocalizationKeys = features
         self.coveredZones = coveredZones ?? layer.defaultCoveredZones
         self.exclusiveGroup = exclusiveGroup ?? layer.defaultExclusiveGroup
         self.use = use ?? layer.defaultUse

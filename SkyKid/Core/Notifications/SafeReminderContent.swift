@@ -14,32 +14,38 @@ struct SafeReminderContent: Equatable, Sendable {
 enum SafeReminderContentFactory {
     static func dailyWeatherRefresh() -> SafeReminderContent {
         SafeReminderContent(
-            title: "Обновите условия перед прогулкой",
-            body: "Откройте SkyKid: приложение обновит погоду и подберёт одежду для текущей прогулки."
+            title: L10n.text("Обновите условия перед прогулкой"),
+            body: L10n.text("Откройте SkyKid: приложение обновит погоду и подберёт одежду для текущей прогулки.")
         )
     }
 
     static func rainCoverVentilationCheck() -> SafeReminderContent {
         SafeReminderContent(
-            title: "Проверьте вентиляцию дождевика",
-            body: "Проверьте штатную вентиляцию и шею или верх спины ребёнка. Снимите дождевик, когда осадки закончатся."
+            title: L10n.text("Проверьте вентиляцию дождевика"),
+            body: L10n.text("Проверьте штатную вентиляцию и живот или заднюю поверхность шеи ребёнка. Снимите дождевик, когда осадки закончатся.")
         )
     }
 
     static func suitableWalkWindow(start: Date) -> SafeReminderContent {
         let time = start.formatted(
-            Date.FormatStyle.dateTime.hour(.twoDigits(amPM: .omitted)).minute()
+            Date.FormatStyle.dateTime
+                .hour(.twoDigits(amPM: .omitted))
+                .minute()
+                .locale(L10n.locale)
         )
         return SafeReminderContent(
-            title: "Более подходящее время по прогнозу",
-            body: "Расчётное окно начинается в (time). Перед выходом обновите погоду и проверьте самочувствие ребёнка."
+            title: L10n.text("Более подходящее время по прогнозу"),
+            body: L10n.format(
+                "Расчётное окно начинается в %@. Перед выходом обновите погоду и проверьте самочувствие ребёнка.",
+                time
+            )
         )
     }
 
     static func scheduledWalkCheck() -> SafeReminderContent {
         SafeReminderContent(
-            title: "Пора проверить условия прогулки",
-            body: "Откройте SkyKid, обновите погоду и проверьте самочувствие ребёнка перед выходом."
+            title: L10n.text("Пора проверить условия прогулки"),
+            body: L10n.text("Откройте SkyKid, обновите погоду и проверьте самочувствие ребёнка перед выходом.")
         )
     }
 }

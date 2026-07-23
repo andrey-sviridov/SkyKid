@@ -34,7 +34,7 @@ struct OutfitFeedbackSection: View {
             Label("Оцените после 10–15 минут", systemImage: "hand.thumbsup")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-            Text("Проверьте шею и верх спины, затем отметьте ощущение ребёнка.")
+            Text("Проверьте живот или заднюю поверхность шеи, затем отметьте ощущение ребёнка.")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -50,19 +50,19 @@ struct OutfitFeedbackSection: View {
 
         return layout {
             feedbackButton(
-                label: "Холодно",
+                label: L10n.text("Холодно"),
                 icon: "thermometer.snowflake",
                 color: .blue,
                 feedback: .tooCold
             )
             feedbackButton(
-                label: "Комфортно",
+                label: L10n.text("Комфортно"),
                 icon: "checkmark.circle",
                 color: .green,
                 feedback: .comfortable
             )
             feedbackButton(
-                label: "Жарко",
+                label: L10n.text("Жарко"),
                 icon: "thermometer.sun",
                 color: .red,
                 feedback: .tooWarm
@@ -100,7 +100,7 @@ struct OutfitFeedbackSection: View {
 
     private func confirmationBanner(feedback: UserFeedback) -> some View {
         Label(
-            confirmationMessage ?? "Наблюдение сохранено",
+            confirmationMessage ?? L10n.text("Наблюдение сохранено"),
             systemImage: "brain.headset"
         )
             .font(.subheadline.weight(.medium))

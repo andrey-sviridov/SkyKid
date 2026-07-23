@@ -143,13 +143,22 @@ final class OutfitViewModel {
         update: PersonalizationUpdate
     ) -> String {
         if feedback == .comfortable {
-            return "Комфорт подтверждён — текущая поправка сохранена"
+            return L10n.text("Комфорт подтверждён — текущая поправка сохранена")
         }
         if update.didChangeOffset {
             let sign = update.currentOffset > 0 ? "+" : ""
-            return "Сигнал повторился — поправка теперь \(sign)\(update.currentOffset.formatted(.number.precision(.fractionLength(1)))) TOG"
+            let offset = update.currentOffset.formatted(
+                .number
+                    .precision(.fractionLength(1))
+                    .locale(L10n.locale)
+            )
+            return L10n.format(
+                "Сигнал повторился — поправка теперь %@%@ TOG",
+                sign,
+                offset
+            )
         }
-        return "Наблюдение сохранено — изменение будет только после повторения"
+        return L10n.text("Наблюдение сохранено — изменение будет только после повторения")
     }
 }
 

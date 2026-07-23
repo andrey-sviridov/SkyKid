@@ -89,10 +89,12 @@ enum OutfitSolver {
 
         if input.carrierUnderJacket {
             steps.append(CalcStep(
-                label: "Слинг под курткой (§5)",
+                label: L10n.text("Слинг под курткой (§5)"),
                 value: 0,
                 unit: "TOG",
-                note: "Корпус согревают родитель и верхняя одежда; отдельно проверяйте открытые зоны"
+                note: L10n.text(
+                    "Корпус согревают родитель и верхняя одежда; отдельно проверяйте открытые зоны"
+                )
             ))
             return Output(
                 layers: [],
@@ -109,10 +111,10 @@ enum OutfitSolver {
         let gearTOG = supportedGearTOG(input)
         if gearTOG > 0 {
             steps.append(CalcStep(
-                label: "Конверт / плед (§5.0)",
+                label: L10n.text("Конверт / плед (§5.0)"),
                 value: gearTOG,
                 unit: "TOG",
-                note: "Вычтено из потребности в одежде"
+                note: L10n.text("Вычтено из потребности в одежде")
             ))
         }
 
@@ -148,17 +150,17 @@ enum OutfitSolver {
         let missing = deduplicated(missingBody + accessoryPair.missing)
 
         steps.append(CalcStep(
-            label: "Подбор слоёв (§5.2)",
+            label: L10n.text("Подбор слоёв (§5.2)"),
             value: clothingTOG,
             unit: "TOG",
-            note: "цель одежда: \(String(format: "%.1f", clothingTarget)) TOG"
+            note: L10n.format("цель одежда: %.1f TOG", clothingTarget)
         ))
         if guardResult.warning != nil {
             steps.append(CalcStep(
-                label: "Двойное утепление (§5.6)",
+                label: L10n.text("Двойное утепление (§5.6)"),
                 value: clothingTOG + gearTOG,
                 unit: "TOG",
-                note: "Снят конфликтующий верхний слой"
+                note: L10n.text("Снят конфликтующий верхний слой")
             ))
         }
 
@@ -170,11 +172,11 @@ enum OutfitSolver {
 
         if moistureFactor < 1 {
             steps.append(CalcStep(
-                label: "Мокрая одежда (§5.5)",
+                label: L10n.text("Мокрая одежда (§5.5)"),
                 value: effectiveTOG,
                 unit: "TOG",
-                note: String(
-                    format: "Без дождевика: %.1f → %.1f TOG",
+                note: L10n.format(
+                    "Без дождевика: %.1f → %.1f TOG",
                     dryTotalTOG,
                     effectiveTOG
                 )
@@ -197,7 +199,7 @@ enum OutfitSolver {
 
         if let gap {
             steps.append(CalcStep(
-                label: "Ограничение подбора (§5.2)",
+                label: L10n.text("Ограничение подбора (§5.2)"),
                 value: fit.deltaTOG,
                 unit: "TOG",
                 note: gap
@@ -353,17 +355,17 @@ enum OutfitSolver {
         var parts: [String] = []
         if !missing.isEmpty {
             let names = missing.map { $0.name.lowercased() }.joined(separator: ", ")
-            parts.append("В гардеробе не хватает: \(names).")
+            parts.append(L10n.format("В гардеробе не хватает: %@.", names))
         }
         if fit.confidence != .high {
-            parts.append(String(
-                format: "Цель %.1f TOG, доступный комплект даёт %.1f TOG.",
+            parts.append(L10n.format(
+                "Цель %.1f TOG, доступный комплект даёт %.1f TOG.",
                 fit.targetTOG,
                 fit.effectiveTOG
             ))
         }
         if moistureLoss {
-            parts.append("Без дождевика промокание снижает теплоизоляцию одежды.")
+            parts.append(L10n.text("Без дождевика промокание снижает теплоизоляцию одежды."))
         }
         return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
@@ -375,7 +377,12 @@ enum OutfitSolver {
     ) -> String? {
         guard !missing.isEmpty else { return nil }
         let names = missing.map { $0.name.lowercased() }.joined(separator: ", ")
-        return "В гардеробе не хватает: \(names). Подобрано \(achieved) из \(target) TOG."
+        return L10n.format(
+            "В гардеробе не хватает: %@. Подобрано %.1f из %.1f TOG.",
+            names,
+            achieved,
+            target
+        )
     }
 
     private static func deduplicated(_ layers: [RecommendedLayer]) -> [RecommendedLayer] {
@@ -420,7 +427,7 @@ enum OutfitSolver {
         return (capped, SafetyWarning(
             code: .overheatPriority,
             severity: .danger,
-            message: "Тёплый зимний комбез вместе с меховым конвертом или вторым верхним слоем создаёт двойное утепление. Оставьте что-то одно.",
+            message: L10n.text("Тёплый зимний комбез вместе с меховым конвертом или вторым верхним слоем создаёт двойное утепление. Оставьте что-то одно."),
             systemImage: "thermometer.sun.fill"
         ))
     }
@@ -430,13 +437,15 @@ enum OutfitSolver {
     private static func layerReason(item: GarmentItem, temperature: Double) -> String {
         switch item.layer {
         case .baseFull, .baseTop, .baseBottom:
-            return temperature >= 24 ? "Лёгкий базовый слой" : "Базовый слой у кожи"
+            return temperature >= 24
+                ? L10n.text("Лёгкий базовый слой")
+                : L10n.text("Базовый слой у кожи")
         case .midFull, .midTop, .midBottom:
-            return "Утепляющий средний слой"
+            return L10n.text("Утепляющий средний слой")
         case .outerwear:
-            return "Защита от холода и ветра"
+            return L10n.text("Защита от холода и ветра")
         case .accessory:
-            return "Защита открытой зоны"
+            return L10n.text("Защита открытой зоны")
         case .sleepwear:
             return item.name
         }

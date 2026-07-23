@@ -52,13 +52,13 @@ private extension SafetyWarning.Severity {
     var label: String {
         switch self {
         case .info:
-            return "Подсказка"
+            return L10n.text("Подсказка")
         case .caution:
-            return "Осторожно"
+            return L10n.text("Осторожно")
         case .danger:
-            return "Исправьте до выхода"
+            return L10n.text("Исправьте до выхода")
         case .blocked:
-            return "Прогулку отмените"
+            return L10n.text("Прогулку отмените")
         }
     }
 

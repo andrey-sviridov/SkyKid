@@ -104,21 +104,26 @@ struct PersonalizationStatusCard: View {
 
     private var offsetLabel: String {
         let sign = summary.appliedOffset > 0 ? "+" : ""
-        return "\(sign)\(summary.appliedOffset.formatted(.number.precision(.fractionLength(1)))) TOG"
+        let offset = summary.appliedOffset.formatted(
+            .number
+                .precision(.fractionLength(1))
+                .locale(L10n.locale)
+        )
+        return "\(sign)\(offset) TOG"
     }
 
     private var bandLabel: String {
         switch summary.temperatureBand {
-        case .cold: return "прохладно"
-        case .mild: return "умеренно"
-        case .hot:  return "жарко"
+        case .cold: return L10n.text("прохладно")
+        case .mild: return L10n.text("умеренно")
+        case .hot:  return L10n.text("жарко")
         }
     }
 
     private var scenarioLabel: String {
         switch summary.scenario {
-        case .resting: return "спокойная прогулка"
-        case .active:  return "активное движение"
+        case .resting: return L10n.text("спокойная прогулка")
+        case .active:  return L10n.text("активное движение")
         }
     }
 }

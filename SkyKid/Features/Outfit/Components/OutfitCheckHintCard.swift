@@ -4,7 +4,7 @@ import SwiftUI
 
 struct OutfitCheckHintCard: View {
     let hint: String
-    var title = "Проверьте после начала прогулки"
+    var title = L10n.text("Проверьте после начала прогулки")
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {

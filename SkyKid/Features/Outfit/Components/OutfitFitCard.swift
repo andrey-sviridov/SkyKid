@@ -38,8 +38,8 @@ struct OutfitFitCard: View {
     // MARK: - Presentation
 
     private var detail: String {
-        String(
-            format: "Комплект %.1f TOG · цель %.1f TOG",
+        L10n.format(
+            "Комплект %.1f TOG · цель %.1f TOG",
             fit.effectiveTOG,
             fit.targetTOG
         )
@@ -53,19 +53,19 @@ struct OutfitFitCard: View {
         switch fit.confidence {
         case .high:
             return Presentation(
-                title: "Комплект подходит точно",
+                title: L10n.text("Комплект подходит точно"),
                 systemImage: "checkmark.seal.fill",
                 color: .green
             )
         case .medium:
             return Presentation(
-                title: "Комплект близок к цели",
+                title: L10n.text("Комплект близок к цели"),
                 systemImage: "scope",
                 color: .orange
             )
         case .low:
             return Presentation(
-                title: "Гардероб ограничивает точность",
+                title: L10n.text("Гардероб ограничивает точность"),
                 systemImage: "exclamationmark.triangle.fill",
                 color: .red
             )

@@ -71,7 +71,7 @@ enum WeatherNormalizer {
                 for: .hourlyForecast,
                 raw: raw,
                 quality: .unavailable,
-                note: "Провайдер не вернул почасовой прогноз"
+                note: L10n.text("Провайдер не вернул почасовой прогноз")
             )
             : suppliedStatus(for: .hourlyForecast, raw: raw)
 
@@ -108,7 +108,7 @@ private extension WeatherNormalizer {
                 for: .apparentTemperature,
                 raw: raw,
                 quality: .estimated,
-                note: "Приравнена к температуре воздуха"
+                note: L10n.text("Приравнена к температуре воздуха")
             )
             return temperature
         }
@@ -126,7 +126,10 @@ private extension WeatherNormalizer {
                 for: .humidity,
                 raw: raw,
                 quality: .estimated,
-                note: "Использована осторожная влажность \(fallbackHumidity)%"
+                note: L10n.format(
+                    "Использована осторожная влажность %lld%%",
+                    fallbackHumidity
+                )
             )
             return fallbackHumidity
         }
@@ -144,7 +147,10 @@ private extension WeatherNormalizer {
                 for: .windSpeed,
                 raw: raw,
                 quality: .estimated,
-                note: "Использован осторожный ветер \(fallbackWindSpeed) м/с"
+                note: L10n.format(
+                    "Использован осторожный ветер %.1f м/с",
+                    fallbackWindSpeed
+                )
             )
             return fallbackWindSpeed
         }
@@ -163,7 +169,7 @@ private extension WeatherNormalizer {
                 for: .windGust,
                 raw: raw,
                 quality: .derived,
-                note: "Порыв приравнен к устойчивому ветру"
+                note: L10n.text("Порыв приравнен к устойчивому ветру")
             )
             return sustained
         }
@@ -172,7 +178,7 @@ private extension WeatherNormalizer {
                 for: .windGust,
                 raw: raw,
                 quality: .derived,
-                note: "Порыв не может уменьшать устойчивый ветер"
+                note: L10n.text("Порыв не может уменьшать устойчивый ветер")
             )
             return sustained
         }
@@ -190,7 +196,7 @@ private extension WeatherNormalizer {
                 for: .windDirection,
                 raw: raw,
                 quality: .unavailable,
-                note: "Направление ветра не получено"
+                note: L10n.text("Направление ветра не получено")
             )
             return 0
         }
@@ -213,7 +219,7 @@ private extension WeatherNormalizer {
                 for: .precipitation,
                 raw: raw,
                 quality: .derived,
-                note: "Наличие осадков определено по коду погоды"
+                note: L10n.text("Наличие осадков определено по коду погоды")
             )
             return PrecipType(wmoCode: weatherCode) == .none ? 0 : 0.1
         }
@@ -221,7 +227,7 @@ private extension WeatherNormalizer {
             for: .precipitation,
             raw: raw,
             quality: .unavailable,
-            note: "Осадки не получены"
+            note: L10n.text("Осадки не получены")
         )
         return 0
     }
@@ -242,7 +248,7 @@ private extension WeatherNormalizer {
                 for: .weatherCode,
                 raw: raw,
                 quality: .unavailable,
-                note: "Код условий не получен"
+                note: L10n.text("Код условий не получен")
             )
             return -1
         }
@@ -250,7 +256,7 @@ private extension WeatherNormalizer {
             for: .weatherCode,
             raw: raw,
             quality: .estimated,
-            note: "Код оценён по температуре и осадкам"
+            note: L10n.text("Код оценён по температуре и осадкам")
         )
         return temperature <= 0 ? 71 : 61
     }
@@ -276,7 +282,7 @@ private extension WeatherNormalizer {
             source: raw.source,
             origin: .derivedFromProvider,
             quality: statuses[.weatherCode]?.quality == .unavailable ? .estimated : .derived,
-            note: "Тип осадков выведен из кода погоды"
+            note: L10n.text("Тип осадков выведен из кода погоды")
         )
         return type
     }
@@ -291,7 +297,7 @@ private extension WeatherNormalizer {
                 for: .uvIndex,
                 raw: raw,
                 quality: .unavailable,
-                note: "UV не получен; солнечная прибавка отключена"
+                note: L10n.text("UV не получен; солнечная прибавка отключена")
             )
             return 0
         }
@@ -309,7 +315,9 @@ private extension WeatherNormalizer {
                 for: .cloudCover,
                 raw: raw,
                 quality: .unavailable,
-                note: "Использована сплошная облачность, чтобы не добавлять неподтверждённое солнечное тепло"
+                note: L10n.text(
+                    "Использована сплошная облачность, чтобы не добавлять неподтверждённое солнечное тепло"
+                )
             )
             return fallbackCloudCover
         }

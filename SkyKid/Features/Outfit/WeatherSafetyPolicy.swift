@@ -48,11 +48,11 @@ private extension WeatherSafetyPolicy {
         SafetyWarning(
             code: .coldExposureLimit,
             severity: .blocked,
-            message: "По консервативному правилу SkyKid прогулку лучше отложить: расчётно "
-                + String(format: "%.0f", context.effectiveTemperature)
-                + "°C, возрастной ориентир приложения "
-                + String(Int(limits.coldBelow))
-                + "°C. Одежда не отменяет это ограничение.",
+            message: L10n.format(
+                "По консервативному правилу SkyKid прогулку лучше отложить: расчётно %.0f°C, возрастной ориентир приложения %d°C. Одежда не отменяет это ограничение.",
+                context.effectiveTemperature,
+                Int(limits.coldBelow)
+            ),
             systemImage: "snowflake.circle.fill"
         )
     }
@@ -64,11 +64,11 @@ private extension WeatherSafetyPolicy {
         SafetyWarning(
             code: .heatExposureLimit,
             severity: .blocked,
-            message: "По консервативному правилу SkyKid прогулку лучше перенести: с учётом жары около "
-                + String(format: "%.0f", context.heatIndexTemperature)
-                + "°C, возрастной ориентир приложения "
-                + String(Int(limits.hotAbove))
-                + "°C.",
+            message: L10n.format(
+                "По консервативному правилу SkyKid прогулку лучше перенести: с учётом жары около %.0f°C, возрастной ориентир приложения %d°C.",
+                context.heatIndexTemperature,
+                Int(limits.hotAbove)
+            ),
             systemImage: "sun.max.trianglebadge.exclamationmark"
         )
     }
@@ -90,7 +90,7 @@ private extension WeatherSafetyPolicy {
             warnings.append(SafetyWarning(
                 code: .longWalkBorderlineTemp,
                 severity: .caution,
-                message: "Для длинной прогулки условия близки к холодовой границе приложения. Запланируйте короткий маршрут с возможностью быстро зайти в тепло.",
+                message: L10n.text("Для длинной прогулки условия близки к холодовой границе приложения. Запланируйте короткий маршрут с возможностью быстро зайти в тепло."),
                 systemImage: "timer"
             ))
         }
@@ -99,9 +99,10 @@ private extension WeatherSafetyPolicy {
             warnings.append(SafetyWarning(
                 code: .windWarning,
                 severity: .caution,
-                message: "Сильный ветер "
-                    + String(Int(context.calculatedWindKmh.rounded()))
-                    + " км/ч. Сократите выход, избегайте открытых мест и следите за защитой лица без перекрытия дыхания.",
+                message: L10n.format(
+                    "Сильный ветер %d км/ч. Сократите выход, избегайте открытых мест и следите за защитой лица без перекрытия дыхания.",
+                    Int(context.calculatedWindKmh.rounded())
+                ),
                 systemImage: "wind"
             ))
         }
@@ -125,8 +126,8 @@ private extension WeatherSafetyPolicy {
                 code: .needsRainCover,
                 severity: isFreezing ? .danger : .caution,
                 message: isFreezing
-                    ? "Осадки и холод: перед выходом защитите коляску от воды. Если одежда намокла, вернитесь в сухое и тёплое место."
-                    : "Идут осадки — используйте штатную защиту от дождя и сохраняйте вентиляцию.",
+                    ? L10n.text("Осадки и холод: перед выходом защитите коляску от воды. Если одежда намокла, вернитесь в сухое и тёплое место.")
+                    : L10n.text("Идут осадки — используйте штатную защиту от дождя и сохраняйте вентиляцию."),
                 systemImage: "cloud.rain.fill"
             ))
         }
@@ -135,7 +136,7 @@ private extension WeatherSafetyPolicy {
             warnings.append(SafetyWarning(
                 code: .heavyRainWithoutCover,
                 severity: .danger,
-                message: "Сильный дождь: не начинайте прогулку без штатной защиты или навеса.",
+                message: L10n.text("Сильный дождь: не начинайте прогулку без штатной защиты или навеса."),
                 systemImage: "cloud.heavyrain.fill"
             ))
         }
@@ -149,14 +150,14 @@ private extension WeatherSafetyPolicy {
         guard context.weather.uvIndex >= 3 else { return [] }
 
         let isYoungInfant = context.profile.chronologicalAgeMonths < 6
-        let uvValue = String(Int(context.weather.uvIndex))
+        let uvValue = Int(context.weather.uvIndex)
         if context.weather.uvIndex >= 6 {
             return [SafetyWarning(
                 code: .walkTimeWarning,
                 severity: .caution,
                 message: isYoungInfant
-                    ? "Высокий UV " + uvValue + ": младенца до 6 месяцев держите вне прямого солнца; выбирайте тень, закрывающую одежду и панаму. Избегайте пиковых часов 11:00–16:00."
-                    : "Высокий UV " + uvValue + ": выбирайте тень, закрывающую одежду и панаму; избегайте пиковых часов 11:00–16:00.",
+                    ? L10n.format("Высокий UV %d: младенца до 6 месяцев держите в тени и вне прямого солнца; выбирайте лёгкую закрывающую одежду и широкополую панаму. Избегайте пиковых часов 10:00–16:00.", uvValue)
+                    : L10n.format("Высокий UV %d: выбирайте тень, лёгкую закрывающую одежду и широкополую панаму; избегайте пиковых часов 10:00–16:00.", uvValue),
                 systemImage: "sun.max.fill"
             )]
         }
@@ -165,8 +166,8 @@ private extension WeatherSafetyPolicy {
             code: .uvWarning,
             severity: .info,
             message: isYoungInfant
-                ? "UV " + uvValue + ": младенца до 6 месяцев держите вне прямого солнца; используйте тень, лёгкую закрывающую одежду и панаму."
-                : "UV " + uvValue + ": используйте тень, закрывающую одежду и панаму.",
+                ? L10n.format("UV %d: младенца до 6 месяцев держите в тени и вне прямого солнца; используйте лёгкую закрывающую одежду и широкополую панаму.", uvValue)
+                : L10n.format("UV %d: используйте тень, лёгкую закрывающую одежду и широкополую панаму.", uvValue),
             systemImage: "sun.haze.fill"
         )]
     }

@@ -40,7 +40,7 @@ enum MedicalSafetyPolicy {
             warnings.append(SafetyWarning(
                 code: .medicalPlanPriority,
                 severity: .info,
-                message: "Включён более осторожный режим для недоношенности или особенностей сердца/дыхания. Индивидуальный план врача важнее расчёта SkyKid.",
+                message: L10n.text("Включён более осторожный режим для недоношенности или особенностей сердца/дыхания. Индивидуальный план врача важнее расчёта SkyKid."),
                 systemImage: "cross.case.fill"
             ))
         }
@@ -93,18 +93,19 @@ private extension MedicalSafetyPolicy {
         if profile.chronologicalAgeMonths < 3 {
             let measurementNote: String
             if let measuredTemperature {
-                measurementNote = "Измерено "
-                    + String(format: "%.1f", measuredTemperature)
-                    + "°C. "
+                measurementNote = L10n.format(
+                    "Измерено %.1f°C. ",
+                    measuredTemperature
+                )
             } else {
-                measurementNote = "Измерьте температуру термометром. "
+                measurementNote = L10n.text("Измерьте температуру термометром. ")
             }
 
             return SafetyWarning(
                 code: .feverMedicalAttention,
                 severity: .blocked,
                 message: measurementNote
-                    + "Ребёнку меньше 3 месяцев: прогулку отмените. При 38°C и выше немедленно обратитесь за медицинской помощью.",
+                    + L10n.text("Ребёнку меньше 3 месяцев: прогулку отмените. При 38°C и выше немедленно обратитесь за медицинской помощью."),
                 systemImage: "cross.case.fill"
             )
         }
@@ -112,7 +113,7 @@ private extension MedicalSafetyPolicy {
         return SafetyWarning(
             code: .feverStayHome,
             severity: .blocked,
-            message: "При повышенной температуре прогулку отмените. SkyKid не оценивает тяжесть болезни; ориентируйтесь на состояние ребёнка и рекомендации врача.",
+            message: L10n.text("При повышенной температуре прогулку отмените. SkyKid не оценивает тяжесть болезни; ориентируйтесь на состояние ребёнка и рекомендации врача."),
             systemImage: "thermometer.high"
         )
     }
@@ -125,7 +126,7 @@ private extension MedicalSafetyPolicy {
         return [SafetyWarning(
             code: .illnessNeedsCaution,
             severity: .caution,
-            message: "ОРВИ без температуры и мороз: SkyKid не определяет, безопасна ли прогулка при болезни. Сократите или отложите выход; не закрывайте ребёнку рот и нос тканью.",
+            message: L10n.text("ОРВИ без температуры и мороз: SkyKid не определяет, безопасна ли прогулка при болезни. Сократите или отложите выход; не закрывайте ребёнку рот и нос тканью."),
             systemImage: "lungs.fill"
         )]
     }

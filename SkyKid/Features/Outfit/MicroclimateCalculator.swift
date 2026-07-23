@@ -111,7 +111,9 @@ private extension MicroclimateCalculator {
     static func strollerAdvice(for gear: GearSetup) -> StrollerAdvice? {
         guard gear.rainCover == .present_on else { return nil }
         return StrollerAdvice(
-            recommendation: "Дождевик удерживает тепло и ограничивает вентиляцию. Используйте только от осадков и регулярно проверяйте ребёнка.",
+            recommendation: L10n.text(
+                "Дождевик удерживает тепло и ограничивает вентиляцию. Используйте только от осадков и регулярно проверяйте ребёнка."
+            ),
             isSafetyWarning: true
         )
     }
@@ -127,18 +129,23 @@ private extension MicroclimateCalculator {
         exposure: TransportExposureProfile
     ) -> [CalcStep] {
         var steps = [CalcStep(
-            label: "Микроклимат транспорта (§3)",
+            label: L10n.text("Микроклимат транспорта (§3)"),
             value: microclimate,
             unit: "°C",
-            note: "ветер \(percent(exposure.wind)), осадки \(percent(exposure.precipitation)), солнце \(percent(exposure.solar))"
+            note: L10n.format(
+                "ветер %@, осадки %@, солнце %@",
+                percent(exposure.wind),
+                percent(exposure.precipitation),
+                percent(exposure.solar)
+            )
         )]
 
-        appendGain(label: "Ветер после защиты (§3.1)", value: windDelta, to: &steps)
-        appendGain(label: "Осадки после защиты (§3.2)", value: precipitationDelta, to: &steps)
-        appendGain(label: "Солнце после защиты (§3.3)", value: solarDelta, to: &steps)
-        appendGain(label: "Тепло взрослого (§3.4)", value: bodyHeatGain, to: &steps)
-        appendGain(label: "Дождевик и вентиляция (§3.5)", value: rainCoverHeatGain, to: &steps)
-        appendGain(label: "Слинг под курткой (§3.6)", value: jacketGain, to: &steps)
+        appendGain(label: L10n.text("Ветер после защиты (§3.1)"), value: windDelta, to: &steps)
+        appendGain(label: L10n.text("Осадки после защиты (§3.2)"), value: precipitationDelta, to: &steps)
+        appendGain(label: L10n.text("Солнце после защиты (§3.3)"), value: solarDelta, to: &steps)
+        appendGain(label: L10n.text("Тепло взрослого (§3.4)"), value: bodyHeatGain, to: &steps)
+        appendGain(label: L10n.text("Дождевик и вентиляция (§3.5)"), value: rainCoverHeatGain, to: &steps)
+        appendGain(label: L10n.text("Слинг под курткой (§3.6)"), value: jacketGain, to: &steps)
         return steps
     }
 

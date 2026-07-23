@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>schemaVersion</key>
+	<integer>1</integer>
+	<key>reviewId</key>
+	<string>SKYKID-CLINICAL-001</string>
+	<key>policyVersion</key>
+	<string>safety-1.0-draft</string>
+	<key>status</key>
+	<string>pending_external_review</string>
+	<key>sourceReviewDate</key>
+	<string>2026-07-23</string>
+	<key>scope</key>
+	<dict>
+		<key>ageRange</key>
+		<string>0-12 months</string>
+		<key>language</key>
+		<string>ru</string>
+		<key>targetJurisdiction</key>
+		<string></string>
+	</dict>
+	<key>reviewer</key>
+	<dict>
+		<key>name</key>
+		<string></string>
+		<key>license</key>
+		<string></string>
+		<key>jurisdiction</key>
+		<string></string>
+	</dict>
+	<key>approval</key>
+	<dict>
+		<key>reviewedAt</key>
+		<string></string>
+		<key>reviewedCommit</key>
+		<string></string>
+		<key>policyDigest</key>
+		<string></string>
+	</dict>
+	<key>evidenceDocument</key>
+	<string>docs/clinical-review.md</string>
+</dict>
+</plist>

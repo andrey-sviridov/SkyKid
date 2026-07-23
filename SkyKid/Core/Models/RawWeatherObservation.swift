@@ -16,8 +16,8 @@ enum WeatherSource: String, CaseIterable, Equatable, Sendable {
         case .weatherKit:     return "Apple WeatherKit"
         case .openWeatherMap: return "OpenWeatherMap"
         case .weatherAPI:     return "WeatherAPI.com"
-        case .yandex:         return "Яндекс Погода"
-        case .manual:         return "Тестовые данные"
+        case .yandex:         return L10n.text("Яндекс Погода")
+        case .manual:         return L10n.text("Тестовые данные")
         }
     }
 

@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "SkyKid";
+"CFBundleName" = "SkyKid";
+"NSLocationWhenInUseUsageDescription" = "SkyKid uses your location to show nearby weather and precipitation.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SkyKid uses your location to keep weather information up to date.";

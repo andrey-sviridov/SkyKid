@@ -5,11 +5,11 @@ import Foundation
 extension TransportMode {
     var walkLabel: String {
         switch self {
-        case .walking:         return "Пешком"
-        case .pramBassinette:  return "Люлька"
-        case .pushchairSeat:   return "Прогулочная коляска"
-        case .carrier:         return "Слинг / эргорюкзак"
-        case .carSeat:         return "Автокресло"
+        case .walking:         return L10n.text("Пешком")
+        case .pramBassinette:  return L10n.text("Люлька")
+        case .pushchairSeat:   return L10n.text("Прогулочная коляска")
+        case .carrier:         return L10n.text("Слинг / эргорюкзак")
+        case .carSeat:         return L10n.text("Автокресло")
         }
     }
 

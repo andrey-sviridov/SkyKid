@@ -22,10 +22,10 @@ enum TempZone: String, Codable, CaseIterable {
 
     var label: String {
         switch self {
-        case .freezing: return "Мороз (ниже 0°C)"
-        case .cold:     return "Холодно (0–10°C)"
-        case .mild:     return "Умеренно (10–20°C)"
-        case .warm:     return "Тепло (выше 20°C)"
+        case .freezing: return L10n.text("Мороз (ниже 0°C)")
+        case .cold:     return L10n.text("Холодно (0–10°C)")
+        case .mild:     return L10n.text("Умеренно (10–20°C)")
+        case .warm:     return L10n.text("Тепло (выше 20°C)")
         }
     }
 }

@@ -131,41 +131,52 @@ final class WardrobeModel {
 
     // ── Контекстно-зависимые сообщения ────────────────────────────────────
     var riskLabel: String {
-        if isExtremeHeat { return "ОПАСНО: КРИТИЧЕСКИЙ ПЕРЕГРЕВ" }
-        if isExtremeCold { return "ОПАСНО: РИСК ОБМОРОЖЕНИЯ" }
+        if isExtremeHeat { return L10n.text("ОПАСНО: КРИТИЧЕСКИЙ ПЕРЕГРЕВ") }
+        if isExtremeCold { return L10n.text("ОПАСНО: РИСК ОБМОРОЖЕНИЯ") }
         switch riskLevel {
-        case .dangerouslyCold:  return "Опасно холодно!"
-        case .cold:             return "Холодно"
-        case .slightlyCold:     return "Прохладно"
-        case .optimal:          return "Идеально"
-        case .warm:             return "Тепловато"
-        case .hot:              return tempZone == .cold ? "Очень жарко" : "Жарко"
-        case .criticalOverheat: return "Критический перегрев!"
+        case .dangerouslyCold:  return L10n.text("Опасно холодно!")
+        case .cold:             return L10n.text("Холодно")
+        case .slightlyCold:     return L10n.text("Прохладно")
+        case .optimal:          return L10n.text("Идеально")
+        case .warm:             return L10n.text("Тепловато")
+        case .hot:
+            return tempZone == .cold
+                ? L10n.text("Очень жарко")
+                : L10n.text("Жарко")
+        case .criticalOverheat: return L10n.text("Критический перегрев!")
         }
     }
 
     var riskDetail: String {
-        if isExtremeHeat { return "Прогулку лучше перенести на более прохладное время. Младенцу предлагайте обычные кормления чаще." }
-        if isExtremeCold { return "Прогулку лучше перенести. Одежда не отменяет риск от экстремального холода." }
+        if isExtremeHeat {
+            return L10n.text(
+                "Прогулку лучше перенести на более прохладное время. Младенцу предлагайте обычные кормления чаще."
+            )
+        }
+        if isExtremeCold {
+            return L10n.text(
+                "Прогулку лучше перенести. Одежда не отменяет риск от экстремального холода."
+            )
+        }
         switch riskLevel {
         case .dangerouslyCold:
-            return "Риск обморожения и переохлаждения! Срочно занесите малыша в тепло."
+            return L10n.text("Риск обморожения и переохлаждения! Срочно занесите малыша в тепло.")
         case .cold:
-            return "Ребёнку холодно. Добавьте утепляющий слой."
+            return L10n.text("Ребёнку холодно. Добавьте утепляющий слой.")
         case .slightlyCold:
-            return "Немного прохладно. Рассмотрите ещё один лёгкий слой."
+            return L10n.text("Немного прохладно. Рассмотрите ещё один лёгкий слой.")
         case .optimal:
-            return "Одежда подобрана оптимально для данной температуры."
+            return L10n.text("Одежда подобрана оптимально для данной температуры.")
         case .warm:
-            return "Немного тепловато. Снимите один утепляющий слой."
+            return L10n.text("Немного тепловато. Снимите один утепляющий слой.")
         case .hot where tempZone == .cold:
-            return "Малыш сильно вспотеет и может простудиться. Снимите утеплитель."
+            return L10n.text("Малыш сильно вспотеет и может простудиться. Снимите утеплитель.")
         case .hot:
-            return "Слишком тепло. Срочно снимите лишние слои."
+            return L10n.text("Слишком тепло. Срочно снимите лишние слои.")
         case .criticalOverheat where tempZone == .hot:
-            return "Слишком жарко! Снимите всю лишнюю одежду — минимум: боди и подгузник."
+            return L10n.text("Слишком жарко! Снимите всю лишнюю одежду — минимум: боди и подгузник.")
         case .criticalOverheat:
-            return "Риск теплового удара — немедленно снимите лишнюю одежду!"
+            return L10n.text("Риск теплового удара — немедленно снимите лишнюю одежду!")
         }
     }
 
@@ -187,8 +198,17 @@ final class WardrobeModel {
     var showColdAlert: Bool { isExtremeCold }
 
     var autoSelectLabel: String {
-        if isExtremeHeat { return "Минимум одежды при \(Int(temperature.rounded()))°C" }
-        return "\(Int(temperature.rounded()))°C · \(ageGroup.rawValue)"
+        if isExtremeHeat {
+            return L10n.format(
+                "Минимум одежды при %lld°C",
+                Int(temperature.rounded())
+            )
+        }
+        return L10n.format(
+            "%lld°C · %@",
+            Int(temperature.rounded()),
+            ageGroup.displayName
+        )
     }
 
     var weatherIcon: String {

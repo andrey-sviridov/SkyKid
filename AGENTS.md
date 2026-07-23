@@ -62,7 +62,8 @@ SkyKid/
 │   │   ├── OutfitViewModel.swift    presentation state + контекстный TOG-фидбек
 │   │   ├── OutfitParentSummary.swift pure builder: что/почему/проверка/уверенность
 │   │   ├── TransportMode+Presentation.swift подписи/иконки транспорта
-│   │   ├── Components/              Parent summary, details, alternatives, warnings, feedback
+│   │   ├── Components/              Parent summary, details, alternatives, warnings, feedback,
+│   │   │                            ComfortCheckCard без клинической атрибуции
 │   │   ├── WalkPreparation/         Упрощённая форма прогулки + value-type ViewModel
 │   │   ├── OutfitConfig.swift       §2–§6 константы
 │   │   ├── GearModels.swift         TransportMode, RainCoverState, GearSetup
@@ -81,7 +82,7 @@ SkyKid/
 │   │   ├── MedicalSafetyPolicy.swift             лихорадка, болезнь, особая осторожность
 │   │   ├── WeatherSafetyPolicy.swift             холод, жара, ветер, осадки, UV
 │   │   ├── TransportSafetyPolicy.swift           дождевик, лицо, автокресло
-│   │   ├── ThermalComfortCheckPolicy.swift       проверка шеи/верхней части спины
+│   │   ├── ThermalComfortCheckPolicy.swift       проверка живота/задней поверхности шеи
 │   │   ├── SafetyRulesEngine.swift               оркестратор предупреждений и walkWindow
 │   │   ├── OutfitRecommendationService.swift     оркестратор §2→§6
 │   │   ├── BuildOutfitRecommendationUseCase.swift один result для UI + snapshot
@@ -149,6 +150,10 @@ SkyKidWidget/
 ├── WidgetClothingCalculator.swift   только presentation-адаптер snapshot; без расчёта одежды
 ├── ClothingStatusProvider.swift     fresh outfit / stale update metadata
 └── ClothingStatusWidgetView.swift   Small, Medium, Circular, Rectangular + время/контекст
+
+docs/clinical-review.md               пакет внешней педиатрической проверки
+docs/clinical-review-status.plist     машинный статус; до sign-off = pending
+scripts/validate-clinical-release.sh  блокирует Release без актуального sign-off
 ```
 
 ---

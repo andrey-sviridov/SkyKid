@@ -15,6 +15,11 @@ struct ContentView: View {
     @State private var showProfileSetup = false
 
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
+    @AppStorage(
+        AppLanguagePreferences.storageKey,
+        store: AppGroup.defaults
+    )
+    private var appLanguageRawValue = AppLanguage.system.rawValue
     @Environment(\.scenePhase) private var scenePhase
     @State private var lastForegroundReload: Date = .distantPast
     @State private var didSignalStartupReady = false
@@ -74,6 +79,9 @@ struct ContentView: View {
         }
         .onChange(of: weatherVM.error) { _, _ in
             notifyStartupReadyIfNeeded()
+        }
+        .onChange(of: appLanguageRawValue) { _, _ in
+            weatherVM.refreshLocalization()
         }
         .onChange(of: locationManager.location) { old, new in
             guard let new else { return }
@@ -221,7 +229,7 @@ struct ContentView: View {
         }
         .tabItem {
             Label(
-                childProfile.map { $0.name } ?? "Малыш",
+                childProfile.map(\.name) ?? L10n.text("Малыш"),
                 systemImage: "person.circle.fill"
             )
         }

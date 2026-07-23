@@ -16,14 +16,22 @@ struct FeedbackHistorySection: View {
             }
 
             if items.count > collapsedLimit {
-                Button(isExpanded ? "Свернуть" : "Показать все отзывы") {
+                Button(
+                    isExpanded
+                        ? L10n.text("Свернуть")
+                        : L10n.text("Показать все отзывы")
+                ) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         isExpanded.toggle()
                     }
                 }
                 .font(.caption.weight(.semibold))
                 .frame(minHeight: 44)
-                .accessibilityValue(isExpanded ? "Развёрнуто" : "Свёрнуто")
+                .accessibilityValue(
+                    isExpanded
+                        ? L10n.text("Развёрнуто")
+                        : L10n.text("Свёрнуто")
+                )
             }
         }
         .padding(16)

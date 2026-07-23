@@ -149,10 +149,15 @@ final class BackgroundScenarioTests: XCTestCase {
     func test_walkWindowReminderAvoidsSafetyGuaranteeAndRequestsRefresh() {
         let reminder = SafeReminderContentFactory.suitableWalkWindow(start: now)
         let text = (reminder.title + " " + reminder.body).lowercased()
+        let expectedTime = now.formatted(
+            Date.FormatStyle.dateTime.hour(.twoDigits(amPM: .omitted)).minute()
+        )
 
         XCTAssertTrue(text.contains("более подходящее"))
+        XCTAssertTrue(reminder.body.contains(expectedTime))
         XCTAssertTrue(text.contains("обновите погоду"))
         XCTAssertTrue(text.contains("самочувствие"))
+        XCTAssertFalse(text.contains("(time)"))
         XCTAssertFalse(text.contains("безопас"))
         XCTAssertFalse(text.contains("условия подходят"))
     }

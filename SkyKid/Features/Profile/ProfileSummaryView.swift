@@ -19,6 +19,7 @@ struct ProfileSummaryView: View {
                     notificationsCard
                     walkScheduleCard
                     themeCard
+                    AppLanguagePickerCard()
                     siriCard
                     editButton
                 }
@@ -82,41 +83,54 @@ struct ProfileSummaryView: View {
 
         return VStack(spacing: 1) {
             infoRow(icon: "birthday.cake.fill", color: .pink,
-                    title: "День рождения",
-                    value: p.birthday.formatted(.dateTime.day().month(.wide).year()),
+                    title: L10n.text("День рождения"),
+                    value: p.birthday.formatted(
+                        .dateTime
+                            .day()
+                            .month(.wide)
+                            .year()
+                            .locale(L10n.locale)
+                    ),
                     isFirst: true, isLast: false)
 
             infoRow(icon: "figure.child", color: .orange,
-                    title: "Возрастная группа",
+                    title: L10n.text("Возрастная группа"),
                     value: p.ageGroup.description,
                     isFirst: false, isLast: false)
 
             infoRow(icon: "heart.text.square.fill", color: .pink,
-                    title: "Срок рождения",
+                    title: L10n.text("Срок рождения"),
                     value: p.gestationalAgeWeeks < 40
-                        ? "\(p.gestationalAgeWeeks) недель"
-                        : "Доношенный",
+                        ? L10n.format("%lld недель", p.gestationalAgeWeeks)
+                        : L10n.text("Доношенный"),
                     isFirst: false, isLast: false)
 
             infoRow(icon: "thermometer.medium", color: .blue,
-                    title: "Возрастная поправка",
-                    value: ageOffset == 0 ? "Как у взрослого" : "\(Int(ageOffset))° (ощущает холоднее)",
+                    title: L10n.text("Возрастная поправка"),
+                    value: ageOffset == 0
+                        ? L10n.text("Как у взрослого")
+                        : L10n.format(
+                            "%lld° (ощущает холоднее)",
+                            Int(ageOffset)
+                        ),
                     isFirst: false, isLast: !showTempPref && !showHealth)
 
             if showTempPref {
                 let off = p.temperaturePreferenceOffset
                 let sign = off > 0 ? "+" : ""
                 infoRow(icon: "slider.horizontal.3", color: .purple,
-                        title: "Склонность",
-                        value: off < -1 ? "Мёрзнет (\(sign)\(Int(off))°)" :
-                               off > 1  ? "Жаркий (\(sign)\(Int(off))°)" :
-                               "Нейтрально",
+                        title: L10n.text("Склонность"),
+                        value: off < -1
+                            ? L10n.format("Мёрзнет (%@%lld°)", sign, Int(off))
+                            : off > 1
+                                ? L10n.format("Жаркий (%@%lld°)", sign, Int(off))
+                                : L10n.text("Нейтрально"),
                         isFirst: false, isLast: !showHealth)
             }
 
             if showHealth {
                 infoRow(icon: "cross.case.fill", color: .red,
-                        title: "Особенности здоровья",
+                        title: L10n.text("Особенности здоровья"),
                         value: p.stableTraits.map(\.label).sorted().joined(separator: ", "),
                         isFirst: false, isLast: true)
             }
@@ -196,9 +210,9 @@ struct ProfileSummaryView: View {
 
     private var walkScheduleSummary: String {
         let entries = NotificationService.shared.loadWalkSchedule().filter(\.isEnabled)
-        if entries.isEmpty { return "Нет напоминаний" }
+        if entries.isEmpty { return L10n.text("Нет напоминаний") }
         let times = entries.prefix(3).map(\.timeString).joined(separator: ", ")
-        return "Напоминания: \(times)"
+        return L10n.format("Напоминания: %@", times)
     }
 
     // MARK: - Wardrobe card
@@ -243,8 +257,12 @@ struct ProfileSummaryView: View {
             $0.id != "diaper" && UserWardrobeStore.shared.isOwned($0.id)
         }.count
         return owned == total
-            ? "Все предметы каталога в наличии"
-            : "В наличии \(owned) из \(total) предметов"
+            ? L10n.text("Все предметы каталога в наличии")
+            : L10n.format(
+                "В наличии %lld из %lld предметов",
+                owned,
+                total
+            )
     }
 
     // MARK: - Notifications card
@@ -293,9 +311,21 @@ struct ProfileSummaryView: View {
                 .padding(.horizontal, 4)
 
             HStack(spacing: 10) {
-                themeOption(label: "Авто",    icon: "circle.lefthalf.filled", tag: "system")
-                themeOption(label: "Светлая", icon: "sun.max.fill",           tag: "light")
-                themeOption(label: "Тёмная",  icon: "moon.fill",              tag: "dark")
+                themeOption(
+                    label: L10n.text("Авто"),
+                    icon: "circle.lefthalf.filled",
+                    tag: "system"
+                )
+                themeOption(
+                    label: L10n.text("Светлая"),
+                    icon: "sun.max.fill",
+                    tag: "light"
+                )
+                themeOption(
+                    label: L10n.text("Тёмная"),
+                    icon: "moon.fill",
+                    tag: "dark"
+                )
             }
         }
         .padding(16)

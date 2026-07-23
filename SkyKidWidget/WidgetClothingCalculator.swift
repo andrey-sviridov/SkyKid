@@ -25,13 +25,13 @@ enum ClothingWidgetStatus: String, Codable, CaseIterable, Sendable {
 
     var label: String {
         switch self {
-        case .extremeHeat:  return "ОПАСНО: ПЕРЕГРЕВ"
-        case .hot:          return "Жарко"
-        case .warm:         return "Тепловато"
-        case .ideal:        return "Комфортно"
-        case .slightlyCold: return "Прохладно"
-        case .cold:         return "Холодно"
-        case .extremeCold:  return "ОПАСНО: МОРОЗ"
+        case .extremeHeat:  return L10n.text("ОПАСНО: ПЕРЕГРЕВ")
+        case .hot:          return L10n.text("Жарко")
+        case .warm:         return L10n.text("Тепловато")
+        case .ideal:        return L10n.text("Комфортно")
+        case .slightlyCold: return L10n.text("Прохладно")
+        case .cold:         return L10n.text("Холодно")
+        case .extremeCold:  return L10n.text("ОПАСНО: МОРОЗ")
         }
     }
 
@@ -61,8 +61,8 @@ enum ClothingWidgetStatus: String, Codable, CaseIterable, Sendable {
 
     var defaultSafetyWarning: String? {
         switch self {
-        case .extremeHeat: return "Прогулку лучше перенести"
-        case .extremeCold: return "Прогулку лучше перенести"
+        case .extremeHeat: return L10n.text("Прогулку лучше перенести")
+        case .extremeCold: return L10n.text("Прогулку лучше перенести")
         default:           return nil
         }
     }
@@ -104,10 +104,10 @@ struct WidgetOutfitRecommendation: Sendable {
         self.primaryWarning = recommendation.primarySafetyWarning?.message
         self.hasBlockingWarning = recommendation.blockingWarning != nil
         self.updatedAt = snapshot.generatedAt
-        self.contextSummary = snapshot.context?.shortSummary ?? "Контекст не сохранён"
-        self.contextDetails = snapshot.context?.fullSummary ?? "Условия прогулки не сохранены"
-        self.weatherSource = snapshot.context?.weatherSource ?? "Источник не сохранён"
-        self.weatherConfidence = snapshot.context?.weatherConfidence ?? "Уверенность не сохранена"
+        self.contextSummary = snapshot.context?.shortSummary ?? L10n.text("Контекст не сохранён")
+        self.contextDetails = snapshot.context?.fullSummary ?? L10n.text("Условия прогулки не сохранены")
+        self.weatherSource = snapshot.context?.weatherSource ?? L10n.text("Источник не сохранён")
+        self.weatherConfidence = snapshot.context?.weatherConfidence ?? L10n.text("Уверенность не сохранена")
     }
 
     private init(
@@ -149,7 +149,7 @@ struct WidgetOutfitRecommendation: Sendable {
     }
 
     var alertLabel: String {
-        hasBlockingWarning ? "ПРОГУЛКУ ОТМЕНИТЕ" : status.label
+        hasBlockingWarning ? L10n.text("ПРОГУЛКУ ОТМЕНИТЕ") : status.label
     }
 
     var alertColor: Color {
@@ -168,15 +168,19 @@ struct WidgetOutfitRecommendation: Sendable {
             microclimateTemperature: 10,
             cityName: "—",
             status: .ideal,
-            outfitItems: ["Куртка", "Кофта", "Шапка"],
-            ageLabel: "малыша",
+            outfitItems: [
+                L10n.text("Куртка"),
+                L10n.text("Кофта"),
+                L10n.text("Шапка")
+            ],
+            ageLabel: L10n.text("малыша"),
             primaryWarning: nil,
             hasBlockingWarning: false,
             updatedAt: Date(),
-            contextSummary: "Облачно · Прогулочная коляска",
-            contextDetails: "Облачно · Прогулочная коляска · Спокойно",
+            contextSummary: L10n.text("Облачно · Прогулочная коляска"),
+            contextDetails: L10n.text("Облачно · Прогулочная коляска · Спокойно"),
             weatherSource: "Open-Meteo",
-            weatherConfidence: "Высокая уверенность"
+            weatherConfidence: L10n.text("Высокая уверенность")
         )
     }
 }

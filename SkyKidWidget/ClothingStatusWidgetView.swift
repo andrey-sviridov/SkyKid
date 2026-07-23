@@ -8,28 +8,30 @@ struct ClothingStatusWidgetView: View {
 
     @Environment(\.widgetFamily) private var family
 
-    @ViewBuilder
     var body: some View {
-        if entry.requiresRefresh {
-            WidgetRefreshRequiredView(
-                family: family,
-                lastUpdatedAt: entry.lastUpdatedAt,
-                contextSummary: entry.recommendation.contextSummary
-            )
-        } else {
-            switch family {
-            case .systemSmall:
-                SmallWidgetView(entry: entry)
-            case .systemMedium:
-                MediumWidgetView(entry: entry)
-            case .accessoryCircular:
-                CircularAccessoryView(entry: entry)
-            case .accessoryRectangular:
-                RectangularAccessoryView(entry: entry)
-            default:
-                SmallWidgetView(entry: entry)
+        Group {
+            if entry.requiresRefresh {
+                WidgetRefreshRequiredView(
+                    family: family,
+                    lastUpdatedAt: entry.lastUpdatedAt,
+                    contextSummary: entry.recommendation.contextSummary
+                )
+            } else {
+                switch family {
+                case .systemSmall:
+                    SmallWidgetView(entry: entry)
+                case .systemMedium:
+                    MediumWidgetView(entry: entry)
+                case .accessoryCircular:
+                    CircularAccessoryView(entry: entry)
+                case .accessoryRectangular:
+                    RectangularAccessoryView(entry: entry)
+                default:
+                    SmallWidgetView(entry: entry)
+                }
             }
         }
+        .environment(\.locale, AppLanguagePreferences.locale)
     }
 }
 
@@ -385,8 +387,22 @@ struct CircularAccessoryView: View {
             }
         }
         .containerBackground(.clear, for: .widget)
-        .accessibilityLabel(
-            "\(rec.status.label), \(Int(rec.outsideTemperature.rounded())) градусов, обновлено \(rec.updatedAt.formatted(date: .omitted, time: .shortened)), \(rec.contextDetails)"
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        let time = rec.updatedAt.formatted(
+            Date.FormatStyle.dateTime
+                .hour()
+                .minute()
+                .locale(L10n.locale)
+        )
+        return L10n.format(
+            "%@, %lld градусов, обновлено %@, %@",
+            rec.status.label,
+            Int(rec.outsideTemperature.rounded()),
+            time,
+            rec.contextDetails
         )
     }
 }

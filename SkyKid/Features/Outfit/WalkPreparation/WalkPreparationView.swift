@@ -269,10 +269,10 @@ private enum StrollerInsulationOption: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .none:               return "Без дополнительного утепления"
-        case .blanket:            return "Плед"
-        case .footmuff:           return "Утеплённый конверт"
-        case .footmuffAndBlanket: return "Конверт и плед"
+        case .none:               return L10n.text("Без дополнительного утепления")
+        case .blanket:            return L10n.text("Плед")
+        case .footmuff:           return L10n.text("Утеплённый конверт")
+        case .footmuffAndBlanket: return L10n.text("Конверт и плед")
         }
     }
 
@@ -306,6 +306,10 @@ private struct SelectionRow: View {
             .foregroundStyle(.primary)
         }
         .frame(minHeight: 44)
-        .accessibilityValue(isSelected ? "Выбрано" : "Не выбрано")
+        .accessibilityValue(
+            isSelected
+                ? L10n.text("Выбрано")
+                : L10n.text("Не выбрано")
+        )
     }
 }

@@ -49,7 +49,7 @@ struct OutfitView: View {
                     showWalkPreparation = true
                 }
             } else if let profile, let rec = viewModel.recommendation {
-                ScrollView {
+                ScrollView(.vertical) {
                     VStack(spacing: 14) {
                         if let walkContext {
                             ParentOutfitSummaryCard(summary: OutfitParentSummaryBuilder.make(
@@ -97,10 +97,12 @@ struct OutfitView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .containerRelativeFrame(.horizontal)
                     .padding(.top, 8)
                     .padding(.bottom, 36)
                 }
+                .contentMargins(.horizontal, 16, for: .scrollContent)
+                .scrollBounceBehavior(.basedOnSize, axes: .vertical)
             } else {
                 unavailableContent
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -152,7 +154,11 @@ struct OutfitView: View {
                 HStack(spacing: 7) {
                     Image(systemName: "hanger")
                         .font(.subheadline.weight(.semibold))
-                    Text(profile.map { "Что надеть · \($0.name)" } ?? "Что надеть")
+                    Text(
+                        profile.map {
+                            L10n.format("Что надеть · %@", $0.name)
+                        } ?? L10n.text("Что надеть")
+                    )
                         .font(.system(.headline, design: .rounded).weight(.semibold))
                 }
                 .foregroundStyle(.primary)
@@ -180,15 +186,30 @@ struct OutfitView: View {
     // MARK: - Walk window card (P1-3)
 
     private func walkWindowCard(_ window: DateInterval) -> some View {
-        let fmt = Date.FormatStyle.dateTime.hour(.twoDigits(amPM: .omitted)).minute()
+        let fmt = Date.FormatStyle.dateTime
+            .hour(.twoDigits(amPM: .omitted))
+            .minute()
+            .locale(L10n.locale)
         let isTomorrow = !Calendar.current.isDateInToday(window.start)
-        let prefix = isTomorrow ? "завтра " : ""
+        let start = window.start.formatted(fmt)
+        let end = window.end.formatted(fmt)
+        let label = isTomorrow
+            ? L10n.format(
+                "Более подходящее время для прогулки: завтра %@–%@",
+                start,
+                end
+            )
+            : L10n.format(
+                "Более подходящее время для прогулки: %@–%@",
+                start,
+                end
+            )
         return HStack(spacing: 12) {
             Image(systemName: "clock.badge.checkmark")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(.green)
                 .frame(width: 24)
-            Text("Более подходящее время для прогулки: \(prefix)\(window.start.formatted(fmt))–\(window.end.formatted(fmt))")
+            Text(label)
                 .font(.caption)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -331,11 +352,11 @@ struct OutfitView: View {
 
     private func itemsWord(_ n: Int) -> String {
         let mod10 = n % 10, mod100 = n % 100
-        if mod100 >= 11 && mod100 <= 19 { return "вещей" }
+        if mod100 >= 11 && mod100 <= 19 { return L10n.text("вещей") }
         switch mod10 {
-        case 1: return "вещь"
-        case 2, 3, 4: return "вещи"
-        default: return "вещей"
+        case 1: return L10n.text("вещь")
+        case 2, 3, 4: return L10n.text("вещи")
+        default: return L10n.text("вещей")
         }
     }
 }

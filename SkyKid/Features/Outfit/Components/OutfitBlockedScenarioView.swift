@@ -29,7 +29,7 @@ struct OutfitBlockedScenarioView: View {
 
                 OutfitCheckHintCard(
                     hint: recommendation.checkHint,
-                    title: "Для следующей прогулки"
+                    title: L10n.text("Для следующей прогулки")
                 )
 
                 Button(action: onEditContext) {
@@ -131,11 +131,13 @@ private extension OutfitBlockedScenarioView {
             .weekday(.wide)
             .hour(.twoDigits(amPM: .omitted))
             .minute(.twoDigits)
+            .locale(L10n.locale)
         let start = window.start.formatted(format)
         let end = window.end.formatted(
             Date.FormatStyle.dateTime
                 .hour(.twoDigits(amPM: .omitted))
                 .minute(.twoDigits)
+                .locale(L10n.locale)
         )
         return "\(start)–\(end)"
     }
@@ -154,26 +156,34 @@ private extension OutfitBlockedScenarioView {
         switch warning.code {
         case .feverMedicalAttention:
             return Presentation(
-                title: "Прогулку отмените",
-                guidance: "SkyKid не показывает одежду для этого сценария и не заменяет медицинскую оценку. Если состояние ребёнка вызывает тревогу, обращайтесь за неотложной помощью.",
+                title: L10n.text("Прогулку отмените"),
+                guidance: L10n.text(
+                    "SkyKid не показывает одежду для этого сценария и не заменяет медицинскую оценку. Если состояние ребёнка вызывает тревогу, обращайтесь за неотложной помощью."
+                ),
                 tint: .red
             )
         case .feverStayHome:
             return Presentation(
-                title: "Сегодня без прогулки",
-                guidance: "Вернитесь к подбору одежды после нормализации температуры и с учётом рекомендаций врача.",
+                title: L10n.text("Сегодня без прогулки"),
+                guidance: L10n.text(
+                    "Вернитесь к подбору одежды после нормализации температуры и с учётом рекомендаций врача."
+                ),
                 tint: .red
             )
         case .heatExposureLimit:
             return Presentation(
-                title: "Перенесите прогулку",
-                guidance: "Выберите более прохладное время и тень. Не накрывайте коляску пледом или плотной тканью; используйте штатную вентиляцию.",
+                title: L10n.text("Перенесите прогулку"),
+                guidance: L10n.text(
+                    "Выберите более прохладное время и тень. Не накрывайте коляску пледом или плотной тканью; используйте штатную вентиляцию."
+                ),
                 tint: .red
             )
         default:
             return Presentation(
-                title: "Прогулку лучше отложить",
-                guidance: "Одежда не компенсирует условия за пределами консервативного ориентира приложения. Выберите короткий путь через помещение или перенесите выход.",
+                title: L10n.text("Прогулку лучше отложить"),
+                guidance: L10n.text(
+                    "Одежда не компенсирует условия за пределами консервативного ориентира приложения. Выберите короткий путь через помещение или перенесите выход."
+                ),
                 tint: .blue
             )
         }

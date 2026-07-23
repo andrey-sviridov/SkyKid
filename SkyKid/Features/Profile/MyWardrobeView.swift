@@ -51,7 +51,7 @@ struct MyWardrobeView: View {
 
     private func layerCard(layer: GarmentLayer, items: [GarmentItem]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label(layer.rawValue, systemImage: layer.icon)
+            Label(layer.displayName, systemImage: layer.icon)
                 .font(.caption.weight(.medium)).foregroundStyle(.secondary)
 
             VStack(spacing: 0) {

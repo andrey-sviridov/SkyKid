@@ -12,10 +12,10 @@ enum BabyComfortLevel: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .cold:        return "Мёрз"
-        case .comfortable: return "Комфортно"
-        case .warm:        return "Тепловато"
-        case .sweating:    return "Потел"
+        case .cold:        return L10n.text("Мёрз")
+        case .comfortable: return L10n.text("Комфортно")
+        case .warm:        return L10n.text("Тепловато")
+        case .sweating:    return L10n.text("Потел")
         }
     }
 

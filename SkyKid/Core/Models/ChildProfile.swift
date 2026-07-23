@@ -14,22 +14,22 @@ enum HealthCondition: String, Codable, CaseIterable, Identifiable, Hashable, Sen
 
     var label: String {
         switch self {
-        case .fever:             return "Температура сейчас"
-        case .coldNoFever:       return "ОРВИ без температуры"
-        case .anemia:            return "Анемия"
-        case .atopicDermatitis:  return "Атопический дерматит"
-        case .cardioRespiratory: return "Кардио/дыхательные"
+        case .fever:             return L10n.text("Температура сейчас")
+        case .coldNoFever:       return L10n.text("ОРВИ без температуры")
+        case .anemia:            return L10n.text("Анемия")
+        case .atopicDermatitis:  return L10n.text("Атопический дерматит")
+        case .cardioRespiratory: return L10n.text("Кардио/дыхательные")
         }
     }
 
     /// Что условие меняет в расчёте — см. TOGCalculator.healthDelta (§4.5).
     var note: String {
         switch self {
-        case .fever:             return "−0.5 TOG, не перегревать"
-        case .coldNoFever:       return "предупреждение на прогулке"
-        case .anemia:            return "+0.3 TOG — мёрзнет быстрее"
-        case .atopicDermatitis:  return "фильтр тканей в гардеробе"
-        case .cardioRespiratory: return "строже пороги «не гулять»"
+        case .fever:             return L10n.text("−0.5 TOG, не перегревать")
+        case .coldNoFever:       return L10n.text("предупреждение на прогулке")
+        case .anemia:            return L10n.text("+0.3 TOG — мёрзнет быстрее")
+        case .atopicDermatitis:  return L10n.text("фильтр тканей в гардеробе")
+        case .cardioRespiratory: return L10n.text("строже пороги «не гулять»")
         }
     }
 
@@ -54,10 +54,10 @@ enum BabyActivityLevel: String, Codable, CaseIterable, Sendable {
 
     var label: String {
         switch self {
-        case .sleeping:         return "Спит"
-        case .calmAwake:        return "Бодрствует"
-        case .activeInStroller: return "Активен в коляске"
-        case .walkingCrawling:  return "Ходит/ползает"
+        case .sleeping:         return L10n.text("Спит")
+        case .calmAwake:        return L10n.text("Бодрствует")
+        case .activeInStroller: return L10n.text("Активен в коляске")
+        case .walkingCrawling:  return L10n.text("Ходит/ползает")
         }
     }
 
@@ -97,19 +97,19 @@ enum HealthFeature: String, Codable, CaseIterable, Identifiable, Hashable {
 
     var label: String {
         switch self {
-        case .frequentIllness: return "Часто болеет"
-        case .coldSensitive:   return "Реакция на холод"
-        case .premature:       return "Недоношенный"
-        case .heatSensitive:   return "Плохо переносит жару"
+        case .frequentIllness: return L10n.text("Часто болеет")
+        case .coldSensitive:   return L10n.text("Реакция на холод")
+        case .premature:       return L10n.text("Недоношенный")
+        case .heatSensitive:   return L10n.text("Плохо переносит жару")
         }
     }
 
     var description: String {
         switch self {
-        case .frequentIllness: return "−1.5° к порогу одевания"
-        case .coldSensitive:   return "−2° к порогу одевания"
-        case .premature:       return "−2° к порогу одевания"
-        case .heatSensitive:   return "+1.5° к порогу одевания"
+        case .frequentIllness: return L10n.text("−1.5° к порогу одевания")
+        case .coldSensitive:   return L10n.text("−2° к порогу одевания")
+        case .premature:       return L10n.text("−2° к порогу одевания")
+        case .heatSensitive:   return L10n.text("+1.5° к порогу одевания")
         }
     }
 
@@ -154,19 +154,19 @@ enum WalkType: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
-        case .short:   return "Короткая"
-        case .regular: return "Обычная"
-        case .long:    return "Долгая"
-        case .park:    return "Парк / лес"
+        case .short:   return L10n.text("Короткая")
+        case .regular: return L10n.text("Обычная")
+        case .long:    return L10n.text("Долгая")
+        case .park:    return L10n.text("Парк / лес")
         }
     }
 
     var detail: String {
         switch self {
-        case .short:   return "до 30 мин"
-        case .regular: return "около 1 часа"
-        case .long:    return "2+ часа"
-        case .park:    return "ветер, влажность"
+        case .short:   return L10n.text("до 30 мин")
+        case .regular: return L10n.text("около 1 часа")
+        case .long:    return L10n.text("2+ часа")
+        case .park:    return L10n.text("ветер, влажность")
         }
     }
 
@@ -198,6 +198,8 @@ enum ActivityLevel: String, Codable, CaseIterable, Identifiable {
     case high     = "Высокая"     // активно бегает
 
     var id: String { rawValue }
+
+    var label: String { L10n.text(rawValue) }
 
     /// Поправка к температуре ощущений (°C).
     /// Высокая активность → сам греется → воспринимает как теплее.
@@ -232,17 +234,17 @@ enum StrollerType: String, Codable, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .open:       return "Открытая"
-        case .deepWinter: return "Закрытая люлька"
-        case .covered:    return "Накрыта накидкой"
+        case .open:       return L10n.text("Открытая")
+        case .deepWinter: return L10n.text("Закрытая люлька")
+        case .covered:    return L10n.text("Накрыта накидкой")
         }
     }
 
     var detail: String {
         switch self {
-        case .open:       return "обычный капор"
-        case .deepWinter: return "корпус сам греет"
-        case .covered:    return "ОПАСНО: парниковый эффект"
+        case .open:       return L10n.text("обычный капор")
+        case .deepWinter: return L10n.text("корпус сам греет")
+        case .covered:    return L10n.text("ОПАСНО: парниковый эффект")
         }
     }
 
@@ -275,10 +277,10 @@ enum ChildGender: String, Codable, CaseIterable, Sendable {
     case boy = "boy"
     case girl = "girl"
 
-    var label: String { self == .boy ? "Мальчик" : "Девочка" }
+    var label: String { self == .boy ? L10n.text("Мальчик") : L10n.text("Девочка") }
     var emoji: String { self == .boy ? "👦" : "👧" }
-    var pronoun: String { self == .boy ? "он" : "она" }
-    var pronounCapital: String { self == .boy ? "Он" : "Она" }
+    var pronoun: String { self == .boy ? L10n.text("он") : L10n.text("она") }
+    var pronounCapital: String { self == .boy ? L10n.text("Он") : L10n.text("Она") }
 }
 
 struct ChildProfile: Equatable {
@@ -465,12 +467,12 @@ enum AgeGroup: Equatable, Sendable {
 
     var description: String {
         switch self {
-        case .infant:    return "До 6 месяцев"
-        case .baby:      return "6–12 месяцев"
-        case .toddler:   return "1–3 года"
-        case .preschool: return "3–6 лет"
-        case .schoolAge: return "6–12 лет"
-        case .teen:      return "12+ лет"
+        case .infant:    return L10n.text("До 6 месяцев")
+        case .baby:      return L10n.text("6–12 месяцев")
+        case .toddler:   return L10n.text("1–3 года")
+        case .preschool: return L10n.text("3–6 лет")
+        case .schoolAge: return L10n.text("6–12 лет")
+        case .teen:      return L10n.text("12+ лет")
         }
     }
 }
@@ -494,6 +496,7 @@ extension String {
     // Склоняет имя по падежу с учётом пола.
     // Покрывает все распространённые русские имена и большинство иностранных.
     func declined(to grammaticalCase: RussianCase, gender: ChildGender) -> String {
+        guard Locale.current.language.languageCode?.identifier == "ru" else { return self }
         guard grammaticalCase != .nominative, !isEmpty, let last = self.last else { return self }
 
         switch last {

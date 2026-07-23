@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "SkyKid";
+"CFBundleName" = "SkyKid";
+"NSLocationWhenInUseUsageDescription" = "SkyKid utilise votre position pour afficher la météo et les précipitations à proximité.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SkyKid utilise votre position pour maintenir la météo à jour.";

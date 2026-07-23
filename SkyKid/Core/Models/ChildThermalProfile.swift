@@ -16,23 +16,23 @@ enum StableThermalTrait: String, Codable, CaseIterable, Identifiable, Hashable, 
 
     var label: String {
         switch self {
-        case .frequentIllness:     return "Часто болеет"
-        case .coldSensitive:       return "Чувствителен к холоду"
-        case .heatSensitive:       return "Плохо переносит жару"
-        case .anemia:              return "Анемия"
-        case .atopicDermatitis:    return "Атопический дерматит"
-        case .cardioRespiratory:   return "Особенности сердца/дыхания"
+        case .frequentIllness:     return L10n.text("Часто болеет")
+        case .coldSensitive:       return L10n.text("Чувствителен к холоду")
+        case .heatSensitive:       return L10n.text("Плохо переносит жару")
+        case .anemia:              return L10n.text("Анемия")
+        case .atopicDermatitis:    return L10n.text("Атопический дерматит")
+        case .cardioRespiratory:   return L10n.text("Особенности сердца/дыхания")
         }
     }
 
     var note: String {
         switch self {
-        case .frequentIllness:     return "Учитывается как небольшая постоянная поправка"
-        case .coldSensitive:       return "Может мёрзнуть быстрее"
-        case .heatSensitive:       return "Нужен более осторожный подбор в жару"
-        case .anemia:              return "Учитывается повышенная чувствительность к холоду"
-        case .atopicDermatitis:    return "Исключаются раздражающие ткани"
-        case .cardioRespiratory:   return "Применяются более строгие погодные ограничения"
+        case .frequentIllness:     return L10n.text("Учитывается как небольшая постоянная поправка")
+        case .coldSensitive:       return L10n.text("Может мёрзнуть быстрее")
+        case .heatSensitive:       return L10n.text("Нужен более осторожный подбор в жару")
+        case .anemia:              return L10n.text("Учитывается повышенная чувствительность к холоду")
+        case .atopicDermatitis:    return L10n.text("Исключаются раздражающие ткани")
+        case .cardioRespiratory:   return L10n.text("Применяются более строгие погодные ограничения")
         }
     }
 
@@ -106,13 +106,15 @@ struct ChildThermalProfile: Codable, Equatable, Sendable {
     }
 
     var ageLabel: String {
-        if ageYears == 0 {
-            return "\(ageMonths) \(Self.monthWord(ageMonths))"
-        }
-        if ageMonths == 0 {
-            return "\(ageYears) \(Self.yearWord(ageYears))"
-        }
-        return "\(ageYears) \(Self.yearWord(ageYears)) \(ageMonths) \(Self.monthWord(ageMonths))"
+        var components = DateComponents()
+        components.year = ageYears
+        components.month = ageMonths
+
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.year, .month]
+        formatter.maximumUnitCount = 2
+        formatter.unitsStyle = .full
+        return formatter.string(from: components) ?? L10n.text("Возраст не указан")
     }
 
     var isNewbornPeriod: Bool { chronologicalAgeWeeks < 4 }
@@ -122,31 +124,5 @@ struct ChildThermalProfile: Codable, Equatable, Sendable {
 
     func name(_ grammaticalCase: RussianCase) -> String {
         name.declined(to: grammaticalCase, gender: gender)
-    }
-}
-
-// MARK: - Word forms
-
-private extension ChildThermalProfile {
-    static func yearWord(_ number: Int) -> String {
-        let mod10 = number % 10
-        let mod100 = number % 100
-        if 11...19 ~= mod100 { return "лет" }
-        switch mod10 {
-        case 1: return "год"
-        case 2, 3, 4: return "года"
-        default: return "лет"
-        }
-    }
-
-    static func monthWord(_ number: Int) -> String {
-        let mod10 = number % 10
-        let mod100 = number % 100
-        if 11...19 ~= mod100 { return "месяцев" }
-        switch mod10 {
-        case 1: return "месяц"
-        case 2, 3, 4: return "месяца"
-        default: return "месяцев"
-        }
     }
 }

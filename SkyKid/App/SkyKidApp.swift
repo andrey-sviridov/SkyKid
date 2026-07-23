@@ -17,6 +17,15 @@ struct AppRootView: View {
     @State private var isLaunchOverlayVisible = true
     @State private var hasReachedMinimumDisplayTime = false
     @State private var isStartupContentReady = false
+    @AppStorage(
+        AppLanguagePreferences.storageKey,
+        store: AppGroup.defaults
+    )
+    private var appLanguageRawValue = AppLanguage.system.rawValue
+
+    private var appLanguage: AppLanguage {
+        AppLanguage(rawValue: appLanguageRawValue) ?? .system
+    }
 
     var body: some View {
         ZStack {
@@ -25,9 +34,10 @@ struct AppRootView: View {
             if isLaunchOverlayVisible {
                 AppLaunchOverlayView()
                     .transition(.opacity)
-                    .zIndex(1)
+                .zIndex(1)
             }
         }
+        .environment(\.locale, appLanguage.locale)
         .task {
             try? await Task.sleep(for: .milliseconds(900))
             hasReachedMinimumDisplayTime = true

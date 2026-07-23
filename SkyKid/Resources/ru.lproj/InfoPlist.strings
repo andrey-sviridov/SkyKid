@@ -1,0 +1,4 @@
+"CFBundleDisplayName" = "SkyKid";
+"CFBundleName" = "SkyKid";
+"NSLocationWhenInUseUsageDescription" = "SkyKid использует геолокацию, чтобы показать погоду и карту осадков рядом с вами";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "SkyKid использует геолокацию для актуальной погоды";
