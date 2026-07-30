@@ -15,7 +15,7 @@ struct BuildOutfitRecommendationUseCase {
     private let snapshotStore: any RecommendationSnapshotStoring
 
     init(
-        recommendationService: OutfitRecommendationService = .shared,
+        recommendationService: OutfitRecommendationService,
         snapshotStore: any RecommendationSnapshotStoring = AppGroupRecommendationSnapshotStore()
     ) {
         self.recommendationService = recommendationService

@@ -3,6 +3,7 @@ import Foundation
 // SRP: хранилище профиля вынесено из доменной модели ChildProfile.
 // Класс — singleton, используется только в основном таргете (не в виджете).
 
+@Observable
 final class ChildProfileStore: @unchecked Sendable {
     static let shared = ChildProfileStore()
 

@@ -21,7 +21,7 @@ final class OutfitViewModel {
         profile: ChildProfile?,
         recommendation: OutfitRecommendation?,
         walkContext: WalkContext?,
-        personalizationStore: PersonalOffsetStore = .shared
+        personalizationStore: PersonalOffsetStore
     ) {
         self.profile = profile
         self.recommendation = recommendation

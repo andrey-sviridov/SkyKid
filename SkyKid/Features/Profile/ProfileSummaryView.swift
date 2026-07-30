@@ -5,8 +5,11 @@ import AppIntents
 
 struct ProfileSummaryView: View {
     @Binding var profile: ChildProfile?
+    @Environment(NotificationService.self) private var notificationService
+    @Environment(UserWardrobeStore.self) private var wardrobeStore
     @State private var showEdit = false
-    @State private var notificationsOn = NotificationService.shared.isEnabled
+    @State private var notificationsOn = false
+    @State private var showWalkSchedule = false
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
 
     var body: some View {
@@ -33,6 +36,7 @@ struct ProfileSummaryView: View {
         .sheet(isPresented: $showEdit) {
             ChildProfileSetupView(profile: $profile)
         }
+        .onAppear { notificationsOn = notificationService.isEnabled }
     }
 
     // MARK: - Name header
@@ -149,8 +153,6 @@ struct ProfileSummaryView: View {
 
     // MARK: - Walk schedule card
 
-    @State private var showWalkSchedule = false
-
     private var walkScheduleCard: some View {
         Button { showWalkSchedule = true } label: {
             HStack(spacing: 14) {
@@ -187,7 +189,7 @@ struct ProfileSummaryView: View {
     }
 
     private var walkScheduleSummary: String {
-        let entries = NotificationService.shared.loadWalkSchedule().filter(\.isEnabled)
+        let entries = notificationService.loadWalkSchedule().filter(\.isEnabled)
         if entries.isEmpty { return L10n.text("Нет напоминаний") }
         let times = entries.prefix(3).map(\.timeString).joined(separator: ", ")
         return L10n.format("Напоминания: %@", times)
@@ -232,7 +234,7 @@ struct ProfileSummaryView: View {
     private var wardrobeSummary: String {
         let total = GarmentCatalog.all.count - 1  // без подгузника
         let owned = GarmentCatalog.all.filter {
-            $0.id != "diaper" && UserWardrobeStore.shared.isOwned($0.id)
+            $0.id != "diaper" && wardrobeStore.isOwned($0.id)
         }.count
         return owned == total
             ? L10n.text("Все предметы каталога в наличии")
@@ -268,7 +270,7 @@ struct ProfileSummaryView: View {
                 .tint(.orange)
                 .onChange(of: notificationsOn) { _, on in
                     Task {
-                        let actual = await NotificationService.shared.setEnabled(on)
+                        let actual = await notificationService.setEnabled(on)
                         if actual != notificationsOn { notificationsOn = actual }
                     }
                 }
@@ -392,89 +394,14 @@ struct ProfileSummaryView: View {
     }
 }
 
-// MARK: - WalkScheduleView
-
-struct WalkScheduleView: View {
-    @State private var entries: [WalkScheduleEntry] = []
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Text("Приложение напомнит обновить погоду и проверить самочувствие ребёнка. Сохранённый комплект не будет выдаваться за актуальный.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .listRowBackground(Color.clear)
-                }
-
-                Section("Напоминания") {
-                    ForEach($entries) { $entry in
-                        HStack {
-                            Toggle(isOn: $entry.isEnabled) {
-                                DatePicker(
-                                    "",
-                                    selection: Binding(
-                                        get: {
-                                            Calendar.current.date(
-                                                from: DateComponents(hour: entry.hour, minute: entry.minute)
-                                            ) ?? .now
-                                        },
-                                        set: { date in
-                                            let c = Calendar.current.dateComponents([.hour, .minute], from: date)
-                                            entry.hour = c.hour ?? entry.hour
-                                            entry.minute = c.minute ?? entry.minute
-                                        }
-                                    ),
-                                    displayedComponents: .hourAndMinute
-                                )
-                                .labelsHidden()
-                                .disabled(!entry.isEnabled)
-                                .opacity(entry.isEnabled ? 1 : 0.4)
-                            }
-                            .tint(.teal)
-                        }
-                    }
-                    .onDelete { offsets in entries.remove(atOffsets: offsets) }
-
-                    if entries.count < 4 {
-                        Button {
-                            withAnimation { entries.append(WalkScheduleEntry(hour: 10, minute: 0)) }
-                        } label: {
-                            Label("Добавить время", systemImage: "plus.circle.fill")
-                                .foregroundStyle(.teal)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Расписание прогулок")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Отмена") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Сохранить") { save() }
-                        .fontWeight(.semibold)
-                }
-            }
-            .onAppear { entries = NotificationService.shared.loadWalkSchedule() }
-        }
-    }
-
-    private func save() {
-        NotificationService.shared.saveWalkSchedule(entries)
-        Task { await NotificationService.shared.syncWalkSchedule(entries) }
-        dismiss()
-    }
-}
-
 // MARK: - Previews
 
 #if DEBUG
 #Preview("👤 Профиль") {
     NavigationStack {
         ProfileSummaryView(profile: .constant(.mock))
+            .environment(NotificationService.shared)
+            .environment(UserWardrobeStore.shared)
     }
 }
 #endif

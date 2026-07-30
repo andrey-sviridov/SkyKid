@@ -73,11 +73,6 @@ ContentView
             └─ FeedbackHistoryItemBuilder → FeedbackHistorySection
 
 ContentView
-  └─ RadarMapView(coordinate)
-       └─ RadarMapViewModel.loadFrames() → RainViewerService.fetchFrames() → [RadarFrame]
-            └─ RainViewerOverlay рисуется через RadarTileView (UIViewRepresentable)
-
-ContentView
   └─ ClothingCalculatorView(profile?)
        └─ WardrobeModel
             ├─ riskLevel → ThermalRisk (CLO-формула + safety overrides)
@@ -127,12 +122,12 @@ childProfile == nil → ChildProfileSetupView  (первый запуск)
 childProfile != nil →
   .notDetermined → PermissionView
   .denied        → DeniedView
-  иначе          → TabView (теги 0–4)
-    0 — Погода       (WeatherView)
-    1 — Осадки       (RadarMapView)
-    2 — Одежда       (OutfitView)
-    3 — Конструктор  (ClothingCalculatorView)
-    4 — Профиль      (ProfileSummaryView + sheet редактирования)
+  иначе          → TabView (теги 0, 2–5)
+    0 — Погода     (WeatherView)
+    2 — Одежда     (OutfitView)
+    3 — Прогулка   (WalkTabView → ActiveWalkView / WalkSetupSheet)
+    4 — История    (WalkHistoryView)
+    5 — Профиль    (ProfileSummaryView + sheet редактирования)
 ```
 
 ## Тема оформления

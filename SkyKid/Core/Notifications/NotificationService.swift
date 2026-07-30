@@ -25,6 +25,7 @@ struct WalkScheduleEntry: Codable, Identifiable, Equatable {
 }
 
 @MainActor
+@Observable
 final class NotificationService {
     static let shared = NotificationService()
 

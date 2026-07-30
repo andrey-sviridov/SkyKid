@@ -3,6 +3,7 @@ import SwiftUI
 struct ChildProfileSetupView: View {
     @Binding var profile: ChildProfile?
     @Environment(\.dismiss) private var dismiss
+    @Environment(ChildProfileStore.self) private var childProfileStore
 
     // Basic
     @State private var name     = ""
@@ -352,34 +353,9 @@ struct ChildProfileSetupView: View {
         p.temperaturePreferenceOffset = tempOffset
         p.stableTraits                = stableTraits
         p.gestationalAgeWeeks         = bornEarly ? gestationalAgeWeeks : 40
-        ChildProfileStore.shared.profile = p
+        childProfileStore.profile = p
         profile = p
         if isEditing { dismiss() }
-    }
-}
-
-// MARK: - GenderButton
-
-struct GenderButton: View {
-    let gender: ChildGender
-    let isSelected: Bool
-    let action: () -> Void
-    private var accent: Color { gender == .boy ? .blue : .pink }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Text(gender.emoji)
-                Text(gender.label).font(.body.weight(isSelected ? .semibold : .regular))
-            }
-            .padding(.horizontal, 22).padding(.vertical, 11)
-            .background(isSelected ? accent.opacity(0.14) : Color.primary.opacity(0.08),
-                        in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(isSelected ? accent : Color.clear, lineWidth: 1.5))
-            .foregroundStyle(isSelected ? accent : .primary)
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -388,9 +364,11 @@ struct GenderButton: View {
 #if DEBUG
 #Preview("📝 Онбординг") {
     ChildProfileSetupView(profile: .constant(nil))
+        .environment(ChildProfileStore.shared)
 }
 
 #Preview("✏️ Редактирование") {
     ChildProfileSetupView(profile: .constant(.mock))
+        .environment(ChildProfileStore.shared)
 }
 #endif

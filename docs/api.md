@@ -30,19 +30,6 @@ GET https://api.open-meteo.com/v1/forecast
 
 Отсутствующие UV и облачность не превращаются в «ясно и солнечно»: нормализатор ставит UV `0`, облачность `100%`, отмечает оба поля как `unavailable` и тем самым отключает неподтверждённую солнечную прибавку. Отсутствующий порыв безопасно приравнивается к устойчивому ветру.
 
-## RainViewer (`Core/Network/RainViewerService.swift`)
-
-```
-GET https://api.rainviewer.com/public/weather-maps.json
-→ { radar: { past: [{time, path}], nowcast: [{time, path}] } }
-
-Тайл: https://tilecache.rainviewer.com{path}/256/{z}/{x}/{y}/2/1_1.png
-```
-
-Бесплатно, без ключей.  
-`past` ≈ последние 2 ч, `nowcast` ≈ следующие 30 мин.  
-`fetchFrames()` объединяет past + nowcast → `[RadarFrame]`.
-
 ## WeatherService протокол (`Core/Network/WeatherServiceProtocol.swift`)
 
 ```swift

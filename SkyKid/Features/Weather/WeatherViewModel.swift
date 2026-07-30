@@ -31,7 +31,7 @@ final class WeatherViewModel {
 
     init(
         service: any WeatherService,
-        outfitUseCase: BuildOutfitRecommendationUseCase = BuildOutfitRecommendationUseCase(),
+        outfitUseCase: BuildOutfitRecommendationUseCase,
         nowProvider: @escaping @Sendable () -> Date = Date.init
     ) {
         self.service = service

@@ -4,11 +4,16 @@ import Foundation
 // Orchestrates the full §2→§3→§4→§5→§6 TOG pipeline.
 
 @MainActor
+@Observable
 final class OutfitRecommendationService {
 
     static let shared = OutfitRecommendationService()
 
-    private init() {}
+    private let personalOffsetStore: PersonalOffsetStore
+
+    private init(personalOffsetStore: PersonalOffsetStore = .shared) {
+        self.personalOffsetStore = personalOffsetStore
+    }
 
     func recommend(
         weather: NormalizedWeather,
@@ -29,7 +34,7 @@ final class OutfitRecommendationService {
         ))
 
         // §8 Personal TOG offset
-        let personalOffset = PersonalOffsetStore.shared.currentOffset(
+        let personalOffset = personalOffsetStore.currentOffset(
             for: profile,
             tMicro: microOutput.T_micro,
             walkContext: walkContext

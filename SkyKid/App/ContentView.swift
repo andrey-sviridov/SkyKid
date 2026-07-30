@@ -6,10 +6,17 @@ struct ContentView: View {
     let onStartupReady: @MainActor () -> Void
 
     @State private var locationManager = LocationManager()
-    @State private var weatherVM = WeatherViewModel(service: WeatherProvider.activeService)
+    @State private var weatherVM = WeatherViewModel(
+        service: WeatherProvider.activeService,
+        outfitUseCase: BuildOutfitRecommendationUseCase(recommendationService: .shared)
+    )
     @State private var wardrobeStore = UserWardrobeStore.shared
     @State private var walkContextStore = WalkContextStore.shared
     @State private var activeWalkStore = ActiveWalkStore.shared
+    @State private var walkLogStore = WalkLogStore.shared
+    @State private var personalOffsetStore = PersonalOffsetStore.shared
+    @State private var childProfileStore = ChildProfileStore.shared
+    @State private var notificationService = NotificationService.shared
     @State private var selectedTab = 0
     @State private var showWalkSetup = false
     @State private var tabBeforeWalk = 0
@@ -97,7 +104,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
-            ActiveWalkStore.shared.refresh()
+            activeWalkStore.refresh()
             guard Date().timeIntervalSince(lastForegroundReload) > 30 * 60 else { return }
             lastForegroundReload = Date()
             Task { await weatherVM.reload() }
@@ -124,6 +131,12 @@ struct ContentView: View {
             selectedTab = walkTag
         }
         .preferredColorScheme(preferredScheme)
+        .environment(wardrobeStore)
+        .environment(walkLogStore)
+        .environment(personalOffsetStore)
+        .environment(childProfileStore)
+        .environment(notificationService)
+        .environment(activeWalkStore)
     }
 
     private var isStartupContentReady: Bool {
@@ -240,6 +253,7 @@ struct ContentView: View {
                     profile: childProfile,
                     recommendation: weatherVM.outfitRecommendation,
                     walkContext: walkContextStore.context,
+                    personalOffsetStore: personalOffsetStore,
                     onWalkContextChange: { context in
                         walkContextStore.update(context)
                     },
@@ -322,54 +336,6 @@ struct ContentView: View {
             for: childProfile,
             walkContext: walkContextStore.context
         )
-    }
-}
-
-// MARK: - Permission screens
-
-struct PermissionView: View {
-    let onAllow: () -> Void
-
-    var body: some View {
-        VStack(spacing: 24) {
-            Image(systemName: "location.circle.fill")
-                .font(.system(size: 72))
-                .symbolRenderingMode(.multicolor)
-            Text("Нужен доступ к местоположению")
-                .font(.title2.weight(.semibold))
-                .multilineTextAlignment(.center)
-            Text("Чтобы показать актуальную погоду и карту осадков рядом с вами")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Разрешить", action: onAllow)
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-        }
-        .padding(32)
-    }
-}
-
-struct DeniedView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "location.slash.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(.secondary)
-            Text("Доступ к геолокации запрещён")
-                .font(.headline)
-            Text("Откройте Настройки → SkyKid → Геолокация")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Открыть настройки") {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
-                }
-            }
-            .buttonStyle(.bordered)
-        }
-        .padding(32)
     }
 }
 

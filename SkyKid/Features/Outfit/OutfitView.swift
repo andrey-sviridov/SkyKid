@@ -10,6 +10,7 @@ struct OutfitView: View {
     let onWalkContextChange: (WalkContext) -> Void
     let onFeedbackRecorded: () -> Void
 
+    @Environment(NotificationService.self) private var notificationService
     @State private var viewModel: OutfitViewModel
     @State private var showWalkPreparation = false
 
@@ -18,6 +19,7 @@ struct OutfitView: View {
         profile: ChildProfile? = nil,
         recommendation: OutfitRecommendation? = nil,
         walkContext: WalkContext? = nil,
+        personalOffsetStore: PersonalOffsetStore = .shared,
         onWalkContextChange: @escaping (WalkContext) -> Void = { _ in },
         onFeedbackRecorded: @escaping () -> Void = {}
     ) {
@@ -30,7 +32,8 @@ struct OutfitView: View {
         _viewModel = State(initialValue: OutfitViewModel(
             profile: profile,
             recommendation: recommendation,
-            walkContext: walkContext
+            walkContext: walkContext,
+            personalizationStore: personalOffsetStore
         ))
     }
 
@@ -120,7 +123,7 @@ struct OutfitView: View {
             // P2-3: уведомления синхронизируются раз на обновление погоды,
             // не в computed property (он вызывается каждый рендер)
             guard let walkContext, let rec = viewModel.recommendation else { return }
-            await NotificationService.shared.sync(
+            await notificationService.sync(
                 recommendation: rec,
                 gearSetup: walkContext.gearSetup
             )
@@ -367,35 +370,6 @@ struct OutfitView: View {
     }
 }
 
-// MARK: - OutfitConstructorLinkCard
-
-/// Вход в ручной «Конструктор одежды» (перенесён из отдельной вкладки).
-private struct OutfitConstructorLinkCard: View {
-    var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "slider.horizontal.3")
-                .font(.title2)
-                .foregroundStyle(.blue)
-                .frame(width: 32)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Конструктор одежды")
-                    .font(.subheadline.weight(.semibold))
-                Text("Соберите комплект вручную и проверьте риск перегрева")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
-    }
-}
-
 // MARK: - Previews
 
 #if DEBUG
@@ -419,6 +393,7 @@ private struct OutfitConstructorLinkCard: View {
             walkContext: context
         )
     }
+    .environment(NotificationService.shared)
 }
 
 #Preview("❄️ Зима · 4 мес") {
@@ -441,11 +416,13 @@ private struct OutfitConstructorLinkCard: View {
             walkContext: context
         )
     }
+    .environment(NotificationService.shared)
 }
 
 #Preview("Нет профиля") {
     NavigationStack {
         OutfitView(weather: .mock)
     }
+    .environment(NotificationService.shared)
 }
 #endif
