@@ -35,5 +35,18 @@
     <array>
         <string>UIInterfaceOrientationPortrait</string>
     </array>
+    <key>NSSupportsLiveActivities</key>
+    <true/>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.skykid.app.walk</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>skykid</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

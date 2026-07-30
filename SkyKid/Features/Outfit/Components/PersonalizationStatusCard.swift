@@ -43,13 +43,11 @@ struct PersonalizationStatusCard: View {
             RoundedRectangle(cornerRadius: 18)
                 .strokeBorder(Color.purple.opacity(0.25), lineWidth: 1)
         )
-        .confirmationDialog(
-            "Сбросить все сохранённые наблюдения для этого ребёнка?",
-            isPresented: $showsResetConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Сбросить", role: .destructive, action: onReset)
-            Button("Отмена", role: .cancel) {}
+        // Свой bottom sheet вместо confirmationDialog — см. комментарий в
+        // ActiveWalkView.body для деталей (системный вариант нестабильно
+        // рендерился на iOS 26 simulator).
+        .sheet(isPresented: $showsResetConfirmation) {
+            ResetPersonalizationSheet(onConfirm: onReset)
         }
     }
 
@@ -125,5 +123,47 @@ struct PersonalizationStatusCard: View {
         case .resting: return L10n.text("спокойная прогулка")
         case .active:  return L10n.text("активное движение")
         }
+    }
+}
+
+// MARK: - ResetPersonalizationSheet
+
+private struct ResetPersonalizationSheet: View {
+    var onConfirm: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Сбросить все сохранённые наблюдения для этого ребёнка?")
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .padding(.top, 8)
+
+            VStack(spacing: 10) {
+                Button {
+                    onConfirm()
+                    dismiss()
+                } label: {
+                    Text("Сбросить")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color.red, in: RoundedRectangle(cornerRadius: 14))
+                }
+                .buttonStyle(.plain)
+
+                Button("Отмена") { dismiss() }
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 8)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 20)
+        .presentationDetents([.height(220)])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(.ultraThinMaterial)
     }
 }

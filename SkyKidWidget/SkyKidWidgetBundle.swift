@@ -13,5 +13,6 @@ struct SkyKidWidgetBundle: WidgetBundle {
     var body: some Widget {
         ClothingStatusWidget()
         ClothingStatusLockScreenWidget()
+        WalkLiveActivityWidget()
     }
 }

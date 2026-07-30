@@ -47,9 +47,19 @@
 		AA11BB22CC33DD44EE55FF02 /* OutfitSafetyWarningsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF01 /* OutfitSafetyWarningsSection.swift */; };
 		AA11BB22CC33DD44EE55FF04 /* OutfitCheckHintCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF03 /* OutfitCheckHintCard.swift */; };
 		AA91445FBD0D9886F63DC858 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECE8061C83759412BE23B087 /* Foundation.framework */; };
+		AAWS /* ActiveWalkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAWS /* ActiveWalkStore.swift */; };
+		AAWV /* ActiveWalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAWV /* ActiveWalkView.swift */; };
+		AWAA /* WalkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWAA /* WalkActivityAttributes.swift */; };
 		AWHV /* WalkHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWHV /* WalkHistoryView.swift */; };
+		AWLC /* WalkLiveActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLC /* WalkLiveActivityController.swift */; };
+		AWER /* WalkEventReclassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWER /* WalkEventReclassifier.swift */; };
+		AWRS /* WalkEventReclassifySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWRS /* WalkEventReclassifySheet.swift */; };
+		ACTB /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCTB /* CustomTabBar.swift */; };
 		AWLG /* WalkLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLG /* WalkLog.swift */; };
 		AWLS /* WalkLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLS /* WalkLogStore.swift */; };
+		AWSS /* WalkSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWSS /* WalkSetupSheet.swift */; };
+		AWTO /* WeatherTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTO /* WeatherTone.swift */; };
+		AWTV /* WalkTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTV /* WalkTabView.swift */; };
 		BB0000000000000000000002 /* OutfitRecommendationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000001 /* OutfitRecommendationSnapshot.swift */; };
 		BB0000000000000000000003 /* OutfitRecommendationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000001 /* OutfitRecommendationSnapshot.swift */; };
 		BB0000000000000000000005 /* RecommendationSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* RecommendationSnapshotStore.swift */; };
@@ -60,6 +70,8 @@
 		BB000000000000000000000E /* OutfitFeedbackSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000000000D /* OutfitFeedbackSection.swift */; };
 		BB0000000000000000000010 /* LegacyConstructorNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000000000F /* LegacyConstructorNoticeCard.swift */; };
 		BB0000000000000000000011 /* OutfitOutputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */; };
+		BWAA /* WalkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWAA /* WalkActivityAttributes.swift */; };
+		BWTO /* WeatherTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTO /* WeatherTone.swift */; };
 		CC0000000000000000000002 /* ChildThermalProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000001 /* ChildThermalProfile.swift */; };
 		CC0000000000000000000003 /* ChildThermalProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000001 /* ChildThermalProfile.swift */; };
 		CC0000000000000000000005 /* WalkContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000004 /* WalkContext.swift */; };
@@ -111,12 +123,12 @@
 		FA0000000000000000000002 /* ComfortCheckCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000001 /* ComfortCheckCard.swift */; };
 		FB0000000000000000000002 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000000000000000000001 /* L10n.swift */; };
 		FB0000000000000000000004 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000000000000000000001 /* L10n.swift */; };
+		FC0000000000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000010 /* Localizable.strings */; };
+		FC0000000000000000000002 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000020 /* InfoPlist.strings */; };
 		FD1000000000000000000002 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1000000000000000000001 /* AppLanguage.swift */; };
 		FD1000000000000000000003 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1000000000000000000001 /* AppLanguage.swift */; };
 		FD1000000000000000000005 /* AppLanguagePickerCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1000000000000000000004 /* AppLanguagePickerCard.swift */; };
 		FD1000000000000000000007 /* AppLanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1000000000000000000006 /* AppLanguageTests.swift */; };
-		FC0000000000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000010 /* Localizable.strings */; };
-		FC0000000000000000000002 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000020 /* InfoPlist.strings */; };
 		FF0000000000000000000002 /* WeatherThermalEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000001 /* WeatherThermalEffects.swift */; };
 		FF0000000000000000000004 /* TransportExposureProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000003 /* TransportExposureProfile.swift */; };
 		FF0000000000000000000006 /* MicroclimateCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000000000000000005 /* MicroclimateCalculatorTests.swift */; };
@@ -272,10 +284,10 @@
 		F90000000000000000000007 /* TransportMode+Presentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TransportMode+Presentation.swift"; sourceTree = "<group>"; };
 		F90000000000000000000009 /* BackgroundScenarioTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundScenarioTests.swift; sourceTree = "<group>"; };
 		FA0000000000000000000001 /* ComfortCheckCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortCheckCard.swift; sourceTree = "<group>"; };
+		FAWS /* ActiveWalkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalkStore.swift; sourceTree = "<group>"; };
+		FAWV /* ActiveWalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalkView.swift; sourceTree = "<group>"; };
+		FCTB /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		FB0000000000000000000001 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
-		FD1000000000000000000001 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
-		FD1000000000000000000004 /* AppLanguagePickerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguagePickerCard.swift; sourceTree = "<group>"; };
-		FD1000000000000000000006 /* AppLanguageTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppLanguageTests.swift; sourceTree = "<group>"; };
 		FC0000000000000000000011 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FC0000000000000000000012 /* kk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = kk; path = kk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FC0000000000000000000013 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -287,12 +299,22 @@
 		FC0000000000000000000024 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FC0000000000000000000025 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		FC48EEA4B450C53B8FEFB3B3 /* SkyKidTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SkyKidTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD1000000000000000000001 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
+		FD1000000000000000000004 /* AppLanguagePickerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguagePickerCard.swift; sourceTree = "<group>"; };
+		FD1000000000000000000006 /* AppLanguageTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppLanguageTests.swift; sourceTree = "<group>"; };
 		FF0000000000000000000001 /* WeatherThermalEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherThermalEffects.swift; sourceTree = "<group>"; };
 		FF0000000000000000000003 /* TransportExposureProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportExposureProfile.swift; sourceTree = "<group>"; };
 		FF0000000000000000000005 /* MicroclimateCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MicroclimateCalculatorTests.swift; sourceTree = "<group>"; };
+		FWAA /* WalkActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkActivityAttributes.swift; sourceTree = "<group>"; };
 		FWHV /* WalkHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryView.swift; sourceTree = "<group>"; };
+		FWLC /* WalkLiveActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLiveActivityController.swift; sourceTree = "<group>"; };
+		FWER /* WalkEventReclassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifier.swift; sourceTree = "<group>"; };
+		FWRS /* WalkEventReclassifySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifySheet.swift; sourceTree = "<group>"; };
 		FWLG /* WalkLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLog.swift; sourceTree = "<group>"; };
 		FWLS /* WalkLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogStore.swift; sourceTree = "<group>"; };
+		FWSS /* WalkSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSetupSheet.swift; sourceTree = "<group>"; };
+		FWTO /* WeatherTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTone.swift; sourceTree = "<group>"; };
+		FWTV /* WalkTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTabView.swift; sourceTree = "<group>"; };
 		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		PROD /* SkyKid.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SkyKid.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -373,6 +395,7 @@
 				F002 /* ContentView.swift */,
 				F0TH /* Theme.swift */,
 				F029 /* SkyKidIntents.swift */,
+				FCTB /* CustomTabBar.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -404,6 +427,7 @@
 				NOTIFGROUP /* Notifications */,
 				MODGROUP /* Models */,
 				STORGROUP /* Storage */,
+				LIVEACTGROUP /* LiveActivity */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -478,6 +502,7 @@
 			children = (
 				WEATHERGROUP /* Weather */,
 				OUTFITGROUP /* Outfit */,
+				WALKGROUP /* Walk */,
 				HISTGROUP /* History */,
 				PROFILEGROUP /* Profile */,
 			);
@@ -492,6 +517,14 @@
 				F90000000000000000000005 /* FeedbackHistorySection.swift */,
 			);
 			path = History;
+			sourceTree = "<group>";
+		};
+		LIVEACTGROUP /* LiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				FWLC /* WalkLiveActivityController.swift */,
+			);
+			path = LiveActivity;
 			sourceTree = "<group>";
 		};
 		LOCGROUP /* Location */ = {
@@ -522,6 +555,8 @@
 				F023 /* BiasStore.swift */,
 				F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */,
 				FWLG /* WalkLog.swift */,
+				FWTO /* WeatherTone.swift */,
+				FWAA /* WalkActivityAttributes.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -642,8 +677,21 @@
 			children = (
 				BB0000000000000000000004 /* RecommendationSnapshotStore.swift */,
 				FWLS /* WalkLogStore.swift */,
+				FAWS /* ActiveWalkStore.swift */,
+				FWER /* WalkEventReclassifier.swift */,
 			);
 			path = Storage;
+			sourceTree = "<group>";
+		};
+		WALKGROUP /* Walk */ = {
+			isa = PBXGroup;
+			children = (
+				FWTV /* WalkTabView.swift */,
+				FWSS /* WalkSetupSheet.swift */,
+				FAWV /* ActiveWalkView.swift */,
+				FWRS /* WalkEventReclassifySheet.swift */,
+			);
+			path = Walk;
 			sourceTree = "<group>";
 		};
 		WEATHERGROUP /* Weather */ = {
@@ -828,6 +876,8 @@
 				BB0000000000000000000011 /* OutfitOutputModels.swift in Sources */,
 				BB0000000000000000000003 /* OutfitRecommendationSnapshot.swift in Sources */,
 				BB0000000000000000000006 /* RecommendationSnapshotStore.swift in Sources */,
+				BWTO /* WeatherTone.swift in Sources */,
+				BWAA /* WalkActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -938,6 +988,16 @@
 				8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */,
 				AWLG /* WalkLog.swift in Sources */,
 				AWLS /* WalkLogStore.swift in Sources */,
+				AAWS /* ActiveWalkStore.swift in Sources */,
+				AWTV /* WalkTabView.swift in Sources */,
+				AWSS /* WalkSetupSheet.swift in Sources */,
+				AAWV /* ActiveWalkView.swift in Sources */,
+				ACTB /* CustomTabBar.swift in Sources */,
+				AWTO /* WeatherTone.swift in Sources */,
+				AWAA /* WalkActivityAttributes.swift in Sources */,
+				AWLC /* WalkLiveActivityController.swift in Sources */,
+				AWER /* WalkEventReclassifier.swift in Sources */,
+				AWRS /* WalkEventReclassifySheet.swift in Sources */,
 				AWHV /* WalkHistoryView.swift in Sources */,
 				F90000000000000000000004 /* FeedbackHistoryItem.swift in Sources */,
 				F90000000000000000000006 /* FeedbackHistorySection.swift in Sources */,

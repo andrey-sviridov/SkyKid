@@ -9,7 +9,11 @@ struct ContentView: View {
     @State private var weatherVM = WeatherViewModel(service: WeatherProvider.activeService)
     @State private var wardrobeStore = UserWardrobeStore.shared
     @State private var walkContextStore = WalkContextStore.shared
+    @State private var activeWalkStore = ActiveWalkStore.shared
     @State private var selectedTab = 0
+    @State private var showWalkSetup = false
+    @State private var tabBeforeWalk = 0
+    private let walkTag = 3
 
     @State private var childProfile: ChildProfile? = ChildProfileStore.shared.profile
     @State private var showProfileSetup = false
@@ -100,6 +104,24 @@ struct ContentView: View {
         .sheet(isPresented: $showProfileSetup) {
             ChildProfileSetupView(profile: $childProfile)
         }
+        .sheet(isPresented: $showWalkSetup) {
+            WalkSetupSheet(
+                weather: weatherVM.weather,
+                profile: childProfile,
+                recommendation: weatherVM.outfitRecommendation,
+                walkContext: walkContextStore.context,
+                onStarted: { selectedTab = walkTag }
+            )
+        }
+        .onChange(of: activeWalkStore.isActive) { wasActive, isActive in
+            if wasActive && !isActive {
+                selectedTab = tabBeforeWalk
+            }
+        }
+        .onOpenURL { url in
+            guard url.scheme == "skykid", url.host == "walk" else { return }
+            selectedTab = walkTag
+        }
         .preferredColorScheme(preferredScheme)
     }
 
@@ -132,13 +154,45 @@ struct ContentView: View {
 
     @ViewBuilder
     private var mainTabs: some View {
+        // .safeAreaInset позиционирует бар внизу TabView, но НЕ ужимает safe
+        // area контента вкладок (каждая вкладка — отдельный NavigationStack,
+        // граница TabView эту информацию не пробрасывает). Закреплённые
+        // снизу элементы вкладок (кнопка «Завершить прогулку», FAB в
+        // «Истории») сами резервируют место под баром через
+        // SkyKidTabBarMetrics.totalHeight — статическую константу geometrии
+        // бара (runtime-измерение через PreferenceKey/environment здесь не
+        // сработало: кнопка пропадала, проверено на симуляторе).
         TabView(selection: $selectedTab) {
             weatherTab
             outfitTab
-            calculatorTab
+            walkTab
             historyTab
             profileTab
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            CustomTabBar(
+                selectedTab: $selectedTab,
+                items: tabBarItems,
+                walkTag: walkTag,
+                isWalkActive: activeWalkStore.isActive,
+                walkStartDate: activeWalkStore.current?.startDate,
+                weatherCode: activeWalkStore.current?.weatherCode,
+                onWalkTap: {
+                    tabBeforeWalk = selectedTab
+                    showWalkSetup = true
+                }
+            )
+        }
+    }
+
+    private var tabBarItems: [TabBarItem] {
+        [
+            TabBarItem(tag: 0, title: L10n.text("Погода"), systemImage: "sun.max.fill"),
+            TabBarItem(tag: 2, title: L10n.text("Одежда"), systemImage: "hanger"),
+            TabBarItem(tag: walkTag, title: L10n.text("Прогулка"), systemImage: "figure.walk"),
+            TabBarItem(tag: 4, title: L10n.text("История"), systemImage: "clock.arrow.circlepath"),
+            TabBarItem(tag: 5, title: childProfile.map(\.name) ?? L10n.text("Малыш"), systemImage: "person.circle.fill"),
+        ]
     }
 
     private var weatherTab: some View {
@@ -173,7 +227,7 @@ struct ContentView: View {
                 refreshButton
             }
         }
-        .tabItem { Label("Погода", systemImage: "sun.max.fill") }
+        .toolbar(.hidden, for: .tabBar)
         .tag(0)
     }
 
@@ -197,16 +251,20 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .tabItem { Label("Одежда", systemImage: "hanger") }
+        .toolbar(.hidden, for: .tabBar)
         .tag(2)
     }
 
-    private var calculatorTab: some View {
+    private var walkTab: some View {
         NavigationStack {
-            ClothingCalculatorView(profile: childProfile, weather: weatherVM.weather)
+            WalkTabView(
+                weather: weatherVM.weather,
+                profile: childProfile,
+                onChanged: refreshOutfitRecommendation
+            )
         }
-        .tabItem { Label("Конструктор", systemImage: "slider.horizontal.3") }
-        .tag(3)
+        .toolbar(.hidden, for: .tabBar)
+        .tag(walkTag)
     }
 
     private var historyTab: some View {
@@ -219,7 +277,7 @@ struct ContentView: View {
                 onPersonalizationChange: refreshOutfitRecommendation
             )
         }
-        .tabItem { Label("История", systemImage: "clock.arrow.circlepath") }
+        .toolbar(.hidden, for: .tabBar)
         .tag(4)
     }
 
@@ -227,12 +285,7 @@ struct ContentView: View {
         NavigationStack {
             ProfileSummaryView(profile: $childProfile)
         }
-        .tabItem {
-            Label(
-                childProfile.map(\.name) ?? L10n.text("Малыш"),
-                systemImage: "person.circle.fill"
-            )
-        }
+        .toolbar(.hidden, for: .tabBar)
         .tag(5)
     }
 

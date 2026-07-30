@@ -14,6 +14,7 @@ struct WalkHistoryView: View {
     @State private var showLog = false
     @State private var editingLog: WalkLog? = nil
     @State private var selectedLog: WalkLog? = nil
+    private var tabBarHeight: CGFloat { SkyKidTabBarMetrics.totalHeight }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -67,12 +68,13 @@ struct WalkHistoryView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .skyKidBackground()
-            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
+            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: tabBarHeight + 80) }
             .navigationDestination(item: $selectedLog) { log in
                 WalkLogDetailView(
                     log: log,
                     store: store,
-                    onDelete: onPersonalizationChange
+                    profile: profile,
+                    onChanged: onPersonalizationChange
                 )
             }
 
@@ -92,7 +94,7 @@ struct WalkHistoryView: View {
                     .shadow(color: .blue.opacity(0.35), radius: 10, y: 4)
             }
             .padding(.trailing, 20)
-            .padding(.bottom, 24)
+            .padding(.bottom, tabBarHeight + 24)
         }
         .navigationTitle("Журнал прогулок")
         .navigationBarTitleDisplayMode(.large)
@@ -216,14 +218,7 @@ private struct EmptyHistoryCard: View {
 private struct WalkLogRow: View {
     let log: WalkLog
 
-    private var comfortColor: Color {
-        switch log.comfortLevel {
-        case .cold:        return .blue
-        case .comfortable: return .green
-        case .warm:        return .orange
-        case .sweating:    return .red
-        }
-    }
+    private var comfortColor: Color { log.comfortLevel.color }
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -241,6 +236,7 @@ private struct WalkLogRow: View {
                 HStack {
                     Text(log.date, format: .dateTime.day().month(.abbreviated).hour().minute())
                         .font(.subheadline.weight(.semibold))
+                    if log.isLiveTracked { liveBadge }
                     Spacer()
                     durationBadge
                 }
@@ -276,6 +272,15 @@ private struct WalkLogRow: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(Color.primary.opacity(0.07), in: Capsule())
+    }
+
+    private var liveBadge: some View {
+        Label("Прогулка", systemImage: "figure.walk.motion")
+            .labelStyle(.iconOnly)
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(.green)
+            .padding(5)
+            .background(Color.green.opacity(0.14), in: Circle())
     }
 }
 
@@ -582,14 +587,7 @@ private struct ComfortLevelCard: View {
             HStack(spacing: 10) {
                 ForEach(BabyComfortLevel.allCases) { level in
                     let isSelected = selected == level
-                    let color: Color = {
-                        switch level {
-                        case .cold:        return .blue
-                        case .comfortable: return .green
-                        case .warm:        return .orange
-                        case .sweating:    return .red
-                        }
-                    }()
+                    let color = level.color
                     Button { withAnimation(.spring(response: 0.25)) { selected = level } } label: {
                         VStack(spacing: 6) {
                             ZStack {
@@ -724,20 +722,23 @@ private struct OutfitSummaryCard: View {
 // MARK: - WalkLogDetailView
 
 private struct WalkLogDetailView: View {
-    let log: WalkLog
     let store: WalkLogStore
-    let onDelete: () -> Void
+    let profile: ChildProfile?
+    let onChanged: () -> Void
 
+    @State private var log: WalkLog
+    @State private var showAddEvent = false
+    @State private var reclassifyingEvent: WalkEvent?
     @Environment(\.dismiss) private var dismiss
 
-    private var comfortColor: Color {
-        switch log.comfortLevel {
-        case .cold:        return .blue
-        case .comfortable: return .green
-        case .warm:        return .orange
-        case .sweating:    return .red
-        }
+    init(log: WalkLog, store: WalkLogStore, profile: ChildProfile?, onChanged: @escaping () -> Void) {
+        self.store = store
+        self.profile = profile
+        self.onChanged = onChanged
+        _log = State(initialValue: log)
     }
+
+    private var comfortColor: Color { log.comfortLevel.color }
 
     var body: some View {
         ScrollView {
@@ -745,6 +746,7 @@ private struct WalkLogDetailView: View {
                 comfortHero
                 infoCard
                 if !log.outfitItemIDs.isEmpty { outfitCard }
+                if log.isLiveTracked { timelineCard }
                 deleteButton
             }
             .padding(.horizontal, 16)
@@ -753,6 +755,118 @@ private struct WalkLogDetailView: View {
         .skyKidBackground()
         .navigationTitle("Прогулка")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showAddEvent) {
+            AddWalkEventSheet(walkStart: log.date) { event in
+                log.events.append(event)
+                persist()
+            }
+        }
+        .sheet(item: $reclassifyingEvent) { event in
+            WalkEventReclassifySheet(event: event, profile: profile) { kind, garmentID, note in
+                reclassify(event, kind: kind, garmentID: garmentID, note: note)
+            }
+        }
+    }
+
+    private func persist() {
+        log.events.sort { $0.timestamp < $1.timestamp }
+        store.update(log, profile: profile)
+        onChanged()
+    }
+
+    private func reclassify(_ event: WalkEvent, kind: WalkEventKind, garmentID: String?, note: String?) {
+        guard let idx = log.events.firstIndex(where: { $0.id == event.id }) else { return }
+        let result = WalkEventReclassifier.apply(
+            old: log.events[idx],
+            newKind: kind,
+            newGarmentID: garmentID,
+            newNote: note,
+            outfitItemIDs: log.outfitItemIDs
+        )
+        log.events[idx] = result.event
+        log.outfitItemIDs = result.outfitItemIDs
+        persist()
+    }
+
+    // MARK: Timeline
+
+    private var timelineCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Таймлайн прогулки", systemImage: "list.bullet.rectangle")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button { showAddEvent = true } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.blue)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if log.events.isEmpty {
+                Text("Отметок не было")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            } else {
+                ForEach(log.events.sorted { $0.timestamp > $1.timestamp }) { event in
+                    timelineRow(event)
+                        .contextMenu {
+                            Button {
+                                reclassifyingEvent = event
+                            } label: {
+                                Label("Назначить действие", systemImage: "pencil")
+                            }
+                            Button(role: .destructive) {
+                                log.events.removeAll { $0.id == event.id }
+                                persist()
+                            } label: {
+                                Label("Удалить отметку", systemImage: "trash")
+                            }
+                        }
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
+    }
+
+    private func timelineRow(_ event: WalkEvent) -> some View {
+        let color = event.kind.color
+        let subtitle: String? = event.garmentID.flatMap { GarmentCatalog.byID[$0]?.name } ?? event.note
+        return HStack(spacing: 12) {
+            ZStack {
+                Circle().fill(color.opacity(0.15)).frame(width: 32, height: 32)
+                Image(systemName: event.kind.icon).font(.system(size: 14)).foregroundStyle(color)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(event.kind.title).font(.subheadline.weight(.medium))
+                if let subtitle {
+                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Text(event.timestamp, format: .dateTime.hour().minute())
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+            if event.kind == .checkpoint {
+                Button {
+                    reclassifyingEvent = event
+                } label: {
+                    Text("Назначить")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.blue, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.vertical, 2)
     }
 
     // MARK: Sections
@@ -859,7 +973,7 @@ private struct WalkLogDetailView: View {
         Button(role: .destructive) {
             if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
                 store.delete(at: IndexSet(integer: idx))
-                onDelete()
+                onChanged()
             }
             dismiss()
         } label: {
@@ -876,6 +990,58 @@ private struct WalkLogDetailView: View {
 
     private var durationString: String {
         WalkDurationFormatter.string(minutes: log.durationMinutes)
+    }
+}
+
+// MARK: - AddWalkEventSheet
+
+/// Добавление пропущенной отметки задним числом: тип события + время.
+private struct AddWalkEventSheet: View {
+    let walkStart: Date
+    var onAdd: (WalkEvent) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var kind: WalkEventKind = .checkpoint
+    @State private var timestamp: Date
+
+    init(walkStart: Date, onAdd: @escaping (WalkEvent) -> Void) {
+        self.walkStart = walkStart
+        self.onAdd = onAdd
+        _timestamp = State(initialValue: walkStart)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(L10n.text("Тип отметки")) {
+                    Picker("", selection: $kind) {
+                        ForEach(WalkEventKind.allCases) { k in
+                            Label(k.title, systemImage: k.icon).tag(k)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                }
+                Section(L10n.text("Время")) {
+                    DatePicker("", selection: $timestamp, in: walkStart...Date.now,
+                               displayedComponents: [.hourAndMinute])
+                        .labelsHidden()
+                }
+            }
+            .navigationTitle("Новая отметка")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Добавить") {
+                        onAdd(WalkEvent(timestamp: timestamp, kind: kind))
+                        dismiss()
+                    }.fontWeight(.semibold)
+                }
+            }
+        }
     }
 }
 

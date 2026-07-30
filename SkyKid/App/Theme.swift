@@ -28,6 +28,20 @@ enum SkyKidTheme {
     static let cardCornerRadius: CGFloat = 20
 }
 
+// MARK: - Weather-based gradients (walk event)
+// Реализация — в Core/Models/WeatherTone.swift (dual-target: нужна и
+// виджет-экстеншну для Live Activity). Здесь только проброс через module-
+// qualified имя, чтобы не трогать существующие вызовы вида
+// `SkyKidTheme.WeatherTone(...)` / `SkyKidTheme.weatherGradient(for:)`.
+
+extension SkyKidTheme {
+    typealias WeatherTone = SkyKid.WeatherTone
+
+    static func weatherGradient(for weatherCode: Int?) -> LinearGradient {
+        SkyKid.weatherGradient(for: weatherCode)
+    }
+}
+
 // MARK: - Background modifier
 
 private struct SkyKidBackgroundModifier: ViewModifier {
