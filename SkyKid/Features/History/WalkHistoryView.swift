@@ -218,6 +218,8 @@ private struct EmptyHistoryCard: View {
 private struct WalkLogRow: View {
     let log: WalkLog
 
+    @State private var showingLiveActivityInfo = false
+
     private var comfortColor: Color { log.comfortLevel.color }
 
     var body: some View {
@@ -263,6 +265,11 @@ private struct WalkLogRow: View {
         .padding(14)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
+        .alert(L10n.text("Live Activity"), isPresented: $showingLiveActivityInfo) {
+            Button(L10n.text("Понятно")) {}
+        } message: {
+            Text(L10n.text("Эта прогулка отслеживалась вживую: таймер и статус отображались на экране блокировки и в Dynamic Island, пока прогулка шла."))
+        }
     }
 
     private var durationBadge: some View {
@@ -275,12 +282,20 @@ private struct WalkLogRow: View {
     }
 
     private var liveBadge: some View {
-        Label("Прогулка", systemImage: "figure.walk.motion")
-            .labelStyle(.iconOnly)
-            .font(.caption2.weight(.bold))
-            .foregroundStyle(.green)
-            .padding(5)
-            .background(Color.green.opacity(0.14), in: Circle())
+        Button {
+            showingLiveActivityInfo = true
+        } label: {
+            Label("Прогулка", systemImage: "figure.walk.motion")
+                .labelStyle(.iconOnly)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(.green)
+                .padding(5)
+                .background(Color.green.opacity(0.14), in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.text("Live Activity"))
+        .accessibilityHint(L10n.text("Прогулка отслеживалась вживую через экран блокировки"))
     }
 }
 

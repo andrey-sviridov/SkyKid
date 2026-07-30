@@ -13,7 +13,7 @@ struct ProfileSummaryView: View {
         ScrollView {
             if let p = profile {
                 VStack(spacing: 20) {
-                    avatarHeader(p)
+                    nameHeader(p)
                     infoCards(p)
                     wardrobeCard
                     notificationsCard
@@ -35,43 +35,21 @@ struct ProfileSummaryView: View {
         }
     }
 
-    // MARK: - Avatar header
+    // MARK: - Name header
 
-    private func avatarHeader(_ p: ChildProfile) -> some View {
-        VStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: p.gender == .boy
-                                ? [Color(red: 0.28, green: 0.42, blue: 0.96),
-                                   Color(red: 0.12, green: 0.60, blue: 0.86)]
-                                : [Color(red: 0.92, green: 0.32, blue: 0.60),
-                                   Color(red: 0.72, green: 0.18, blue: 0.78)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 90, height: 90)
-                    .shadow(color: (p.gender == .boy ? Color.blue : Color.pink).opacity(0.4),
-                            radius: 14, y: 5)
-                Image(systemName: "figure.child")
-                    .font(.system(size: 40, weight: .medium))
-                    .foregroundStyle(.white)
-            }
-
-            VStack(spacing: 4) {
-                Text(p.name)
-                    .font(.title2.weight(.bold))
-                Text(p.ageLabel + " · " + p.ageGroup.description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+    private func nameHeader(_ p: ChildProfile) -> some View {
+        VStack(spacing: 4) {
+            Text(p.name)
+                .font(.title2.weight(.bold))
+            Text(p.ageLabel + " · " + p.ageGroup.description)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
+        .padding(.vertical, 14)
         .padding(.horizontal, 16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Info cards

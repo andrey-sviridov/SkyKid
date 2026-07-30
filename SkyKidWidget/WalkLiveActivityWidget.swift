@@ -1,6 +1,7 @@
 import ActivityKit
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 // MARK: - WalkLiveActivityWidget
 // Live Activity для идущей прогулки: банер на экране блокировки + Dynamic
@@ -28,7 +29,7 @@ struct WalkLiveActivityWidget: Widget {
                         .monospacedDigit()
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text(L10n.format("Одежда: %lld · TOG %.1f",
                                          context.state.outfitCount,
                                          context.state.effectiveTOG))
@@ -39,6 +40,7 @@ struct WalkLiveActivityWidget: Widget {
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
+                        quickMarkButtons(state: context.state, foreground: .primary)
                     }
                 }
             } compactLeading: {
@@ -96,9 +98,81 @@ private struct WalkLockScreenView: View {
                         .foregroundStyle(tone.onColor.opacity(0.85))
                 }
             }
+
+            quickMarkButtons(state: context.state, foreground: tone.onColor)
         }
         .padding(16)
         .widgetURL(URL(string: "skykid://walk"))
         .background(weatherGradient(for: context.attributes.weatherCode))
     }
+}
+
+// MARK: - Quick mark buttons
+// Общие для Lock Screen и развёрнутого Dynamic Island: сон/подъём и
+// люлька — переключатели (подпись/иконка зависят от текущего состояния),
+// отметка — фиксированная кнопка. Растянуты на всю ширину, единый стиль
+// (заливка/обводка от `foreground`) — контраст гарантирован по построению,
+// а не подобран под конкретную погоду/фон.
+
+@ViewBuilder
+private func quickMarkButtons(state: WalkActivityAttributes.ContentState, foreground: Color) -> some View {
+    let isBusy = state.pendingControl != nil
+    HStack(spacing: 8) {
+        quickMarkButton(
+            WalkSleepToggleIntent(),
+            title: state.isSleeping ? L10n.text("Проснулся") : L10n.text("Уснул"),
+            icon: state.isSleeping ? "sun.max.fill" : "moon.zzz.fill",
+            foreground: foreground,
+            isPending: state.pendingControl == .sleep,
+            isBusy: isBusy
+        )
+        quickMarkButton(
+            WalkBassinetteToggleIntent(),
+            title: state.isBassinetteOpen ? L10n.text("Закрыли") : L10n.text("Открыли"),
+            icon: state.isBassinetteOpen ? "tray.and.arrow.down.fill" : "tray.and.arrow.up.fill",
+            foreground: foreground,
+            isPending: state.pendingControl == .bassinette,
+            isBusy: isBusy
+        )
+        quickMarkButton(
+            WalkCheckpointIntent(),
+            title: L10n.text("Отметка"),
+            icon: "flag.fill",
+            foreground: foreground,
+            isPending: state.pendingControl == .checkpoint,
+            isBusy: isBusy
+        )
+    }
+    .frame(maxWidth: .infinity)
+}
+
+/// `isPending` — именно эта кнопка сейчас выполняется (показывает спиннер),
+/// `isBusy` — какая-то из трёх выполняется (весь ряд затемнён и недоступен).
+private func quickMarkButton<I: LiveActivityIntent>(
+    _ intent: I, title: String, icon: String, foreground: Color, isPending: Bool, isBusy: Bool
+) -> some View {
+    Button(intent: intent) {
+        VStack(spacing: 3) {
+            if isPending {
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .tint(foreground)
+            } else {
+                Image(systemName: icon)
+                    .font(.body.weight(.semibold))
+            }
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .foregroundStyle(foreground)
+        .opacity(isBusy && !isPending ? 0.45 : 1)
+        .background(foreground.opacity(0.16), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(foreground.opacity(0.3), lineWidth: 1))
+    }
+    .buttonStyle(.plain)
+    .disabled(isBusy)
 }

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		17D10F40EF89310B36736B4C /* OutfitCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */; };
 		1E31DFD1C82635B2F6F3C38C /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
+		BGRM /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
 		21D5913D896A929BDD29B1EC /* OutfitOutputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */; };
 		24C4F50274A10C38308ED2B8 /* OutfitRecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98352411F7F430C375933E52 /* OutfitRecommendationService.swift */; };
 		2C05E8BDC0B573B969E9B7DE /* TOGCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */; };
@@ -50,6 +51,10 @@
 		AAWS /* ActiveWalkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAWS /* ActiveWalkStore.swift */; };
 		AAWV /* ActiveWalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAWV /* ActiveWalkView.swift */; };
 		AWAA /* WalkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWAA /* WalkActivityAttributes.swift */; };
+		AACW /* ActiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACW /* ActiveWalk.swift */; };
+		BACW /* ActiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACW /* ActiveWalk.swift */; };
+		AWQI /* WalkQuickMarkIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWQI /* WalkQuickMarkIntents.swift */; };
+		BWQI /* WalkQuickMarkIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWQI /* WalkQuickMarkIntents.swift */; };
 		AWHV /* WalkHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWHV /* WalkHistoryView.swift */; };
 		AWLC /* WalkLiveActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLC /* WalkLiveActivityController.swift */; };
 		AWER /* WalkEventReclassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWER /* WalkEventReclassifier.swift */; };
@@ -306,6 +311,8 @@
 		FF0000000000000000000003 /* TransportExposureProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportExposureProfile.swift; sourceTree = "<group>"; };
 		FF0000000000000000000005 /* MicroclimateCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MicroclimateCalculatorTests.swift; sourceTree = "<group>"; };
 		FWAA /* WalkActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkActivityAttributes.swift; sourceTree = "<group>"; };
+		FACW /* ActiveWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalk.swift; sourceTree = "<group>"; };
+		FWQI /* WalkQuickMarkIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkQuickMarkIntents.swift; sourceTree = "<group>"; };
 		FWHV /* WalkHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryView.swift; sourceTree = "<group>"; };
 		FWLC /* WalkLiveActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLiveActivityController.swift; sourceTree = "<group>"; };
 		FWER /* WalkEventReclassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifier.swift; sourceTree = "<group>"; };
@@ -523,6 +530,7 @@
 			isa = PBXGroup;
 			children = (
 				FWLC /* WalkLiveActivityController.swift */,
+				FWQI /* WalkQuickMarkIntents.swift */,
 			);
 			path = LiveActivity;
 			sourceTree = "<group>";
@@ -557,6 +565,7 @@
 				FWLG /* WalkLog.swift */,
 				FWTO /* WeatherTone.swift */,
 				FWAA /* WalkActivityAttributes.swift */,
+				FACW /* ActiveWalk.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -878,6 +887,9 @@
 				BB0000000000000000000006 /* RecommendationSnapshotStore.swift in Sources */,
 				BWTO /* WeatherTone.swift in Sources */,
 				BWAA /* WalkActivityAttributes.swift in Sources */,
+				BGRM /* GearModels.swift in Sources */,
+				BACW /* ActiveWalk.swift in Sources */,
+				BWQI /* WalkQuickMarkIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -996,6 +1008,8 @@
 				AWTO /* WeatherTone.swift in Sources */,
 				AWAA /* WalkActivityAttributes.swift in Sources */,
 				AWLC /* WalkLiveActivityController.swift in Sources */,
+				AACW /* ActiveWalk.swift in Sources */,
+				AWQI /* WalkQuickMarkIntents.swift in Sources */,
 				AWER /* WalkEventReclassifier.swift in Sources */,
 				AWRS /* WalkEventReclassifySheet.swift in Sources */,
 				AWHV /* WalkHistoryView.swift in Sources */,

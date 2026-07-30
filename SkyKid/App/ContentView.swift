@@ -97,6 +97,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
+            ActiveWalkStore.shared.refresh()
             guard Date().timeIntervalSince(lastForegroundReload) > 30 * 60 else { return }
             lastForegroundReload = Date()
             Task { await weatherVM.reload() }

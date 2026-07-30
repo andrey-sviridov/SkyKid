@@ -1,80 +1,16 @@
 import Foundation
 import Observation
 
-// MARK: - ActiveWalk
-
-/// Прогулка, идущая прямо сейчас. Персистится целиком, чтобы пережить
-/// перезапуск/выгрузку приложения (таймер восстанавливается из `startDate`).
-struct ActiveWalk: Codable, Identifiable, Hashable {
-    var id: UUID
-    var startDate: Date
-    var plannedDurationMinutes: Int?
-
-    // Снапшот погоды на момент старта.
-    var weatherTemperature: Double
-    var apparentTemperature: Double
-    var microclimateTemperature: Double?
-    var weatherCode: Int?
-    /// Снимок иконки/описания погоды на старте — для Live Activity (виджет-таргет
-    /// не должен зависеть от WeatherData/PrecipType, поэтому передаём готовые строки).
-    var weatherIconSymbol: String?
-    var weatherDescription: String?
-
-    // Контекст прогулки (для персонализации при завершении).
-    var transportMode: TransportMode?
-    var activityLevel: BabyActivityLevel?
-    var walkType: WalkType?
-    var targetTOG: Double?
-
-    // Текущий набор одежды и таймлайн событий.
-    var outfitItemIDs: [String]
-    var events: [WalkEvent]
-
-    init(
-        id: UUID = UUID(),
-        startDate: Date = .now,
-        plannedDurationMinutes: Int? = nil,
-        weatherTemperature: Double,
-        apparentTemperature: Double,
-        microclimateTemperature: Double? = nil,
-        weatherCode: Int? = nil,
-        weatherIconSymbol: String? = nil,
-        weatherDescription: String? = nil,
-        transportMode: TransportMode? = nil,
-        activityLevel: BabyActivityLevel? = nil,
-        walkType: WalkType? = nil,
-        targetTOG: Double? = nil,
-        outfitItemIDs: [String] = [],
-        events: [WalkEvent] = []
-    ) {
-        self.id = id
-        self.startDate = startDate
-        self.plannedDurationMinutes = plannedDurationMinutes
-        self.weatherTemperature = weatherTemperature
-        self.apparentTemperature = apparentTemperature
-        self.microclimateTemperature = microclimateTemperature
-        self.weatherCode = weatherCode
-        self.weatherIconSymbol = weatherIconSymbol
-        self.weatherDescription = weatherDescription
-        self.transportMode = transportMode
-        self.activityLevel = activityLevel
-        self.walkType = walkType
-        self.targetTOG = targetTOG
-        self.outfitItemIDs = outfitItemIDs
-        self.events = events
-    }
-
+// MARK: - ActiveWalk (GarmentCatalog extension)
+// Стуктура `ActiveWalk` живёт в ActiveWalk.swift (общий файл для SkyKid +
+// SkyKidWidgetExtension). `effectiveOutfitTOG` зависит от GarmentCatalog,
+// которого не должно быть в виджет-таргете — поэтому вычисляется здесь,
+// только в app-таргете.
+extension ActiveWalk {
     /// Суммарный TOG текущего набора одежды.
     var effectiveOutfitTOG: Double? {
         let values = outfitItemIDs.compactMap { GarmentCatalog.byID[$0]?.tog }
         return values.isEmpty ? nil : values.reduce(0, +)
-    }
-
-    /// Осталось до целевой длительности (сек), если она задана.
-    func remainingSeconds(now: Date = .now) -> TimeInterval? {
-        guard let planned = plannedDurationMinutes else { return nil }
-        let target = startDate.addingTimeInterval(TimeInterval(planned * 60))
-        return target.timeIntervalSince(now)
     }
 }
 
@@ -91,7 +27,7 @@ final class ActiveWalkStore {
     private let defaults: UserDefaults
     private let logStore: WalkLogStore
     private let liveActivity: WalkLiveActivityController
-    private let storageKey = "active_walk_v1"
+    private let storageKey = ActiveWalkStorage.key
 
     init(
         defaults: UserDefaults = AppGroup.defaults,
@@ -220,6 +156,13 @@ final class ActiveWalkStore {
     }
 
     // MARK: - Persistence
+
+    /// Перечитывает активную прогулку из AppGroup — нужно при возврате в
+    /// приложение, т.к. быстрые метки с экрана блокировки пишут события
+    /// напрямую в хранилище, минуя этот процесс.
+    func refresh() {
+        load()
+    }
 
     private func load() {
         guard let data = defaults.data(forKey: storageKey),

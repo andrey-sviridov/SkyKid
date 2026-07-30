@@ -69,7 +69,10 @@ final class WalkLiveActivityController {
             effectiveTOG: walk.effectiveOutfitTOG ?? 0,
             lastEventTitle: lastEvent?.kind.title,
             lastEventIcon: lastEvent?.kind.icon,
-            lastEventDate: lastEvent?.timestamp
+            lastEventDate: lastEvent?.timestamp,
+            isSleeping: walk.isSleeping,
+            isBassinetteOpen: walk.isBassinetteOpen,
+            pendingControl: nil
         )
     }
 }

@@ -40,86 +40,9 @@ enum BabyComfortLevel: String, Codable, CaseIterable, Identifiable {
 
 }
 
-// MARK: - WalkEventKind
-
-/// Тип события, произошедшего во время живой прогулки.
-enum WalkEventKind: String, Codable, CaseIterable, Identifiable {
-    case addedGarment      = "addedGarment"
-    case removedGarment    = "removedGarment"
-    case openedBassinette  = "openedBassinette"
-    case closedBassinette  = "closedBassinette"
-    case sleep             = "sleep"
-    case wake              = "wake"
-    case checkpoint        = "checkpoint"
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .addedGarment:     return L10n.text("Надели")
-        case .removedGarment:   return L10n.text("Сняли")
-        case .openedBassinette: return L10n.text("Открыли люльку")
-        case .closedBassinette: return L10n.text("Закрыли люльку")
-        case .sleep:            return L10n.text("Уснул")
-        case .wake:             return L10n.text("Проснулся")
-        case .checkpoint:       return L10n.text("Отметка")
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .addedGarment:     return "plus.circle.fill"
-        case .removedGarment:   return "minus.circle.fill"
-        case .openedBassinette: return "tray.and.arrow.up.fill"
-        case .closedBassinette: return "tray.and.arrow.down.fill"
-        case .sleep:            return "moon.zzz.fill"
-        case .wake:             return "sun.max.fill"
-        case .checkpoint:       return "flag.fill"
-        }
-    }
-
-    // ВАЖНО: именно `Color`, а не имя цвета строкой — `Color("green")` ищет
-    // цвет в asset catalog, которого у нас нет, и рисует невидимый цвет
-    // (из-за этого «Быстрые отметки» выглядели как пустая карточка).
-    var color: Color {
-        switch self {
-        case .addedGarment:     return .green
-        case .removedGarment:   return .orange
-        case .openedBassinette: return .blue
-        case .closedBassinette: return .indigo
-        case .sleep:            return .purple
-        case .wake:             return .orange
-        case .checkpoint:       return .cyan
-        }
-    }
-}
-
-// MARK: - WalkEvent
-
-/// Одна отметка на таймлайне живой прогулки, привязанная ко времени.
-struct WalkEvent: Codable, Identifiable, Hashable {
-    var id: UUID
-    var timestamp: Date
-    var kind: WalkEventKind
-    var garmentID: String?
-    var note: String?
-
-    init(
-        id: UUID = UUID(),
-        timestamp: Date = .now,
-        kind: WalkEventKind,
-        garmentID: String? = nil,
-        note: String? = nil
-    ) {
-        self.id = id
-        self.timestamp = timestamp
-        self.kind = kind
-        self.garmentID = garmentID
-        self.note = note
-    }
-}
-
 // MARK: - WalkLog
+// `WalkEventKind`/`WalkEvent` живут в ActiveWalk.swift (общий файл для
+// SkyKid + SkyKidWidgetExtension — используются интентами быстрых меток).
 
 struct WalkLog: Codable, Identifiable, Hashable {
     var id: UUID
