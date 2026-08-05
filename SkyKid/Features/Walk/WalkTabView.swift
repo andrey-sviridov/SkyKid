@@ -2,10 +2,9 @@ import SwiftUI
 
 // MARK: - WalkTabView
 
-/// Корень вкладки «Прогулка». Кастомный таб-бар ([App/CustomTabBar.swift])
-/// сам решает, когда сюда попадать: без активной прогулки тап открывает
-/// `WalkSetupSheet` напрямую из `ContentView`, минуя эту вкладку — сюда
-/// переключают только когда прогулка уже идёт.
+/// Корень вкладки «Прогулка». Попасть сюда можно только когда прогулка уже
+/// идёт: `ContentView.tabSelection` перехватывает выбор этой вкладки и без
+/// активной прогулки открывает `WalkSetupSheet`, не переключая вкладку.
 struct WalkTabView: View {
     var weather: NormalizedWeather?
     var profile: ChildProfile?

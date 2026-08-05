@@ -18,6 +18,7 @@ final class BackgroundScenarioTests: XCTestCase {
         context.walkType = .short
 
         let output = BuildOutfitRecommendationUseCase(
+            recommendationService: .shared,
             snapshotStore: RecordingStore()
         ).execute(
             weather: makeWeather(),
@@ -42,6 +43,7 @@ final class BackgroundScenarioTests: XCTestCase {
             availableGarmentIDs: Set(GarmentCatalog.all.map(\.id))
         )
         let output = BuildOutfitRecommendationUseCase(
+            recommendationService: .shared,
             snapshotStore: RecordingStore()
         ).execute(
             weather: makeWeather(),
@@ -73,6 +75,7 @@ final class BackgroundScenarioTests: XCTestCase {
             availableGarmentIDs: Set(GarmentCatalog.all.map(\.id))
         )
         let useCase = BuildOutfitRecommendationUseCase(
+            recommendationService: .shared,
             snapshotStore: RecordingStore()
         )
 

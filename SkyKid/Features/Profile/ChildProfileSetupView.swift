@@ -4,6 +4,7 @@ struct ChildProfileSetupView: View {
     @Binding var profile: ChildProfile?
     @Environment(\.dismiss) private var dismiss
     @Environment(ChildProfileStore.self) private var childProfileStore
+    @Environment(SupabaseAuthService.self) private var authService
 
     // Basic
     @State private var name     = ""
@@ -17,15 +18,71 @@ struct ChildProfileSetupView: View {
     @State private var gestationalAgeWeeks = 36
 
     @State private var nameError = false
+    @State private var showJoinFamily = false
     @FocusState private var nameFocused: Bool
 
     private var isEditing: Bool { profile != nil }
+
+    /// В онбординге этот экран открывается сразу после выбора «Продолжить
+    /// без аккаунта» — и остаётся возможность передумать и вернуться к
+    /// `AuthGateView`. Вошедшему возвращаться некуда: гейт он уже прошёл.
+    private var canReturnToAuthGate: Bool {
+        !isEditing && authService.isOfflineMode && !authService.isSignedIn
+    }
+
+    /// Второй родитель попадает сюда же, хотя ребёнок давно заведён — просто
+    /// в семье первого. Без ввода кода прямо здесь он был бы вынужден
+    /// сначала завести ребёнка-дубликат: карточка семьи живёт в профиле, а
+    /// профиль открывается только после создания.
+    private var canJoinFamily: Bool {
+        !isEditing && authService.isSignedIn
+    }
+
+    private var joinFamilyCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Вас пригласил второй родитель?", systemImage: "person.2.fill")
+                .font(.subheadline.weight(.semibold))
+
+            Text("Введите код приглашения — ребёнок и журнал прогулок подтянутся сами, заполнять ничего не нужно.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                showJoinFamily = true
+            } label: {
+                Label("Ввести код", systemImage: "square.and.arrow.down")
+                    .font(.subheadline.weight(.medium))
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+
+    /// Присоединение закрывает онбординг само — профиль приезжает из семьи.
+    private func joinFamily(code: String) async -> Bool {
+        do {
+            let joinedProfile = try await SupabaseSyncService.shared
+                .joinFamilyAndPullData(code: code)
+            // Профиля в семье может ещё не быть — тогда экран остаётся
+            // открытым, но всё созданное на нём уже уедет в общую семью.
+            if let joinedProfile { profile = joinedProfile }
+            return true
+        } catch {
+            return false
+        }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     if !isEditing { welcomeHeader }
+                    if canJoinFamily { joinFamilyCard }
                     formCard
                     if isInfantOrBaby {
                         togCard
@@ -46,8 +103,20 @@ struct ChildProfileSetupView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Готово") { save() }.fontWeight(.semibold)
                     }
+                } else if canReturnToAuthGate {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            authService.exitOfflineMode()
+                        } label: {
+                            Label("Вход", systemImage: "chevron.left")
+                                .labelStyle(.titleAndIcon)
+                        }
+                    }
                 }
             }
+        }
+        .sheet(isPresented: $showJoinFamily) {
+            JoinFamilySheet { await joinFamily(code: $0) }
         }
         .onAppear {
             if let p = profile {
@@ -365,10 +434,12 @@ struct ChildProfileSetupView: View {
 #Preview("📝 Онбординг") {
     ChildProfileSetupView(profile: .constant(nil))
         .environment(ChildProfileStore.shared)
+        .environment(SupabaseAuthService.shared)
 }
 
 #Preview("✏️ Редактирование") {
     ChildProfileSetupView(profile: .constant(.mock))
         .environment(ChildProfileStore.shared)
+        .environment(SupabaseAuthService.shared)
 }
 #endif

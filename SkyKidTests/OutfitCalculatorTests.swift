@@ -707,7 +707,7 @@ final class OutfitCalculatorTests: XCTestCase {
 
     func test_buildUseCasePublishesTheSameRecommendationItReturns() {
         let store = RecordingRecommendationSnapshotStore()
-        let useCase = BuildOutfitRecommendationUseCase(snapshotStore: store)
+        let useCase = BuildOutfitRecommendationUseCase(recommendationService: .shared, snapshotStore: store)
         let profile = makeProfile(ageMonths: 5)
         let generatedAt = Date(timeIntervalSince1970: 1_750_100_000)
 
@@ -727,7 +727,7 @@ final class OutfitCalculatorTests: XCTestCase {
 
     func test_weatherViewModel_keepsSnapshotWhileWaitingForWeather() {
         let store = RecordingRecommendationSnapshotStore()
-        let useCase = BuildOutfitRecommendationUseCase(snapshotStore: store)
+        let useCase = BuildOutfitRecommendationUseCase(recommendationService: .shared, snapshotStore: store)
         let viewModel = WeatherViewModel(
             service: StubWeatherService(),
             outfitUseCase: useCase

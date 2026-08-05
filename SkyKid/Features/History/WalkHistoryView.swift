@@ -14,7 +14,6 @@ struct WalkHistoryView: View {
     @State private var showLog = false
     @State private var editingLog: WalkLog? = nil
     @State private var selectedLog: WalkLog? = nil
-    private var tabBarHeight: CGFloat { SkyKidTabBarMetrics.totalHeight }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -68,7 +67,9 @@ struct WalkHistoryView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .skyKidBackground()
-            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: tabBarHeight + 80) }
+            // Запас только под FAB — место под таб-баром нативный бар
+            // резервирует сам.
+            .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 80) }
             .navigationDestination(item: $selectedLog) { log in
                 WalkLogDetailView(
                     log: log,
@@ -94,7 +95,7 @@ struct WalkHistoryView: View {
                     .shadow(color: .blue.opacity(0.35), radius: 10, y: 4)
             }
             .padding(.trailing, 20)
-            .padding(.bottom, tabBarHeight + 24)
+            .padding(.bottom, 24)
         }
         .navigationTitle("Журнал прогулок")
         .navigationBarTitleDisplayMode(.large)

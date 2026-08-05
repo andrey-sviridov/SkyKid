@@ -13,7 +13,6 @@ struct ActiveWalkView: View {
     @State private var showFinish = false
     @State private var showCancel = false
     @State private var reclassifyingEvent: WalkEvent?
-    private var tabBarHeight: CGFloat { SkyKidTabBarMetrics.totalHeight }
 
     private var outfitBinding: Binding<[String]> {
         Binding(
@@ -57,9 +56,11 @@ struct ActiveWalkView: View {
         }
         .safeAreaInset(edge: .bottom) {
             if store.current != nil {
+                // Место под таб-баром резервировать не нужно: нативный бар
+                // сам ужимает safe area вкладки.
                 finishButton
                     .padding(.horizontal, 16)
-                    .padding(.bottom, tabBarHeight + 8)
+                    .padding(.bottom, 8)
             }
         }
         // Свой bottom sheet вместо системного confirmationDialog: на iOS 26

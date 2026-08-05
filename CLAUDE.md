@@ -39,12 +39,12 @@ SkyKid/
 │   ├── SkyKidApp.swift              @main → ContentView
 │   ├── ContentView.swift            Композиционный корень: создаёт все @Observable
 │   │                                сторы и пробрасывает их вниз через .environment(_:);
-│   │                                роутер онбординг → геолокация → TabView (5 вкладок)
+│   │                                роутер онбординг → геолокация → нативный
+│   │                                TabView (5 вкладок, .tabItem + Liquid Glass);
+│   │                                tabSelection перехватывает вкладку «Прогулка»
 │   ├── PermissionView.swift / DeniedView.swift   Экраны геолокации
 │   ├── SkyKidIntents.swift          AppIntents (Siri): рекомендация из кеша AppGroup
-│   ├── Theme.swift                  SkyKidTheme, weather-градиенты
-│   └── TabBar/                      CustomTabBar, TabBarItem, SkyKidTabBarMetrics,
-│                                     StandardTabButton, WalkCircleButton
+│   └── Theme.swift                  SkyKidTheme, weather-градиенты
 │
 ├── Features/
 │   ├── Weather/

@@ -10,8 +10,18 @@ final class ChildProfileStore: @unchecked Sendable {
     var profile: ChildProfile? {
         get { AppGroup.loadProfile() }
         set {
-            if let newValue { AppGroup.saveProfile(newValue) }
-            else { AppGroup.deleteProfile() }
+            if let newValue {
+                AppGroup.saveProfile(newValue)
+                // ChildProfileStore не @MainActor (см. класс-комментарий),
+                // а SupabaseSyncService — @MainActor: явный хоп вместо
+                // конструкторской инъекции, иначе `.shared` как default
+                // параметра не проходит проверку изоляции Swift 6.
+                Task { @MainActor in
+                    await SupabaseSyncService.shared.pushProfile(newValue)
+                }
+            } else {
+                AppGroup.deleteProfile()
+            }
         }
     }
 }

@@ -7,24 +7,59 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FF975C5583E33AD9E708838C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = F07B0901B0B10C697647CAA1 /* Supabase */; };
+		CB0000000000000000000002 /* KeychainStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000001 /* KeychainStoreTests.swift */; };
+		CB0000000000000000000004 /* ChildNameCipherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000003 /* ChildNameCipherTests.swift */; };
+		CB0000000000000000000006 /* AuthSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* AuthSyncTests.swift */; };
+		CF3016AD05C7F67B8DD604A6 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 701AF90ACAE91C070C53DA05 /* SupabaseConfig.swift */; };
+		B38502801A4831EBF4AEBE64 /* SupabaseClientProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31959B6E83940648759A9B1F /* SupabaseClientProvider.swift */; };
+		4D444A32EEFBADA6DC6DBA46 /* ChildNameCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DAC29CEEE07861A2D647F2 /* ChildNameCipher.swift */; };
+		5A86BB826263241A9CCC9DF0 /* SupabaseAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0ACB67ECAE8D63A9D5EA20 /* SupabaseAuthService.swift */; };
+		F32CBA9B24BCAF950464E4AA /* AccountCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E348885C79C1FDEFF9B511E7 /* AccountCard.swift */; };
+		AUTHPREFSBUILD /* AuthPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = AUTHPREFSFILE /* AuthPreferences.swift */; };
+		AUTHGATEVIEWBUILD /* AuthGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AUTHGATEVIEWFILE /* AuthGateView.swift */; };
+		FAMINVITECODEBUILD /* FamilyInviteCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMINVITECODEFILE /* FamilyInviteCode.swift */; };
+		FAMILYCARDBUILD /* FamilyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMILYCARDFILE /* FamilyCard.swift */; };
+		JOINFAMILYBUILD /* JoinFamilySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = JOINFAMILYFILE /* JoinFamilySheet.swift */; };
+		9F64ECECE3C18F326554C8AC /* SupabaseSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */; };
+		00B924BAF836AC1A63BA75DE /* WalkEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */; };
+		05021B7BF02ED6CF1760CFE9 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */; };
+		0AC3A553C3F50E19097D00A5 /* WardrobeItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F88BE7805FC5DCF66F8A0C4 /* WardrobeItemRow.swift */; };
+		0B8C14AF621B51C83D7577B1 /* WalkDurationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022FFE02828ABB54176BC587 /* WalkDurationFormatter.swift */; };
+		0C2AB4E4CF18FD57A84125F5 /* GarmentChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */; };
+		0CC66532B6245A1A514F6028 /* GarmentIconPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E612A9CF3F86C6A4E1E2C9F5 /* GarmentIconPreviewSheet.swift */; };
+		0E1BE61EEB9C12EEF46C50B0 /* AutoSelectButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EF89407C18D7849AD6CE3E /* AutoSelectButton.swift */; };
+		112CBDE2E3BA64279E359489 /* WalkLogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */; };
 		17D10F40EF89310B36736B4C /* OutfitCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */; };
 		1E31DFD1C82635B2F6F3C38C /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
-		BGRM /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
 		21D5913D896A929BDD29B1EC /* OutfitOutputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */; };
+		233F5345FB2EAEE43607F5DA /* WalkLogDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F1E27E7A1A8CAECC4C85BD /* WalkLogDetailView.swift */; };
 		24C4F50274A10C38308ED2B8 /* OutfitRecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98352411F7F430C375933E52 /* OutfitRecommendationService.swift */; };
+		26421E5AC57BE5070350F34B /* ComfortLevelSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */; };
 		2C05E8BDC0B573B969E9B7DE /* TOGCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */; };
+		3959FCD4D57850EA76C93738 /* AddWalkEventSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08ACE7426C6A8B55C00407D1 /* AddWalkEventSheet.swift */; };
+		3A2D35413E4B9696050E7385 /* StatsHeaderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */; };
 		48EE3988618308CA1F261E03 /* OutfitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */; };
 		4A6EE286E4B4E015FB160AFB /* MicroclimateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D2D238BD9B3BE6CCE1A80 /* MicroclimateCalculator.swift */; };
+		4BC1CD15A5A4B0680C65DEF3 /* GarmentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 359FC12BF7C73BEDCC726FE8 /* GarmentPickerSheet.swift */; };
+		4D9039D4347748F2C3F75868 /* GarmentListRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00854279D3849AD1162F7F10 /* GarmentListRow.swift */; };
+		5080C3C7DCC1FE25D50419A8 /* HourlyForecastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */; };
+		520CC73C85DF3EBD606F7ABB /* EditPinnedItemsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C492673BFB90E7C0420427DD /* EditPinnedItemsSheet.swift */; };
+		607C60C4B84A20BECC8EE41D /* WalkWeatherSnapshotCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */; };
+		6607D78575D0AC8014AF5801 /* EmptyHistoryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59234723319C252DD95250BA /* EmptyHistoryCard.swift */; };
+		66137106ADA97E90613DC653 /* WalkOutfitChipsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */; };
+		7C78A303045B58319838A80A /* GarmentPhotoPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28115CB15B1C082DF9B4D07 /* GarmentPhotoPreviewSheet.swift */; };
+		8276D5EC44DEF3C1EFF90D62 /* PinnedItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320D7A7A60159A788FFB07A2 /* PinnedItemsCard.swift */; };
+		884D8FB1CBA6199460D33F67 /* OutfitConstructorLinkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A839E64963E0CAF1D8A8F97 /* OutfitConstructorLinkCard.swift */; };
 		8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */; };
+		91DECA886D70F096722D44BF /* CancelWalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */; };
+		948AC5E3D92786BE22DD5AA6 /* WeatherControlsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36421A330DA08B5AF9728389 /* WeatherControlsCard.swift */; };
+		97F5DCB61D116CBCBC41826C /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDE49626C11D86115DF7B77 /* KeychainStore.swift */; };
+		9988F1D868295BA065812FC5 /* ComfortLevelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */; };
 		A001 /* SkyKidApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* SkyKidApp.swift */; };
 		A002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F002 /* ContentView.swift */; };
-		C18859BE5A58F4A292889E5A /* PermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F6E8F8096CD2BD8BB84FCB /* PermissionView.swift */; };
-		DF38455243DD3A28A4461881 /* DeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FDF8B3A99B9823238F06EA6 /* DeniedView.swift */; };
 		A003 /* WeatherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003 /* WeatherView.swift */; };
 		A004 /* WeatherViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F004 /* WeatherViewModel.swift */; };
-		5080C3C7DCC1FE25D50419A8 /* HourlyForecastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */; };
-		F8BE03DA1DF521672FDB4E99 /* ProviderPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */; };
-		B57F918A27C56E0E8B368B48 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89AD9F5FE561BFB06281AB2 /* StatCard.swift */; };
 		A008 /* OutfitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F008 /* OutfitView.swift */; };
 		A010 /* OpenMeteoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F010 /* OpenMeteoService.swift */; };
 		A012 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F012 /* LocationManager.swift */; };
@@ -47,45 +82,32 @@
 		A033 /* YandexWeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F030 /* YandexWeatherService.swift */; };
 		A0NS /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0NS /* NotificationService.swift */; };
 		A0PS /* ProfileSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0PS /* ProfileSummaryView.swift */; };
-		FA894C0891B25B104B5F09F2 /* WalkScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733EA56854858B226733586C /* WalkScheduleView.swift */; };
 		A0TH /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0TH /* Theme.swift */; };
 		A0WD /* UserWardrobeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0WD /* UserWardrobeStore.swift */; };
 		A0WV /* MyWardrobeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0WV /* MyWardrobeView.swift */; };
-		C541EC7E544C30E907F3553B /* GenderButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B9089E661B3297212103B52 /* GenderButton.swift */; };
-		0AC3A553C3F50E19097D00A5 /* WardrobeItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F88BE7805FC5DCF66F8A0C4 /* WardrobeItemRow.swift */; };
+		A2C806F50C4BDE4A80191BC4 /* OutfitSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7253A4199F72E28D6571D6C /* OutfitSummaryCard.swift */; };
 		AA11BB22CC33DD44EE55FF02 /* OutfitSafetyWarningsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF01 /* OutfitSafetyWarningsSection.swift */; };
 		AA11BB22CC33DD44EE55FF04 /* OutfitCheckHintCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE55FF03 /* OutfitCheckHintCard.swift */; };
 		AA91445FBD0D9886F63DC858 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECE8061C83759412BE23B087 /* Foundation.framework */; };
+		AACW /* ActiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACW /* ActiveWalk.swift */; };
 		AAWS /* ActiveWalkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAWS /* ActiveWalkStore.swift */; };
 		AAWV /* ActiveWalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAWV /* ActiveWalkView.swift */; };
+		AC26E9E85811B8FF7DBC72B1 /* WalkTemperatureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E687DA74A4AF7405010D4A9A /* WalkTemperatureCard.swift */; };
 		AWAA /* WalkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWAA /* WalkActivityAttributes.swift */; };
-		AACW /* ActiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACW /* ActiveWalk.swift */; };
-		BACW /* ActiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACW /* ActiveWalk.swift */; };
-		AWQI /* WalkQuickMarkIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWQI /* WalkQuickMarkIntents.swift */; };
-		BWQI /* WalkQuickMarkIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWQI /* WalkQuickMarkIntents.swift */; };
+		AWER /* WalkEventReclassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWER /* WalkEventReclassifier.swift */; };
 		AWHV /* WalkHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWHV /* WalkHistoryView.swift */; };
 		AWLC /* WalkLiveActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLC /* WalkLiveActivityController.swift */; };
-		AWER /* WalkEventReclassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWER /* WalkEventReclassifier.swift */; };
-		AWRS /* WalkEventReclassifySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWRS /* WalkEventReclassifySheet.swift */; };
-		ACTB /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCTB /* CustomTabBar.swift */; };
-		7C6243DA6F8E0F185F6A417C /* TabBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCBA72803EAD0AE3A09FB89D /* TabBarItem.swift */; };
-		FC08E2173AEFE83D514E24FA /* SkyKidTabBarMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 472BE061E59B2A68EFDA71B0 /* SkyKidTabBarMetrics.swift */; };
-		3E25A0CF0923A6651A63BC97 /* StandardTabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E043FD5361220181163FC15 /* StandardTabButton.swift */; };
-		EDA026E0CC300BF322639EEB /* WalkCircleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC0DC0815B497C8763B5986A /* WalkCircleButton.swift */; };
 		AWLG /* WalkLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLG /* WalkLog.swift */; };
 		AWLS /* WalkLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWLS /* WalkLogStore.swift */; };
+		AWQI /* WalkQuickMarkIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWQI /* WalkQuickMarkIntents.swift */; };
+		AWRS /* WalkEventReclassifySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWRS /* WalkEventReclassifySheet.swift */; };
 		AWSS /* WalkSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWSS /* WalkSetupSheet.swift */; };
-		EB613DBE94E905560844ED06 /* WalkTOGVerdict.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA76C1E4B57E56EA101AF5C2 /* WalkTOGVerdict.swift */; };
-		4BC1CD15A5A4B0680C65DEF3 /* GarmentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 359FC12BF7C73BEDCC726FE8 /* GarmentPickerSheet.swift */; };
-		26421E5AC57BE5070350F34B /* ComfortLevelSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */; };
-		91DECA886D70F096722D44BF /* CancelWalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */; };
-		00B924BAF836AC1A63BA75DE /* WalkEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */; };
-		0C2AB4E4CF18FD57A84125F5 /* GarmentChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */; };
-		66137106ADA97E90613DC653 /* WalkOutfitChipsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */; };
-		B5927FF61A603C84E91D8218 /* PlannedDurationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */; };
-		607C60C4B84A20BECC8EE41D /* WalkWeatherSnapshotCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */; };
 		AWTO /* WeatherTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTO /* WeatherTone.swift */; };
 		AWTV /* WalkTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTV /* WalkTabView.swift */; };
+		B57F918A27C56E0E8B368B48 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89AD9F5FE561BFB06281AB2 /* StatCard.swift */; };
+		B5927FF61A603C84E91D8218 /* PlannedDurationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */; };
+		BA171B595519DD293986CBBE /* DurationPickerCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */; };
+		BACW /* ActiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACW /* ActiveWalk.swift */; };
 		BB0000000000000000000002 /* OutfitRecommendationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000001 /* OutfitRecommendationSnapshot.swift */; };
 		BB0000000000000000000003 /* OutfitRecommendationSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000001 /* OutfitRecommendationSnapshot.swift */; };
 		BB0000000000000000000005 /* RecommendationSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000004 /* RecommendationSnapshotStore.swift */; };
@@ -96,8 +118,15 @@
 		BB000000000000000000000E /* OutfitFeedbackSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000000000D /* OutfitFeedbackSection.swift */; };
 		BB0000000000000000000010 /* LegacyConstructorNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000000000F /* LegacyConstructorNoticeCard.swift */; };
 		BB0000000000000000000011 /* OutfitOutputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */; };
+		BGRM /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
 		BWAA /* WalkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWAA /* WalkActivityAttributes.swift */; };
+		BWQI /* WalkQuickMarkIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWQI /* WalkQuickMarkIntents.swift */; };
 		BWTO /* WeatherTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTO /* WeatherTone.swift */; };
+		C18859BE5A58F4A292889E5A /* PermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F6E8F8096CD2BD8BB84FCB /* PermissionView.swift */; };
+		C4FB8D13DD72F2DEA4CEE00E /* LogWalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86032F82229890CCF345EF35 /* LogWalkSheet.swift */; };
+		C541EC7E544C30E907F3553B /* GenderButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B9089E661B3297212103B52 /* GenderButton.swift */; };
+		C74A9214A993B7BA45E864C6 /* RiskMeterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DE49D8731D6827C133DFD4 /* RiskMeterBar.swift */; };
+		CA582AB0E66B1AAEFCDE6F98 /* RiskMeterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A61546E16B8FA2F87EEFB7 /* RiskMeterCard.swift */; };
 		CC0000000000000000000002 /* ChildThermalProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000001 /* ChildThermalProfile.swift */; };
 		CC0000000000000000000003 /* ChildThermalProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000001 /* ChildThermalProfile.swift */; };
 		CC0000000000000000000005 /* WalkContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000004 /* WalkContext.swift */; };
@@ -107,6 +136,7 @@
 		CC000000000000000000000D /* WalkContextSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000000000C /* WalkContextSummaryCard.swift */; };
 		CC000000000000000000000F /* StableThermalTraitRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000000000000000000000E /* StableThermalTraitRow.swift */; };
 		D350AE15738B6C3E14C484C1 /* OutfitSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A4AF5BBA29EAF6086B51119 /* OutfitSolver.swift */; };
+		D776E54C249B984806600AD3 /* GarmentIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6429ABCB54EE2A136C314AA /* GarmentIconView.swift */; };
 		DAC85AA52FD22E0C0096CC6F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */; };
 		DAC85AA72FD22E0C0096CC6F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAC85AA62FD22E0C0096CC6F /* SwiftUI.framework */; };
 		DAC85AE12FD22E4D0096CC6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DAC85AC52FD22E4D0096CC6F /* Assets.xcassets */; };
@@ -116,13 +146,17 @@
 		DD0000000000000000000004 /* NormalizedWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000003 /* NormalizedWeather.swift */; };
 		DD0000000000000000000006 /* WeatherNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000005 /* WeatherNormalizer.swift */; };
 		DD0000000000000000000008 /* WeatherDataQualityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000007 /* WeatherDataQualityCard.swift */; };
+		DD74ECDE4F0A1475F6844A66 /* TemperatureNoWalkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0B0C61AB9235A432DC639 /* TemperatureNoWalkCard.swift */; };
 		DEC402649260087CE142BCC6 /* SafetyRulesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBB05756B2851EB6CF8BD55 /* SafetyRulesEngine.swift */; };
+		DF38455243DD3A28A4461881 /* DeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FDF8B3A99B9823238F06EA6 /* DeniedView.swift */; };
+		EB613DBE94E905560844ED06 /* WalkTOGVerdict.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA76C1E4B57E56EA101AF5C2 /* WalkTOGVerdict.swift */; };
 		EE0000000000000000000002 /* WeatherNormalizerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0000000000000000000001 /* WeatherNormalizerTests.swift */; };
 		EE5000000000000000000002 /* GarmentCompatibilityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5000000000000000000001 /* GarmentCompatibilityPolicy.swift */; };
 		EE5000000000000000000004 /* OutfitCombinationSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5000000000000000000003 /* OutfitCombinationSolver.swift */; };
 		EE5000000000000000000006 /* OutfitAccessoryResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5000000000000000000005 /* OutfitAccessoryResolver.swift */; };
 		EE5000000000000000000008 /* OutfitFitCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5000000000000000000007 /* OutfitFitCard.swift */; };
 		EE500000000000000000000A /* LegacyWardrobeAutoSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5000000000000000000009 /* LegacyWardrobeAutoSelector.swift */; };
+		EFA48FD52BA4B047FFC8CA1E /* WalkDateTimeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */; };
 		F60000000000000000000002 /* SafetyAssessmentContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60000000000000000000001 /* SafetyAssessmentContext.swift */; };
 		F60000000000000000000004 /* AgeSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60000000000000000000003 /* AgeSafetyPolicy.swift */; };
 		F60000000000000000000006 /* MedicalSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60000000000000000000005 /* MedicalSafetyPolicy.swift */; };
@@ -135,44 +169,21 @@
 		F70000000000000000000004 /* PersonalizationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70000000000000000000003 /* PersonalizationEngine.swift */; };
 		F70000000000000000000006 /* PersonalizationStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70000000000000000000005 /* PersonalizationStatusCard.swift */; };
 		F70000000000000000000008 /* PersonalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70000000000000000000007 /* PersonalizationTests.swift */; };
+		F7C3327A9C24DE1A9235AC18 /* ClothingConstructorSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 295CF83C0932EB0539AAF061 /* ClothingConstructorSection.swift */; };
 		F80000000000000000000002 /* OutfitParentSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000001 /* OutfitParentSummary.swift */; };
 		F80000000000000000000004 /* ParentOutfitSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000003 /* ParentOutfitSummaryCard.swift */; };
 		F80000000000000000000006 /* OutfitCalculationDetailsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000005 /* OutfitCalculationDetailsCard.swift */; };
 		F80000000000000000000008 /* WardrobeAlternativesCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000007 /* WardrobeAlternativesCard.swift */; };
 		F8000000000000000000000A /* OutfitPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000009 /* OutfitPresentationTests.swift */; };
+		F8BE03DA1DF521672FDB4E99 /* ProviderPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */; };
 		F90000000000000000000002 /* SafeReminderContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90000000000000000000001 /* SafeReminderContent.swift */; };
 		F90000000000000000000004 /* FeedbackHistoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90000000000000000000003 /* FeedbackHistoryItem.swift */; };
 		F90000000000000000000006 /* FeedbackHistorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90000000000000000000005 /* FeedbackHistorySection.swift */; };
-		05021B7BF02ED6CF1760CFE9 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */; };
-		948AC5E3D92786BE22DD5AA6 /* WeatherControlsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36421A330DA08B5AF9728389 /* WeatherControlsCard.swift */; };
-		CA582AB0E66B1AAEFCDE6F98 /* RiskMeterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A61546E16B8FA2F87EEFB7 /* RiskMeterCard.swift */; };
-		C74A9214A993B7BA45E864C6 /* RiskMeterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DE49D8731D6827C133DFD4 /* RiskMeterBar.swift */; };
-		0E1BE61EEB9C12EEF46C50B0 /* AutoSelectButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EF89407C18D7849AD6CE3E /* AutoSelectButton.swift */; };
-		8276D5EC44DEF3C1EFF90D62 /* PinnedItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320D7A7A60159A788FFB07A2 /* PinnedItemsCard.swift */; };
-		520CC73C85DF3EBD606F7ABB /* EditPinnedItemsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C492673BFB90E7C0420427DD /* EditPinnedItemsSheet.swift */; };
-		F7C3327A9C24DE1A9235AC18 /* ClothingConstructorSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 295CF83C0932EB0539AAF061 /* ClothingConstructorSection.swift */; };
-		4D9039D4347748F2C3F75868 /* GarmentListRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00854279D3849AD1162F7F10 /* GarmentListRow.swift */; };
-		DD74ECDE4F0A1475F6844A66 /* TemperatureNoWalkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0B0C61AB9235A432DC639 /* TemperatureNoWalkCard.swift */; };
-		D776E54C249B984806600AD3 /* GarmentIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6429ABCB54EE2A136C314AA /* GarmentIconView.swift */; };
-		0CC66532B6245A1A514F6028 /* GarmentIconPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E612A9CF3F86C6A4E1E2C9F5 /* GarmentIconPreviewSheet.swift */; };
-		7C78A303045B58319838A80A /* GarmentPhotoPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28115CB15B1C082DF9B4D07 /* GarmentPhotoPreviewSheet.swift */; };
-		884D8FB1CBA6199460D33F67 /* OutfitConstructorLinkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A839E64963E0CAF1D8A8F97 /* OutfitConstructorLinkCard.swift */; };
-		3A2D35413E4B9696050E7385 /* StatsHeaderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */; };
-		6607D78575D0AC8014AF5801 /* EmptyHistoryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59234723319C252DD95250BA /* EmptyHistoryCard.swift */; };
-		112CBDE2E3BA64279E359489 /* WalkLogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */; };
-		EFA48FD52BA4B047FFC8CA1E /* WalkDateTimeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */; };
-		AC26E9E85811B8FF7DBC72B1 /* WalkTemperatureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E687DA74A4AF7405010D4A9A /* WalkTemperatureCard.swift */; };
-		BA171B595519DD293986CBBE /* DurationPickerCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */; };
-		9988F1D868295BA065812FC5 /* ComfortLevelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */; };
-		A2C806F50C4BDE4A80191BC4 /* OutfitSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7253A4199F72E28D6571D6C /* OutfitSummaryCard.swift */; };
-		C4FB8D13DD72F2DEA4CEE00E /* LogWalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86032F82229890CCF345EF35 /* LogWalkSheet.swift */; };
-		233F5345FB2EAEE43607F5DA /* WalkLogDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47F1E27E7A1A8CAECC4C85BD /* WalkLogDetailView.swift */; };
-		3959FCD4D57850EA76C93738 /* AddWalkEventSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08ACE7426C6A8B55C00407D1 /* AddWalkEventSheet.swift */; };
-		0B8C14AF621B51C83D7577B1 /* WalkDurationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022FFE02828ABB54176BC587 /* WalkDurationFormatter.swift */; };
 		F90000000000000000000008 /* TransportMode+Presentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90000000000000000000007 /* TransportMode+Presentation.swift */; };
 		F9000000000000000000000A /* BackgroundScenarioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90000000000000000000009 /* BackgroundScenarioTests.swift */; };
 		F94E09BE167EB286CDC877F0 /* EffectiveTemperatureCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547831DAA43B9BBCF7C08EBA /* EffectiveTemperatureCalculator.swift */; };
 		FA0000000000000000000002 /* ComfortCheckCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000001 /* ComfortCheckCard.swift */; };
+		FA894C0891B25B104B5F09F2 /* WalkScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733EA56854858B226733586C /* WalkScheduleView.swift */; };
 		FB0000000000000000000002 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000000000000000000001 /* L10n.swift */; };
 		FB0000000000000000000004 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000000000000000000001 /* L10n.swift */; };
 		FC0000000000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000010 /* Localizable.strings */; };
@@ -233,15 +244,46 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00854279D3849AD1162F7F10 /* GarmentListRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentListRow.swift; sourceTree = "<group>"; };
+		022FFE02828ABB54176BC587 /* WalkDurationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDurationFormatter.swift; sourceTree = "<group>"; };
+		08ACE7426C6A8B55C00407D1 /* AddWalkEventSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWalkEventSheet.swift; sourceTree = "<group>"; };
 		0A4AF5BBA29EAF6086B51119 /* OutfitSolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitSolver.swift; sourceTree = "<group>"; };
 		0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitCalculatorTests.swift; sourceTree = "<group>"; };
+		0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HourlyForecastCard.swift; sourceTree = "<group>"; };
+		14A61546E16B8FA2F87EEFB7 /* RiskMeterCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskMeterCard.swift; sourceTree = "<group>"; };
 		14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitOutputModels.swift; sourceTree = "<group>"; };
+		187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedDurationCard.swift; sourceTree = "<group>"; };
+		1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkOutfitChipsCard.swift; sourceTree = "<group>"; };
+		1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventRow.swift; sourceTree = "<group>"; };
+		276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortLevelCard.swift; sourceTree = "<group>"; };
+		295CF83C0932EB0539AAF061 /* ClothingConstructorSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingConstructorSection.swift; sourceTree = "<group>"; };
+		2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDateTimeCard.swift; sourceTree = "<group>"; };
+		320D7A7A60159A788FFB07A2 /* PinnedItemsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedItemsCard.swift; sourceTree = "<group>"; };
+		359FC12BF7C73BEDCC726FE8 /* GarmentPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentPickerSheet.swift; sourceTree = "<group>"; };
+		36421A330DA08B5AF9728389 /* WeatherControlsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherControlsCard.swift; sourceTree = "<group>"; };
 		394C0803F4348866DB8BF4DA /* GearModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GearModels.swift; sourceTree = "<group>"; };
+		39DE49D8731D6827C133DFD4 /* RiskMeterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskMeterBar.swift; sourceTree = "<group>"; };
+		3A839E64963E0CAF1D8A8F97 /* OutfitConstructorLinkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitConstructorLinkCard.swift; sourceTree = "<group>"; };
+		3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
+		3B9089E661B3297212103B52 /* GenderButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenderButton.swift; sourceTree = "<group>"; };
+		3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogRow.swift; sourceTree = "<group>"; };
+		47F1E27E7A1A8CAECC4C85BD /* WalkLogDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogDetailView.swift; sourceTree = "<group>"; };
 		4FBB05756B2851EB6CF8BD55 /* SafetyRulesEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SafetyRulesEngine.swift; sourceTree = "<group>"; };
 		547831DAA43B9BBCF7C08EBA /* EffectiveTemperatureCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EffectiveTemperatureCalculator.swift; sourceTree = "<group>"; };
+		59234723319C252DD95250BA /* EmptyHistoryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyHistoryCard.swift; sourceTree = "<group>"; };
+		5F88BE7805FC5DCF66F8A0C4 /* WardrobeItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeItemRow.swift; sourceTree = "<group>"; };
+		61E0B0C61AB9235A432DC639 /* TemperatureNoWalkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureNoWalkCard.swift; sourceTree = "<group>"; };
+		7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkWeatherSnapshotCard.swift; sourceTree = "<group>"; };
+		733EA56854858B226733586C /* WalkScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkScheduleView.swift; sourceTree = "<group>"; };
+		7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortLevelSheet.swift; sourceTree = "<group>"; };
+		76F6E8F8096CD2BD8BB84FCB /* PermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionView.swift; sourceTree = "<group>"; };
+		7FDF8B3A99B9823238F06EA6 /* DeniedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeniedView.swift; sourceTree = "<group>"; };
+		86032F82229890CCF345EF35 /* LogWalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWalkSheet.swift; sourceTree = "<group>"; };
+		8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentChip.swift; sourceTree = "<group>"; };
 		9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitConfig.swift; sourceTree = "<group>"; };
 		952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TOGCalculator.swift; sourceTree = "<group>"; };
 		98352411F7F430C375933E52 /* OutfitRecommendationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitRecommendationService.swift; sourceTree = "<group>"; };
+		A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsHeaderCard.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF01 /* OutfitSafetyWarningsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitSafetyWarningsSection.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF03 /* OutfitCheckHintCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitCheckHintCard.swift; sourceTree = "<group>"; };
 		BB0000000000000000000001 /* OutfitRecommendationSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitRecommendationSnapshot.swift; sourceTree = "<group>"; };
@@ -251,6 +293,10 @@
 		BB000000000000000000000B /* OutfitViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitViewModel.swift; sourceTree = "<group>"; };
 		BB000000000000000000000D /* OutfitFeedbackSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitFeedbackSection.swift; sourceTree = "<group>"; };
 		BB000000000000000000000F /* LegacyConstructorNoticeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyConstructorNoticeCard.swift; sourceTree = "<group>"; };
+		C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderPickerView.swift; sourceTree = "<group>"; };
+		C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationPickerCard.swift; sourceTree = "<group>"; };
+		C492673BFB90E7C0420427DD /* EditPinnedItemsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPinnedItemsSheet.swift; sourceTree = "<group>"; };
+		C9EF89407C18D7849AD6CE3E /* AutoSelectButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSelectButton.swift; sourceTree = "<group>"; };
 		CC0000000000000000000001 /* ChildThermalProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildThermalProfile.swift; sourceTree = "<group>"; };
 		CC0000000000000000000004 /* WalkContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkContext.swift; sourceTree = "<group>"; };
 		CC0000000000000000000006 /* WalkContextStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkContextStore.swift; sourceTree = "<group>"; };
@@ -259,6 +305,8 @@
 		CC000000000000000000000C /* WalkContextSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkContextSummaryCard.swift; sourceTree = "<group>"; };
 		CC000000000000000000000E /* StableThermalTraitRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StableThermalTraitRow.swift; sourceTree = "<group>"; };
 		D08D2D238BD9B3BE6CCE1A80 /* MicroclimateCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MicroclimateCalculator.swift; sourceTree = "<group>"; };
+		D28115CB15B1C082DF9B4D07 /* GarmentPhotoPreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentPhotoPreviewSheet.swift; sourceTree = "<group>"; };
+		DA76C1E4B57E56EA101AF5C2 /* WalkTOGVerdict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTOGVerdict.swift; sourceTree = "<group>"; };
 		DAC85A9D2FD21E320096CC6F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DAC85AA22FD22E0C0096CC6F /* SkyKidWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SkyKidWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		DAC85AA42FD22E0C0096CC6F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WidgetKit.framework; sourceTree = SDKROOT; };
@@ -275,6 +323,22 @@
 		DD0000000000000000000003 /* NormalizedWeather.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NormalizedWeather.swift; sourceTree = "<group>"; };
 		DD0000000000000000000005 /* WeatherNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherNormalizer.swift; sourceTree = "<group>"; };
 		DD0000000000000000000007 /* WeatherDataQualityCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherDataQualityCard.swift; sourceTree = "<group>"; };
+		E612A9CF3F86C6A4E1E2C9F5 /* GarmentIconPreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentIconPreviewSheet.swift; sourceTree = "<group>"; };
+		E6429ABCB54EE2A136C314AA /* GarmentIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentIconView.swift; sourceTree = "<group>"; };
+		E687DA74A4AF7405010D4A9A /* WalkTemperatureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTemperatureCard.swift; sourceTree = "<group>"; };
+		E7253A4199F72E28D6571D6C /* OutfitSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitSummaryCard.swift; sourceTree = "<group>"; };
+		EBDE49626C11D86115DF7B77 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		701AF90ACAE91C070C53DA05 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
+		31959B6E83940648759A9B1F /* SupabaseClientProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClientProvider.swift; sourceTree = "<group>"; };
+		C3DAC29CEEE07861A2D647F2 /* ChildNameCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildNameCipher.swift; sourceTree = "<group>"; };
+		AB0ACB67ECAE8D63A9D5EA20 /* SupabaseAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseAuthService.swift; sourceTree = "<group>"; };
+		E348885C79C1FDEFF9B511E7 /* AccountCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountCard.swift; sourceTree = "<group>"; };
+		AUTHPREFSFILE /* AuthPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthPreferences.swift; sourceTree = "<group>"; };
+		AUTHGATEVIEWFILE /* AuthGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthGateView.swift; sourceTree = "<group>"; };
+		FAMINVITECODEFILE /* FamilyInviteCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyInviteCode.swift; sourceTree = "<group>"; };
+		FAMILYCARDFILE /* FamilyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyCard.swift; sourceTree = "<group>"; };
+		JOINFAMILYFILE /* JoinFamilySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinFamilySheet.swift; sourceTree = "<group>"; };
+		4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSyncService.swift; sourceTree = "<group>"; };
 		ECE8061C83759412BE23B087 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EE0000000000000000000001 /* WeatherNormalizerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WeatherNormalizerTests.swift; sourceTree = "<group>"; };
 		EE5000000000000000000001 /* GarmentCompatibilityPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentCompatibilityPolicy.swift; sourceTree = "<group>"; };
@@ -284,13 +348,8 @@
 		EE5000000000000000000009 /* LegacyWardrobeAutoSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyWardrobeAutoSelector.swift; sourceTree = "<group>"; };
 		F001 /* SkyKidApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidApp.swift; sourceTree = "<group>"; };
 		F002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		76F6E8F8096CD2BD8BB84FCB /* PermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionView.swift; sourceTree = "<group>"; };
-		7FDF8B3A99B9823238F06EA6 /* DeniedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeniedView.swift; sourceTree = "<group>"; };
 		F003 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
 		F004 /* WeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModel.swift; sourceTree = "<group>"; };
-		0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HourlyForecastCard.swift; sourceTree = "<group>"; };
-		C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderPickerView.swift; sourceTree = "<group>"; };
-		F89AD9F5FE561BFB06281AB2 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
 		F008 /* OutfitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitView.swift; sourceTree = "<group>"; };
 		F010 /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
 		F012 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
@@ -314,9 +373,6 @@
 		F030 /* YandexWeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YandexWeatherService.swift; sourceTree = "<group>"; };
 		F0NS /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		F0PS /* ProfileSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSummaryView.swift; sourceTree = "<group>"; };
-		733EA56854858B226733586C /* WalkScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkScheduleView.swift; sourceTree = "<group>"; };
-		3B9089E661B3297212103B52 /* GenderButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenderButton.swift; sourceTree = "<group>"; };
-		5F88BE7805FC5DCF66F8A0C4 /* WardrobeItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeItemRow.swift; sourceTree = "<group>"; };
 		F0TH /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		F0WD /* UserWardrobeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserWardrobeStore.swift; sourceTree = "<group>"; };
 		F0WV /* MyWardrobeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyWardrobeView.swift; sourceTree = "<group>"; };
@@ -338,45 +394,17 @@
 		F80000000000000000000005 /* OutfitCalculationDetailsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitCalculationDetailsCard.swift; sourceTree = "<group>"; };
 		F80000000000000000000007 /* WardrobeAlternativesCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeAlternativesCard.swift; sourceTree = "<group>"; };
 		F80000000000000000000009 /* OutfitPresentationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitPresentationTests.swift; sourceTree = "<group>"; };
+		F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancelWalkSheet.swift; sourceTree = "<group>"; };
+		F89AD9F5FE561BFB06281AB2 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
 		F90000000000000000000001 /* SafeReminderContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeReminderContent.swift; sourceTree = "<group>"; };
 		F90000000000000000000003 /* FeedbackHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackHistoryItem.swift; sourceTree = "<group>"; };
 		F90000000000000000000005 /* FeedbackHistorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackHistorySection.swift; sourceTree = "<group>"; };
-		3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
-		36421A330DA08B5AF9728389 /* WeatherControlsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherControlsCard.swift; sourceTree = "<group>"; };
-		14A61546E16B8FA2F87EEFB7 /* RiskMeterCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskMeterCard.swift; sourceTree = "<group>"; };
-		39DE49D8731D6827C133DFD4 /* RiskMeterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskMeterBar.swift; sourceTree = "<group>"; };
-		C9EF89407C18D7849AD6CE3E /* AutoSelectButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSelectButton.swift; sourceTree = "<group>"; };
-		320D7A7A60159A788FFB07A2 /* PinnedItemsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedItemsCard.swift; sourceTree = "<group>"; };
-		C492673BFB90E7C0420427DD /* EditPinnedItemsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPinnedItemsSheet.swift; sourceTree = "<group>"; };
-		295CF83C0932EB0539AAF061 /* ClothingConstructorSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingConstructorSection.swift; sourceTree = "<group>"; };
-		00854279D3849AD1162F7F10 /* GarmentListRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentListRow.swift; sourceTree = "<group>"; };
-		61E0B0C61AB9235A432DC639 /* TemperatureNoWalkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureNoWalkCard.swift; sourceTree = "<group>"; };
-		E6429ABCB54EE2A136C314AA /* GarmentIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentIconView.swift; sourceTree = "<group>"; };
-		E612A9CF3F86C6A4E1E2C9F5 /* GarmentIconPreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentIconPreviewSheet.swift; sourceTree = "<group>"; };
-		D28115CB15B1C082DF9B4D07 /* GarmentPhotoPreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentPhotoPreviewSheet.swift; sourceTree = "<group>"; };
-		3A839E64963E0CAF1D8A8F97 /* OutfitConstructorLinkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitConstructorLinkCard.swift; sourceTree = "<group>"; };
-		A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsHeaderCard.swift; sourceTree = "<group>"; };
-		59234723319C252DD95250BA /* EmptyHistoryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyHistoryCard.swift; sourceTree = "<group>"; };
-		3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogRow.swift; sourceTree = "<group>"; };
-		2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDateTimeCard.swift; sourceTree = "<group>"; };
-		E687DA74A4AF7405010D4A9A /* WalkTemperatureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTemperatureCard.swift; sourceTree = "<group>"; };
-		C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationPickerCard.swift; sourceTree = "<group>"; };
-		276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortLevelCard.swift; sourceTree = "<group>"; };
-		E7253A4199F72E28D6571D6C /* OutfitSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitSummaryCard.swift; sourceTree = "<group>"; };
-		86032F82229890CCF345EF35 /* LogWalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWalkSheet.swift; sourceTree = "<group>"; };
-		47F1E27E7A1A8CAECC4C85BD /* WalkLogDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogDetailView.swift; sourceTree = "<group>"; };
-		08ACE7426C6A8B55C00407D1 /* AddWalkEventSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWalkEventSheet.swift; sourceTree = "<group>"; };
-		022FFE02828ABB54176BC587 /* WalkDurationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDurationFormatter.swift; sourceTree = "<group>"; };
 		F90000000000000000000007 /* TransportMode+Presentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TransportMode+Presentation.swift"; sourceTree = "<group>"; };
 		F90000000000000000000009 /* BackgroundScenarioTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundScenarioTests.swift; sourceTree = "<group>"; };
 		FA0000000000000000000001 /* ComfortCheckCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortCheckCard.swift; sourceTree = "<group>"; };
+		FACW /* ActiveWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalk.swift; sourceTree = "<group>"; };
 		FAWS /* ActiveWalkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalkStore.swift; sourceTree = "<group>"; };
 		FAWV /* ActiveWalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalkView.swift; sourceTree = "<group>"; };
-		FCTB /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
-		CCBA72803EAD0AE3A09FB89D /* TabBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarItem.swift; sourceTree = "<group>"; };
-		472BE061E59B2A68EFDA71B0 /* SkyKidTabBarMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyKidTabBarMetrics.swift; sourceTree = "<group>"; };
-		7E043FD5361220181163FC15 /* StandardTabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardTabButton.swift; sourceTree = "<group>"; };
-		BC0DC0815B497C8763B5986A /* WalkCircleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkCircleButton.swift; sourceTree = "<group>"; };
 		FB0000000000000000000001 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		FC0000000000000000000011 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FC0000000000000000000012 /* kk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = kk; path = kk.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -392,28 +420,21 @@
 		FD1000000000000000000001 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		FD1000000000000000000004 /* AppLanguagePickerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguagePickerCard.swift; sourceTree = "<group>"; };
 		FD1000000000000000000006 /* AppLanguageTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppLanguageTests.swift; sourceTree = "<group>"; };
+		CB0000000000000000000001 /* KeychainStoreTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeychainStoreTests.swift; sourceTree = "<group>"; };
+		CB0000000000000000000003 /* ChildNameCipherTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChildNameCipherTests.swift; sourceTree = "<group>"; };
+		CB0000000000000000000005 /* AuthSyncTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthSyncTests.swift; sourceTree = "<group>"; };
 		FF0000000000000000000001 /* WeatherThermalEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherThermalEffects.swift; sourceTree = "<group>"; };
 		FF0000000000000000000003 /* TransportExposureProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportExposureProfile.swift; sourceTree = "<group>"; };
 		FF0000000000000000000005 /* MicroclimateCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MicroclimateCalculatorTests.swift; sourceTree = "<group>"; };
 		FWAA /* WalkActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkActivityAttributes.swift; sourceTree = "<group>"; };
-		FACW /* ActiveWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalk.swift; sourceTree = "<group>"; };
-		FWQI /* WalkQuickMarkIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkQuickMarkIntents.swift; sourceTree = "<group>"; };
+		FWER /* WalkEventReclassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifier.swift; sourceTree = "<group>"; };
 		FWHV /* WalkHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryView.swift; sourceTree = "<group>"; };
 		FWLC /* WalkLiveActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLiveActivityController.swift; sourceTree = "<group>"; };
-		FWER /* WalkEventReclassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifier.swift; sourceTree = "<group>"; };
-		FWRS /* WalkEventReclassifySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifySheet.swift; sourceTree = "<group>"; };
 		FWLG /* WalkLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLog.swift; sourceTree = "<group>"; };
 		FWLS /* WalkLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogStore.swift; sourceTree = "<group>"; };
+		FWQI /* WalkQuickMarkIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkQuickMarkIntents.swift; sourceTree = "<group>"; };
+		FWRS /* WalkEventReclassifySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifySheet.swift; sourceTree = "<group>"; };
 		FWSS /* WalkSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSetupSheet.swift; sourceTree = "<group>"; };
-		DA76C1E4B57E56EA101AF5C2 /* WalkTOGVerdict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTOGVerdict.swift; sourceTree = "<group>"; };
-		359FC12BF7C73BEDCC726FE8 /* GarmentPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentPickerSheet.swift; sourceTree = "<group>"; };
-		7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortLevelSheet.swift; sourceTree = "<group>"; };
-		F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancelWalkSheet.swift; sourceTree = "<group>"; };
-		1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventRow.swift; sourceTree = "<group>"; };
-		8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentChip.swift; sourceTree = "<group>"; };
-		1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkOutfitChipsCard.swift; sourceTree = "<group>"; };
-		187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedDurationCard.swift; sourceTree = "<group>"; };
-		7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkWeatherSnapshotCard.swift; sourceTree = "<group>"; };
 		FWTO /* WeatherTone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherTone.swift; sourceTree = "<group>"; };
 		FWTV /* WalkTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTabView.swift; sourceTree = "<group>"; };
 		PLIST /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -456,18 +477,45 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FF975C5583E33AD9E708838C /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		16F285F67629CF43499F31B7 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */,
+				C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */,
+				F89AD9F5FE561BFB06281AB2 /* StatCard.swift */,
+				DD0000000000000000000007 /* WeatherDataQualityCard.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		32AE25F665A2C0E2DB773A47 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
 				ECE8061C83759412BE23B087 /* Foundation.framework */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		7AC719E80F878FF73101421C /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */,
+				59234723319C252DD95250BA /* EmptyHistoryCard.swift */,
+				3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */,
+				2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */,
+				E687DA74A4AF7405010D4A9A /* WalkTemperatureCard.swift */,
+				C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */,
+				276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */,
+				E7253A4199F72E28D6571D6C /* OutfitSummaryCard.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		AA11BB22CC33DD44EE55FF05 /* Components */ = {
@@ -502,6 +550,35 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		AEB92860283AAB827AC337C9 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		0802A4A15874AB1C2DFBB884 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				701AF90ACAE91C070C53DA05 /* SupabaseConfig.swift */,
+				31959B6E83940648759A9B1F /* SupabaseClientProvider.swift */,
+				C3DAC29CEEE07861A2D647F2 /* ChildNameCipher.swift */,
+				AB0ACB67ECAE8D63A9D5EA20 /* SupabaseAuthService.swift */,
+				AUTHPREFSFILE /* AuthPreferences.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		E884F1B18538BE010950AD98 /* Sync */ = {
+			isa = PBXGroup;
+			children = (
+				4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */,
+				FAMINVITECODEFILE /* FamilyInviteCode.swift */,
+			);
+			path = Sync;
+			sourceTree = "<group>";
+		};
 		APPGROUP /* App */ = {
 			isa = PBXGroup;
 			children = (
@@ -511,21 +588,22 @@
 				7FDF8B3A99B9823238F06EA6 /* DeniedView.swift */,
 				F0TH /* Theme.swift */,
 				F029 /* SkyKidIntents.swift */,
-				9C8C8D900663B044F60F45B2 /* TabBar */,
 			);
 			path = App;
 			sourceTree = "<group>";
 		};
-		9C8C8D900663B044F60F45B2 /* TabBar */ = {
+		B70774ECDA60634DEC5267F9 /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				FCTB /* CustomTabBar.swift */,
-				CCBA72803EAD0AE3A09FB89D /* TabBarItem.swift */,
-				472BE061E59B2A68EFDA71B0 /* SkyKidTabBarMetrics.swift */,
-				7E043FD5361220181163FC15 /* StandardTabButton.swift */,
-				BC0DC0815B497C8763B5986A /* WalkCircleButton.swift */,
+				7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */,
+				F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */,
+				1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */,
+				8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */,
+				1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */,
+				187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */,
+				7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */,
 			);
-			path = TabBar;
+			path = Components;
 			sourceTree = "<group>";
 		};
 		CC0000000000000000000010 /* WalkPreparation */ = {
@@ -544,6 +622,9 @@
 				CC000000000000000000000E /* StableThermalTraitRow.swift */,
 				3B9089E661B3297212103B52 /* GenderButton.swift */,
 				5F88BE7805FC5DCF66F8A0C4 /* WardrobeItemRow.swift */,
+				E348885C79C1FDEFF9B511E7 /* AccountCard.swift */,
+				FAMILYCARDFILE /* FamilyCard.swift */,
+				JOINFAMILYFILE /* JoinFamilySheet.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -559,16 +640,10 @@
 				STORGROUP /* Storage */,
 				LIVEACTGROUP /* LiveActivity */,
 				AEB92860283AAB827AC337C9 /* UI */,
+				0802A4A15874AB1C2DFBB884 /* Auth */,
+				E884F1B18538BE010950AD98 /* Sync */,
 			);
 			path = Core;
-			sourceTree = "<group>";
-		};
-		AEB92860283AAB827AC337C9 /* UI */ = {
-			isa = PBXGroup;
-			children = (
-				3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */,
-			);
-			path = UI;
 			sourceTree = "<group>";
 		};
 		D33386E2718AAD7AE26BADB0 /* SkyKidTests */ = {
@@ -582,6 +657,9 @@
 				F80000000000000000000009 /* OutfitPresentationTests.swift */,
 				F90000000000000000000009 /* BackgroundScenarioTests.swift */,
 				FD1000000000000000000006 /* AppLanguageTests.swift */,
+				CB0000000000000000000001 /* KeychainStoreTests.swift */,
+				CB0000000000000000000003 /* ChildNameCipherTests.swift */,
+				CB0000000000000000000005 /* AuthSyncTests.swift */,
 			);
 			path = SkyKidTests;
 			sourceTree = "<group>";
@@ -636,8 +714,17 @@
 				WALKGROUP /* Walk */,
 				HISTGROUP /* History */,
 				PROFILEGROUP /* Profile */,
+				AUTHFEATGROUP /* Auth */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		AUTHFEATGROUP /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				AUTHGATEVIEWFILE /* AuthGateView.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		HISTGROUP /* History */ = {
@@ -653,46 +740,6 @@
 				7AC719E80F878FF73101421C /* Components */,
 			);
 			path = History;
-			sourceTree = "<group>";
-		};
-		7AC719E80F878FF73101421C /* Components */ = {
-			isa = PBXGroup;
-			children = (
-				A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */,
-				59234723319C252DD95250BA /* EmptyHistoryCard.swift */,
-				3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */,
-				2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */,
-				E687DA74A4AF7405010D4A9A /* WalkTemperatureCard.swift */,
-				C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */,
-				276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */,
-				E7253A4199F72E28D6571D6C /* OutfitSummaryCard.swift */,
-			);
-			path = Components;
-			sourceTree = "<group>";
-		};
-		16F285F67629CF43499F31B7 /* Components */ = {
-			isa = PBXGroup;
-			children = (
-				0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */,
-				C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */,
-				F89AD9F5FE561BFB06281AB2 /* StatCard.swift */,
-				DD0000000000000000000007 /* WeatherDataQualityCard.swift */,
-			);
-			path = Components;
-			sourceTree = "<group>";
-		};
-		B70774ECDA60634DEC5267F9 /* Components */ = {
-			isa = PBXGroup;
-			children = (
-				7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */,
-				F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */,
-				1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */,
-				8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */,
-				1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */,
-				187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */,
-				7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */,
-			);
-			path = Components;
 			sourceTree = "<group>";
 		};
 		LIVEACTGROUP /* LiveActivity */ = {
@@ -858,6 +905,7 @@
 				FWLS /* WalkLogStore.swift */,
 				FAWS /* ActiveWalkStore.swift */,
 				FWER /* WalkEventReclassifier.swift */,
+				EBDE49626C11D86115DF7B77 /* KeychainStore.swift */,
 			);
 			path = Storage;
 			sourceTree = "<group>";
@@ -945,6 +993,9 @@
 				DAC85AED2FD232940096CC6F /* PBXTargetDependency */,
 			);
 			name = SkyKid;
+			packageProductDependencies = (
+				F07B0901B0B10C697647CAA1 /* Supabase */,
+			);
 			productName = SkyKid;
 			productReference = PROD /* SkyKid.app */;
 			productType = "com.apple.product-type.application";
@@ -980,6 +1031,9 @@
 				Base,
 			);
 			mainGroup = ROOT;
+			packageReferences = (
+				DA57749C301BDBD1002E2E1E /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			productRefGroup = PRODUCTS /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1078,6 +1132,9 @@
 				F8000000000000000000000A /* OutfitPresentationTests.swift in Sources */,
 				F9000000000000000000000A /* BackgroundScenarioTests.swift in Sources */,
 				FD1000000000000000000007 /* AppLanguageTests.swift in Sources */,
+				CB0000000000000000000002 /* KeychainStoreTests.swift in Sources */,
+				CB0000000000000000000006 /* AuthSyncTests.swift in Sources */,
+				CB0000000000000000000004 /* ChildNameCipherTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1181,6 +1238,18 @@
 				8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */,
 				AWLG /* WalkLog.swift in Sources */,
 				AWLS /* WalkLogStore.swift in Sources */,
+				97F5DCB61D116CBCBC41826C /* KeychainStore.swift in Sources */,
+				CF3016AD05C7F67B8DD604A6 /* SupabaseConfig.swift in Sources */,
+				B38502801A4831EBF4AEBE64 /* SupabaseClientProvider.swift in Sources */,
+				4D444A32EEFBADA6DC6DBA46 /* ChildNameCipher.swift in Sources */,
+				5A86BB826263241A9CCC9DF0 /* SupabaseAuthService.swift in Sources */,
+				F32CBA9B24BCAF950464E4AA /* AccountCard.swift in Sources */,
+				AUTHPREFSBUILD /* AuthPreferences.swift in Sources */,
+				AUTHGATEVIEWBUILD /* AuthGateView.swift in Sources */,
+				FAMINVITECODEBUILD /* FamilyInviteCode.swift in Sources */,
+				FAMILYCARDBUILD /* FamilyCard.swift in Sources */,
+				JOINFAMILYBUILD /* JoinFamilySheet.swift in Sources */,
+				9F64ECECE3C18F326554C8AC /* SupabaseSyncService.swift in Sources */,
 				AAWS /* ActiveWalkStore.swift in Sources */,
 				AWTV /* WalkTabView.swift in Sources */,
 				AWSS /* WalkSetupSheet.swift in Sources */,
@@ -1194,11 +1263,6 @@
 				66137106ADA97E90613DC653 /* WalkOutfitChipsCard.swift in Sources */,
 				B5927FF61A603C84E91D8218 /* PlannedDurationCard.swift in Sources */,
 				607C60C4B84A20BECC8EE41D /* WalkWeatherSnapshotCard.swift in Sources */,
-				ACTB /* CustomTabBar.swift in Sources */,
-				7C6243DA6F8E0F185F6A417C /* TabBarItem.swift in Sources */,
-				FC08E2173AEFE83D514E24FA /* SkyKidTabBarMetrics.swift in Sources */,
-				3E25A0CF0923A6651A63BC97 /* StandardTabButton.swift in Sources */,
-				EDA026E0CC300BF322639EEB /* WalkCircleButton.swift in Sources */,
 				AWTO /* WeatherTone.swift in Sources */,
 				AWAA /* WalkActivityAttributes.swift in Sources */,
 				AWLC /* WalkLiveActivityController.swift in Sources */,
@@ -1603,6 +1667,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DA57749C301BDBD1002E2E1E /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F07B0901B0B10C697647CAA1 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DA57749C301BDBD1002E2E1E /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = PROJECT /* Project object */;
 }

@@ -7,6 +7,7 @@ struct ProfileSummaryView: View {
     @Binding var profile: ChildProfile?
     @Environment(NotificationService.self) private var notificationService
     @Environment(UserWardrobeStore.self) private var wardrobeStore
+    @Environment(SupabaseAuthService.self) private var authService
     @State private var showEdit = false
     @State private var notificationsOn = false
     @State private var showWalkSchedule = false
@@ -17,6 +18,10 @@ struct ProfileSummaryView: View {
             if let p = profile {
                 VStack(spacing: 20) {
                     nameHeader(p)
+                    AccountCard(profile: p)
+                    if authService.isSignedIn {
+                        FamilyCard()
+                    }
                     infoCards(p)
                     wardrobeCard
                     notificationsCard
@@ -402,6 +407,8 @@ struct ProfileSummaryView: View {
         ProfileSummaryView(profile: .constant(.mock))
             .environment(NotificationService.shared)
             .environment(UserWardrobeStore.shared)
+            .environment(SupabaseAuthService.shared)
+            .environment(WalkLogStore.shared)
     }
 }
 #endif

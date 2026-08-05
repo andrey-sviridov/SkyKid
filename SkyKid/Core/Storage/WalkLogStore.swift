@@ -13,14 +13,17 @@ final class WalkLogStore {
 
     private let defaults: UserDefaults
     private let personalizationStore: PersonalOffsetStore
+    private let syncService: SupabaseSyncService
     private let storageKey = "walk_logs_v1"
 
     init(
         defaults: UserDefaults = AppGroup.defaults,
-        personalizationStore: PersonalOffsetStore = .shared
+        personalizationStore: PersonalOffsetStore = .shared,
+        syncService: SupabaseSyncService = .shared
     ) {
         self.defaults = defaults
         self.personalizationStore = personalizationStore
+        self.syncService = syncService
         load()
     }
 
@@ -30,6 +33,7 @@ final class WalkLogStore {
         logs.insert(log, at: 0)
         save()
         synchronizePersonalization(for: log, profile: profile)
+        Task { await syncService.pushWalkLog(log) }
     }
 
     func update(_ log: WalkLog, profile: ChildProfile?) {
@@ -37,6 +41,21 @@ final class WalkLogStore {
         logs[index] = log
         save()
         synchronizePersonalization(for: log, profile: profile)
+        Task { await syncService.pushWalkLog(log) }
+    }
+
+    /// Стирает локальный журнал прогулок без каскадного удаления на
+    /// сервере — вызывается при выходе из аккаунта
+    /// (`SupabaseAuthService.signOut()`), где записи принадлежат уже
+    /// отвязываемому пользователю. Не должно триггерить `deleteWalkLogRemote`:
+    /// сами данные на сервере ещё принадлежат этому аккаунту и должны
+    /// остаться доступны, если пользователь снова войдёт на этом или другом
+    /// устройстве — стираем только локальный кеш, чтобы следующий
+    /// `ContentView.syncOnLaunch()` не запушил их под чужим `auth.uid()`.
+    func clearAll() {
+        logs.forEach { personalizationStore.removeObservation(sourceID: $0.id) }
+        logs = []
+        save()
     }
 
     func delete(at offsets: IndexSet) {
@@ -46,6 +65,9 @@ final class WalkLogStore {
         logs.remove(atOffsets: offsets)
         save()
         deletedIDs.forEach { personalizationStore.removeObservation(sourceID: $0) }
+        for id in deletedIDs {
+            Task { await syncService.deleteWalkLogRemote(id: id) }
+        }
     }
 
     // MARK: - Stats
