@@ -8,19 +8,23 @@ struct FamilyCard: View {
     @Environment(SupabaseAuthService.self) private var authService
     @Environment(WalkLogStore.self) private var walkLogStore
 
-    @State private var memberCount = 0
+    @State private var members: [FamilyMember] = []
     @State private var inviteCode: String?
     @State private var isWorking = false
     @State private var errorMessage: String?
     @State private var showJoinSheet = false
 
-    private var isShared: Bool { memberCount > 1 }
+    private var isShared: Bool { members.count > 1 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Второй родитель", systemImage: "person.2.fill")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.secondary)
+
+            if !members.isEmpty {
+                membersList
+            }
 
             if isShared {
                 sharedStatus
@@ -41,6 +45,21 @@ struct FamilyCard: View {
         .task { await refreshMembers() }
         .sheet(isPresented: $showJoinSheet) {
             JoinFamilySheet { await join(code: $0) }
+        }
+    }
+
+    // MARK: - Кто в семье
+
+    /// Состав семьи показывается и до приглашения — тогда в нём одна строка,
+    /// и пользователь видит, каким аккаунтом он делится.
+    private var membersList: some View {
+        VStack(spacing: 10) {
+            ForEach(members) { member in
+                FamilyMemberRow(
+                    member: member,
+                    isCurrentUser: member.userID == authService.userID
+                )
+            }
         }
     }
 
@@ -133,7 +152,7 @@ struct FamilyCard: View {
 
     private func refreshMembers() async {
         guard authService.isSignedIn else { return }
-        memberCount = await SupabaseSyncService.shared.familyMemberCount()
+        members = await SupabaseSyncService.shared.familyMembers()
     }
 
     private func createInvite() async {

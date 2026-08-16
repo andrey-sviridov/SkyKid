@@ -12,6 +12,17 @@ final class SupabaseAuthService {
     private(set) var isSignedIn = false
     private(set) var userID: UUID?
 
+    /// Как выглядит текущий аккаунт для самого пользователя и для второго
+    /// родителя: почта, имя из профиля провайдера и способ входа. Второй
+    /// родитель видит те же поля через `family_members_info()`.
+    private(set) var accountEmail: String?
+    private(set) var accountDisplayName: String?
+    private(set) var accountProvider: String?
+
+    /// Подпись для карточки аккаунта: имя, а если провайдер его не дал —
+    /// почта. `nil` — оба поля пусты, и показывать нечего.
+    var accountTitle: String? { accountDisplayName ?? accountEmail }
+
     /// Пользователь сознательно выбрал работу без аккаунта на стартовом
     /// экране (`AuthGateView`).
     private(set) var isOfflineMode = AuthPreferences.isOfflineModeChosen
@@ -95,12 +106,36 @@ final class SupabaseAuthService {
     func restoreSession() async {
         do {
             let session = try await SupabaseClientProvider.client.auth.session
-            userID = session.user.id
-            isSignedIn = true
+            apply(user: session.user)
         } catch {
             isSignedIn = false
             userID = nil
+            clearAccountIdentity()
         }
+    }
+
+    /// Google кладёт имя в `full_name`, часть провайдеров — в `name`.
+    private func apply(user: User) {
+        userID = user.id
+        isSignedIn = true
+        accountEmail = user.email
+        accountDisplayName = Self.metadataString(user, keys: ["full_name", "name"])
+        accountProvider = user.appMetadata["provider"]?.stringValue
+    }
+
+    private static func metadataString(_ user: User, keys: [String]) -> String? {
+        for key in keys {
+            let value = user.userMetadata[key]?.stringValue?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if let value, !value.isEmpty { return value }
+        }
+        return nil
+    }
+
+    private func clearAccountIdentity() {
+        accountEmail = nil
+        accountDisplayName = nil
+        accountProvider = nil
     }
 
     // MARK: - Sign in with Google
@@ -120,14 +155,14 @@ final class SupabaseAuthService {
             // аккаунта показывается всегда.
             queryParams: [(name: "prompt", value: "select_account")]
         )
-        userID = session.user.id
-        isSignedIn = true
+        apply(user: session.user)
     }
 
     func signOut() async {
         try? await SupabaseClientProvider.client.auth.signOut()
         isSignedIn = false
         userID = nil
+        clearAccountIdentity()
         // Стартовый выбор сбрасывается вместе с сессией: локальный кеш ниже
         // очищается, профиля больше нет, и пользователь снова выбирает —
         // войти в другой аккаунт или остаться автономным.

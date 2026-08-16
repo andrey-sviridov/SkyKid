@@ -21,6 +21,9 @@
 		FAMINVITECODEBUILD /* FamilyInviteCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMINVITECODEFILE /* FamilyInviteCode.swift */; };
 		FAMILYCARDBUILD /* FamilyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMILYCARDFILE /* FamilyCard.swift */; };
 		JOINFAMILYBUILD /* JoinFamilySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = JOINFAMILYFILE /* JoinFamilySheet.swift */; };
+		SIGNINPROVIDERBUILD /* SignInProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNINPROVIDERFILE /* SignInProvider.swift */; };
+		FAMILYMEMBERBUILD /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMILYMEMBERFILE /* FamilyMember.swift */; };
+		FAMILYMEMBERROWBUILD /* FamilyMemberRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMILYMEMBERROWFILE /* FamilyMemberRow.swift */; };
 		9F64ECECE3C18F326554C8AC /* SupabaseSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */; };
 		00B924BAF836AC1A63BA75DE /* WalkEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */; };
 		05021B7BF02ED6CF1760CFE9 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */; };
@@ -338,6 +341,9 @@
 		FAMINVITECODEFILE /* FamilyInviteCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyInviteCode.swift; sourceTree = "<group>"; };
 		FAMILYCARDFILE /* FamilyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyCard.swift; sourceTree = "<group>"; };
 		JOINFAMILYFILE /* JoinFamilySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinFamilySheet.swift; sourceTree = "<group>"; };
+		SIGNINPROVIDERFILE /* SignInProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInProvider.swift; sourceTree = "<group>"; };
+		FAMILYMEMBERFILE /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
+		FAMILYMEMBERROWFILE /* FamilyMemberRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberRow.swift; sourceTree = "<group>"; };
 		4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSyncService.swift; sourceTree = "<group>"; };
 		ECE8061C83759412BE23B087 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EE0000000000000000000001 /* WeatherNormalizerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WeatherNormalizerTests.swift; sourceTree = "<group>"; };
@@ -566,6 +572,7 @@
 				C3DAC29CEEE07861A2D647F2 /* ChildNameCipher.swift */,
 				AB0ACB67ECAE8D63A9D5EA20 /* SupabaseAuthService.swift */,
 				AUTHPREFSFILE /* AuthPreferences.swift */,
+				SIGNINPROVIDERFILE /* SignInProvider.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -575,6 +582,7 @@
 			children = (
 				4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */,
 				FAMINVITECODEFILE /* FamilyInviteCode.swift */,
+				FAMILYMEMBERFILE /* FamilyMember.swift */,
 			);
 			path = Sync;
 			sourceTree = "<group>";
@@ -625,6 +633,7 @@
 				E348885C79C1FDEFF9B511E7 /* AccountCard.swift */,
 				FAMILYCARDFILE /* FamilyCard.swift */,
 				JOINFAMILYFILE /* JoinFamilySheet.swift */,
+				FAMILYMEMBERROWFILE /* FamilyMemberRow.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -1249,6 +1258,9 @@
 				FAMINVITECODEBUILD /* FamilyInviteCode.swift in Sources */,
 				FAMILYCARDBUILD /* FamilyCard.swift in Sources */,
 				JOINFAMILYBUILD /* JoinFamilySheet.swift in Sources */,
+				SIGNINPROVIDERBUILD /* SignInProvider.swift in Sources */,
+				FAMILYMEMBERBUILD /* FamilyMember.swift in Sources */,
+				FAMILYMEMBERROWBUILD /* FamilyMemberRow.swift in Sources */,
 				9F64ECECE3C18F326554C8AC /* SupabaseSyncService.swift in Sources */,
 				AAWS /* ActiveWalkStore.swift in Sources */,
 				AWTV /* WalkTabView.swift in Sources */,

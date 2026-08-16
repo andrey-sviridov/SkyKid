@@ -72,15 +72,37 @@ struct AccountCard: View {
         }
     }
 
+    /// Под каким именно аккаунтом вошли — то же, что второй родитель видит о
+    /// вас в карточке семьи. Без этого «Вы вошли» не отвечает на вопрос
+    /// «а под кем?», когда у пользователя несколько аккаунтов Google.
     private var signedInContent: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-            Text(authService.isLocalDataLinkedToCurrentAccount
-                 ? "Вы вошли — данные синхронизируются"
-                 : "Вы вошли")
-                .font(.subheadline)
-            Spacer()
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(authService.accountTitle ?? L10n.text("Вы вошли"))
+                    .font(.subheadline)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+
+                if let accountDetails {
+                    Text(accountDetails)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+
+                if authService.isLocalDataLinkedToCurrentAccount {
+                    Text("Данные синхронизируются")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 8)
+
             Button("Выйти") {
                 Task { await authService.signOut() }
             }
@@ -88,6 +110,15 @@ struct AccountCard: View {
             .foregroundStyle(.red)
             .disabled(isMigrating)
         }
+    }
+
+    /// Почта и способ входа. Почта опускается, когда она же стоит
+    /// заголовком — провайдер не дал имени.
+    private var accountDetails: String? {
+        let email = authService.accountDisplayName == nil ? nil : authService.accountEmail
+        let parts = [email, SignInProvider(identifier: authService.accountProvider)?.label]
+        let details = parts.compactMap { $0 }.joined(separator: " · ")
+        return details.isEmpty ? nil : details
     }
 
     // MARK: - Перенос автономных данных

@@ -480,6 +480,11 @@ struct ContentView: View {
             for log in walkLogStore.logs {
                 await SupabaseSyncService.shared.pushWalkLog(log)
             }
+            // Дальше идёт пул — без него новые прогулки другого родителя не
+            // появятся, пока приложение не свернут и не развернут: `.onChange`
+            // на `scenePhase` не срабатывает на само появление вью при
+            // холодном старте, он видит только последующие переходы.
+            await refreshSharedFamilyData()
         }
     }
 }

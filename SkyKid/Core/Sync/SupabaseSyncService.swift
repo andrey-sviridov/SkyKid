@@ -101,20 +101,22 @@ final class SupabaseSyncService {
         return profile
     }
 
-    /// Сколько родителей сейчас в семье — по этому числу карточка решает,
-    /// показывать приглашение или отметку «второй родитель подключён».
-    func familyMemberCount() async -> Int {
-        guard let familyID = SupabaseAuthService.shared.familyID else { return 0 }
+    /// Кто сейчас в семье — с именем и почтой, чтобы родители видели, с кем
+    /// именно у них общие данные. По длине списка карточка решает,
+    /// показывать приглашение или состав семьи.
+    ///
+    /// Идентификация живёт в `auth.users`, куда клиенту хода нет, поэтому
+    /// список отдаёт `security definer` функция `family_members_info()`,
+    /// ограниченная семьёй вызывающего.
+    func familyMembers() async -> [FamilyMember] {
+        guard SupabaseAuthService.shared.familyID != nil else { return [] }
         do {
-            let rows: [FamilyMemberRow] = try await client
-                .from("family_members")
-                .select()
-                .eq("family_id", value: familyID)
+            return try await client
+                .rpc("family_members_info")
                 .execute()
                 .value
-            return rows.count
         } catch {
-            return 0
+            return []
         }
     }
 
@@ -311,14 +313,6 @@ private struct FamilyInviteInsert: Encodable {
 
 private struct FamilyInviteRow: Decodable {
     let id: UUID
-}
-
-private struct FamilyMemberRow: Decodable {
-    let userID: UUID
-
-    enum CodingKeys: String, CodingKey {
-        case userID = "user_id"
-    }
 }
 
 private struct ChildProfileRow: Codable {
