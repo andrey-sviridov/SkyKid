@@ -27,16 +27,19 @@ final class ActiveWalkStore {
     private let defaults: UserDefaults
     private let logStore: WalkLogStore
     private let liveActivity: WalkLiveActivityController
+    private let publisher: LiveWalkPublisher
     private let storageKey = ActiveWalkStorage.key
 
     init(
         defaults: UserDefaults = AppGroup.defaults,
         logStore: WalkLogStore = .shared,
-        liveActivity: WalkLiveActivityController = .shared
+        liveActivity: WalkLiveActivityController = .shared,
+        publisher: LiveWalkPublisher = .shared
     ) {
         self.defaults = defaults
         self.logStore = logStore
         self.liveActivity = liveActivity
+        self.publisher = publisher
         load()
         if let current {
             liveActivity.reattachIfNeeded(for: current)
@@ -50,12 +53,19 @@ final class ActiveWalkStore {
     func start(_ walk: ActiveWalk) {
         current = walk
         save()
+        // Старт — без дебаунса: второй родитель должен увидеть прогулку
+        // сразу, а не через полторы секунды.
+        publisher.publishNow(walk)
         liveActivity.start(for: walk)
     }
 
+    /// Общий выход из прогулки — и для отмены, и для завершения (`finish()`
+    /// заканчивается этим же вызовом). Поэтому и слот на сервере снимается
+    /// здесь: отдельная врезка в `finish()` была бы дублем.
     func cancel() {
         current = nil
         defaults.removeObject(forKey: storageKey)
+        publisher.retract()
         liveActivity.end()
     }
 
@@ -160,8 +170,16 @@ final class ActiveWalkStore {
     /// Перечитывает активную прогулку из AppGroup — нужно при возврате в
     /// приложение, т.к. быстрые метки с экрана блокировки пишут события
     /// напрямую в хранилище, минуя этот процесс.
+    ///
+    /// Здесь же прочитанное догоняющей публикацией уезжает на сервер: в
+    /// виджет-процессе, где выполняются интенты Live Activity, нет ни
+    /// Supabase-клиента, ни сессии, поэтому отметки с локскрина второй
+    /// родитель увидит не мгновенно, а когда владелец вернётся в приложение.
     func refresh() {
         load()
+        if let current {
+            publisher.publishNow(current)
+        }
     }
 
     private func load() {
@@ -171,9 +189,12 @@ final class ActiveWalkStore {
         current = decoded
     }
 
+    /// Единственная точка, через которую проходят все мутации прогулки, —
+    /// поэтому публикация висит здесь, а не на каждом из шести методов.
     private func save() {
         guard let walk = current,
               let data = try? JSONEncoder().encode(walk) else { return }
         defaults.set(data, forKey: storageKey)
+        publisher.schedule(walk)
     }
 }

@@ -11,13 +11,20 @@ struct WalkHistoryView: View {
 
     @Environment(WalkLogStore.self) private var store
     @Environment(PersonalOffsetStore.self) private var personalizationStore
+    @Environment(ActiveWalkStore.self) private var activeWalkStore
+    @Environment(LiveWalkObserver.self) private var liveWalkObserver
     @State private var showLog = false
     @State private var editingLog: WalkLog? = nil
     @State private var selectedLog: WalkLog? = nil
+    @State private var showPartnerWalk = false
 
+    /// Прогулка попадает в журнал только после завершения, поэтому идущие
+    /// живут отдельной секцией сверху — и своя, и чужая.
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
+                inProgressSection
+
                 if store.totalCount > 0 {
                     StatsHeaderCard(store: store)
                         .listRowBackground(Color.clear)
@@ -99,6 +106,11 @@ struct WalkHistoryView: View {
         }
         .navigationTitle("Журнал прогулок")
         .navigationBarTitleDisplayMode(.large)
+        .navigationDestination(isPresented: $showPartnerWalk) {
+            if let partner = liveWalkObserver.partner {
+                LiveWalkDetailView(snapshot: partner, weather: weather, profile: profile)
+            }
+        }
         .sheet(isPresented: $showLog) {
             LogWalkSheet(
                 weather: weather,
@@ -121,6 +133,28 @@ struct WalkHistoryView: View {
     }
 
     // MARK: - Feedback history
+
+    // MARK: - Идущие прогулки
+
+    @ViewBuilder
+    private var inProgressSection: some View {
+        if let walk = activeWalkStore.current {
+            LiveWalkInProgressRow(walk: walk, ownerName: nil)
+                .liveWalkRowChrome()
+        }
+
+        if let partner = liveWalkObserver.partner {
+            Button { showPartnerWalk = true } label: {
+                LiveWalkInProgressRow(
+                    walk: partner.walk,
+                    ownerName: liveWalkObserver.partnerName ?? L10n.text("второй родитель")
+                )
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .liveWalkRowChrome()
+        }
+    }
 
     private var feedbackHistoryItems: [FeedbackHistoryItem] {
         guard let profile else { return [] }

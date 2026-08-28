@@ -187,5 +187,8 @@ final class SupabaseAuthService {
     private func clearLocallyCachedAccountData() {
         ChildProfileStore.shared.profile = nil
         WalkLogStore.shared.clearAll()
+        // Чужая идущая прогулка не должна пережить смену пользователя —
+        // вместе с ней рвётся и Realtime-подписка на прежнюю семью.
+        LiveWalkObserver.shared.reset()
     }
 }

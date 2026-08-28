@@ -5,6 +5,8 @@ struct WalkOutfitChipsCard: View {
     @Binding var selectedIDs: [String]
     let profile: ChildProfile?
     let targetTOG: Double?
+    /// `false` — просмотр чужой прогулки: ни «＋», ни крестиков на чипах.
+    var isEditable: Bool = true
     var onAdd: (String) -> Void = { _ in }
     var onRemove: (String) -> Void = { _ in }
 
@@ -23,37 +25,36 @@ struct WalkOutfitChipsCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Label("Во что одет", systemImage: "hanger")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(L10n.format("%.1f TOG", effectiveTOG))
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.primary)
-            }
-
+        SectionCard(
+            title: L10n.text("Во что одет"),
+            systemImage: "hanger",
+            spacing: 14
+        ) {
             FlowLayout(spacing: 8) {
                 ForEach(items) { item in
-                    GarmentChip(item: item) {
-                        withAnimation(.spring(response: 0.2)) {
-                            selectedIDs.removeAll { $0 == item.id }
-                        }
-                        onRemove(item.id)
-                    }
+                    GarmentChip(item: item, onRemove: isEditable ? { remove(item) } : nil)
                 }
-                addChip
+                if isEditable {
+                    addChip
+                }
             }
 
             verdictBar
+        } trailing: {
+            Text(L10n.format("%.1f TOG", effectiveTOG))
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(.primary)
         }
-        .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
         .sheet(isPresented: $showPicker) {
             GarmentPickerSheet(profile: profile, selectedIDs: $selectedIDs, onAdd: onAdd)
         }
+    }
+
+    private func remove(_ item: GarmentItem) {
+        withAnimation(.spring(response: 0.2)) {
+            selectedIDs.removeAll { $0 == item.id }
+        }
+        onRemove(item.id)
     }
 
     private var addChip: some View {

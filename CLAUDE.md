@@ -41,7 +41,10 @@ SkyKid/
 │   │                                сторы и пробрасывает их вниз через .environment(_:);
 │   │                                роутер онбординг → геолокация → нативный
 │   │                                TabView (5 вкладок, .tabItem + Liquid Glass);
-│   │                                tabSelection перехватывает вкладку «Прогулка»
+│   │                                tabSelection перехватывает вкладку «Прогулка» (пропускает,
+│   │                                если нет своей, но есть live-прогулка второго родителя);
+│   │                                жизненный цикл LiveWalkObserver: start()/stop() на
+│   │                                scenePhase, plus start() в конце syncOnLaunch()
 │   ├── PermissionView.swift / DeniedView.swift   Экраны геолокации
 │   ├── SkyKidIntents.swift          AppIntents (Siri): рекомендация из кеша AppGroup
 │   └── Theme.swift                  SkyKidTheme, weather-градиенты
@@ -84,38 +87,64 @@ SkyKid/
 │   │   ├── WalkScheduleView.swift       Расписание напоминаний о прогулке
 │   │   ├── ChildWeatherPerception.swift summary, ageContextNote, comfortScore/Label
 │   │   └── Components/                  AppLanguagePickerCard, StableThermalTraitRow,
-│   │                                     GenderButton, WardrobeItemRow
+│   │                                     GenderButton, WardrobeItemRow, AccountCard,
+│   │                                     FamilyCard, FamilyMemberRow, JoinFamilySheet,
+│   │                                     LiveWalkNotificationsCard (тумблер уведомлений
+│   │                                     о живой прогулке второго родителя)
 │   │
 │   ├── Walk/                        Вкладка «Прогулка» — живая прогулка + Live Activity
-│   │   ├── WalkTabView.swift         Тонкая обёртка над ActiveWalkView
-│   │   ├── ActiveWalkView.swift      Экран идущей прогулки: таймер, чипы, таймлайн
+│   │   ├── WalkTabView.swift         Роутер: своя прогулка → ActiveWalkView, чужая →
+│   │   │                             LiveWalkDetailView, ничего → ContentUnavailableView
+│   │   ├── ActiveWalkView.swift      Экран идущей своей прогулки — сборка из
+│   │   │                             Components/Walk* + Core/UI
+│   │   ├── LiveWalkDetailView.swift  Read-only экран прогулки второго родителя — та же
+│   │   │                             сборка с isEditable: false; @Environment(LiveWalkObserver.self)
 │   │   ├── WalkSetupSheet.swift      Старт новой прогулки
 │   │   ├── GarmentPickerSheet.swift, WalkTOGVerdict.swift, WalkEventReclassifySheet.swift
 │   │   └── Components/               ComfortLevelSheet, CancelWalkSheet, WalkEventRow,
-│   │                                  GarmentChip, WalkOutfitChipsCard,
-│   │                                  PlannedDurationCard, WalkWeatherSnapshotCard
+│   │                                  GarmentChip, WalkOutfitChipsCard (isEditable:),
+│   │                                  PlannedDurationCard, WalkWeatherSnapshotCard,
+│   │                                  WalkTimerHeaderCard, WalkTimelineCard (isEditable:),
+│   │                                  WalkQuickActionsCard, LiveWalkStatusFooter —
+│   │                                  общие блоки для ActiveWalkView и LiveWalkDetailView
 │   │
 │   └── History/                     Вкладка «История» — журнал прогулок
-│       ├── WalkHistoryView.swift     Список записей + FAB
+│       ├── WalkHistoryView.swift     Список записей + FAB; секция идущих прогулок
+│       │                             (своя + partner) над журналом
 │       ├── LogWalkSheet.swift        Запись/редактирование прогулки
 │       ├── WalkLogDetailView.swift   Детальный экран + таймлайн событий
 │       ├── AddWalkEventSheet.swift, WalkDurationFormatter.swift
 │       ├── FeedbackHistoryItem.swift, FeedbackHistorySection.swift
 │       └── Components/               StatsHeaderCard, EmptyHistoryCard, WalkLogRow,
 │                                      WalkDateTimeCard, WalkTemperatureCard,
-│                                      DurationPickerCard, ComfortLevelCard, OutfitSummaryCard
+│                                      DurationPickerCard, ComfortLevelCard, OutfitSummaryCard,
+│                                      LiveWalkInProgressRow («идёт сейчас», своя/чужая)
 │
 ├── Core/
 │   ├── Network/                     WeatherServiceProtocol, OpenMeteoService,
 │   │                                OpenWeatherMapService, WeatherAPIService,
 │   │                                YandexWeatherService, WeatherKitService (заглушка)
 │   ├── Location/                    LocationManager (@Observable CLLocationManager)
-│   ├── Notifications/                NotificationService (@Observable, DI через .environment)
+│   ├── Auth/                        SupabaseAuthService (@Observable, .environment),
+│   │                                SupabaseClientProvider, SupabaseConfig,
+│   │                                AuthPreferences, ChildNameCipher, SignInProvider
+│   ├── Sync/                        SupabaseSyncService (family-scoped pull/push),
+│   │                                FamilyInviteCode, FamilyMember,
+│   │                                LiveWalkSnapshot (модель строки live_walks + isStale()),
+│   │                                SupabaseSyncService+LiveWalk (upsert/delete/pull),
+│   │                                LiveWalkPublisher (дебаунс-публикатор своей прогулки),
+│   │                                LiveWalkObserver (@Observable singleton; Realtime-
+│   │                                подписка на чужую прогулку, .environment)
+│   ├── Notifications/                NotificationService (@Observable, DI через .environment),
+│   │                                 LiveWalkNotifier, LiveWalkNotificationPreferences,
+│   │                                 LiveWalkNotificationContent
 │   ├── LiveActivity/                 WalkLiveActivityController, WalkQuickMarkIntents
-│   ├── Storage/                      ActiveWalkStore, WalkLogStore,
+│   ├── Storage/                      ActiveWalkStore (публикует live_walks из save/start/
+│   │                                 cancel/refresh через LiveWalkPublisher), WalkLogStore,
 │   │                                 RecommendationSnapshotStore, WalkEventReclassifier
-│   ├── UI/                           FlowLayout — общий Layout, переиспользуется
-│   │                                 в Outfit/Walk/History
+│   ├── UI/                           Примитивы без доменных зависимостей: FlowLayout,
+│   │                                 SectionCard, ElapsedTimeText, CountdownLabel,
+│   │                                 StatusDotLabel, MetricTile (.compact/.prominent)
 │   └── Models/
 │       ├── ChildProfile.swift            ChildProfile, ChildGender, AgeGroup, AppGroup (enum)
 │       │                                 ⚠️ Target Membership: SkyKid + SkyKidWidget

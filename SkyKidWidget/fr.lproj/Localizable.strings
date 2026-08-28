@@ -1,5 +1,6 @@
 /* Generated from Russian source strings. See scripts/generate_localizations.py. */
 
+"%.1f TOG" = "%.1f TOG";
 "%.1f мм" = "%.1f mm";
 "%1$@, %2$lld градусов, обновлено %3$@, %4$@" = "%1$@, %2$lld degrés, mise à jour %3$@, %4$@";
 "%@ %@" = "%@ %@";
@@ -29,7 +30,9 @@
 "%lld мин" = "%lld min";
 "%lld нед." = "%lld semaines.";
 "%lld недель" = "%lld semaines";
+"%lld новых отметок" = "%lld nouveaux repères";
 "%lld особ." = "%lld personnes.";
+"%lld отметок" = "%lld repères";
 "%lld°" = "%lld°";
 "%lld° (ощущает холоднее)" = "%lld° (plus froid)";
 "%lld° · ощущается %lld°C" = "%lld° · Sensation %lld°C";
@@ -37,6 +40,7 @@
 "%lld°C ·" = "%lld°C ·";
 "%lld°C · %@" = "%lld°C · %@";
 ")). Расчёт использует осторожные замены." = "Le calcul utilise des substitutions prudentes.";
+"+%lld:%02lld" = "+%lld:%02lld";
 "+0.3 TOG — мёрзнет быстрее" = "+0,3 TOG - congele plus rapidement";
 "+1.5° к порогу одевания" = "+1,5° au seuil de pansement";
 "+35°" = "+35°";
@@ -115,6 +119,7 @@
 "Более подходящее время для прогулки: завтра %@–%@" = "Temps plus approprié pour marcher: demain %@-%@";
 "Более подходящее время по прогнозу" = "Temps plus approprié selon les prévisions";
 "ботинк" = "Chaussures";
+"Быстрые отметки" = "Marques rapides";
 "Быстрый отзыв" = "Révision rapide";
 "В гардеробе не хватает: %@." = "La garde-robe est manquante: %@.";
 "В гардеробе не хватает: %@. Подобрано %.1f из %.1f TOG." = "La garde-robe est manquante: %@. Prise en charge %.1f de %.1f TOG.";
@@ -155,6 +160,7 @@
 "Влажность" = "Humidité";
 "Влажность (§2.3)" = "Humidité (§ 2.3)";
 "Во что был одет" = "Qu'est-ce qu'il portait?";
+"Во что одет" = "Tenue actuelle";
 "Возраст" = "Âge.";
 "Возраст / активность" = "Âge/activité";
 "Возраст не указан" = "Âge non spécifié";
@@ -168,6 +174,9 @@
 "Все предметы каталога в наличии" = "Tous les articles du catalogue sont disponibles";
 "Всего\nзаписей" = "Tous les dossiers.";
 "встроенные царапки" = "griffures";
+"второй родитель" = "l'autre parent";
+"Второй родитель закончил прогулку" = "L'autre parent a terminé la promenade";
+"Второй родитель начал прогулку" = "L'autre parent a commencé une promenade";
 "второй слой" = "deuxième couche";
 "Выберите более прохладное время и тень. Не накрывайте коляску пледом или плотной тканью; используйте штатную вентиляцию." = "Choisissez des temps et des nuances plus froids. Ne couvrez pas la poussette avec un plaid ou un tissu épais; utilisez une ventilation régulière.";
 "Выберите один готовый вариант утепления. Дождевик требует вентиляции; плотной тканью коляску накрывать нельзя." = "Choisissez une option d'isolation prête à l'emploi. Le imperméable nécessite une ventilation; un tissu dense ne peut pas couvrir la poussette.";
@@ -186,6 +195,7 @@
 "Голова малыша — главная зона теплообмена" = "La tête de bébé est la principale zone d'échange de chaleur";
 "Готово" = "Prêt.";
 "Гроза" = "Tempête";
+"Гуляет %@" = "%@ est en promenade";
 "Данные ребёнка" = "Données relatives à l'enfant";
 "Дата" = "Date.";
 "Дата и время прогулки" = "Date et heure de la promenade";
@@ -244,6 +254,7 @@
 "Жаркий (%@%lld°)" = "Chaud (%@%lld°)";
 "жарко" = "chaud";
 "Жарко" = "C'est chaud.";
+"Живая прогулка" = "Promenade en direct";
 "Журнал прогулки" = "Pénétration";
 "Журнал прогулок" = "Revue de marche";
 "За 7 дней" = "7 jours.";
@@ -279,6 +290,8 @@
 "Идеально" = "Parfait.";
 "Идут осадки — используйте штатную защиту от дождя и сохраняйте вентиляцию." = "Précipitations à venir - utiliser une protection régulière contre la pluie et garder la ventilation.";
 "Идёт дождь — нужна водонепроницаемая защита" = "Il pleut, vous avez besoin d'une protection étanche.";
+"Идёт сейчас" = "En cours";
+"Изменения применяются сразу" = "Les modifications s’appliquent immédiatement";
 "Изменить" = "Changement.";
 "Изменить данные ребёнка" = "Changer les données de l'enfant";
 "Изменить самочувствие, активность и условия прогулки" = "Changer l'état de santé, l'activité et les conditions de marche";
@@ -306,6 +319,7 @@
 "й" = "ouvrés";
 "к" = "vers";
 "Как будет двигаться" = "Comment va-t-elle bouger?";
+"Как в системе" = "Langue du système";
 "Как гуляем" = "Comme marcher.";
 "Как получилась рекомендация" = "Comment la recommandation a-t-elle été formulée?";
 "Как проверить комфорт" = "Comment vérifier le confort";
@@ -441,6 +455,7 @@
 "Нет метаданных" = "Pas de métadonnées.";
 "Нет напоминаний" = "Pas de rappels.";
 "Нет профиля" = "Pas de profil.";
+"Нет связи · обновлено в %@" = "Hors ligne · mis à jour à %@";
 "ниже 0°C" = "inférieur à 0°C";
 "Низкая" = "Faible.";
 "Низкая уверенность" = "Fiabilité faible";
@@ -461,6 +476,7 @@
 "Обновление погоды · дождевик · осторожное окно прогулки" = "Mise à jour météorologique · imperméable · fenêtre de marche soignée";
 "Обновлено" = "Mise à jour";
 "Обновляем рекомендацию" = "Mise à jour de la recommandation";
+"Обновляется в реальном времени" = "Mise à jour en temps réel";
 "Обычная" = "Normal.";
 "обычный капор" = "Caporal";
 "Ограничение подбора (§5.2)" = "Restriction de la sélection (§ 5.2)";
@@ -498,6 +514,7 @@
 "Осадки после защиты (§3.2)" = "Précipitations après protection (§ 3.2)";
 "Особенности здоровья" = "Caractéristiques de la santé";
 "Особенности сердца/дыхания" = "Caractéristiques du cœur / respiration";
+"осталось" = "restant";
 "Осторожно" = "Doucement.";
 "от +5 до +15°C" = "+5 à +15°C";
 "Отзывы об одежде" = "Examens des vêtements";
@@ -594,6 +611,8 @@
 "Проверьте после начала прогулки" = "Vérifiez après le début de la promenade";
 "Проверьте штатную вентиляцию и живот или заднюю поверхность шеи ребёнка. Снимите дождевик, когда осадки закончатся." = "Vérifiez la ventilation normale et l'abdomen ou l'arrière du cou de l'enfant. Enlevez le imperméable lorsque la précipitation est terminée.";
 "Прогулка" = "Marcher.";
+"Прогулка завершена" = "Promenade terminée";
+"Прогулку ведёт %@" = "%@ dirige la promenade";
 "Прогулку лучше отложить" = "Il vaut mieux reporter la marche.";
 "Прогулку лучше перенести" = "Il est préférable de reporter la marche";
 "Прогулку лучше перенести на более прохладное время. Младенцу предлагайте обычные кормления чаще." = "Il est préférable de reporter la marche à un moment plus frais. Offrir des repas normaux au bébé plus souvent.";
@@ -702,6 +721,7 @@
 "Срок рождения" = "Date de naissance";
 "строже пороги «не гулять»" = "Stricter \"pas de marche\" seuils";
 "Сургут" = "surgut";
+"Таймлайн" = "Chronologie";
 "Текущее\nтепло" = "Chaleur actuelle";
 "Тема оформления" = "Thème du design";
 "температура" = "température";
@@ -734,6 +754,8 @@
 "Тёплый свитер / флис" = "Pull chaud/fleece";
 "у" = "au";
 "Уведомления" = "Notifications";
+"Уведомления о прогулке" = "Notifications de promenade";
+"Уведомления приходят, пока приложение открыто. Пуши на закрытое приложение появятся позже." = "Les notifications n'arrivent que lorsque l'application est ouverte. Les notifications push pour l'application fermée arriveront plus tard.";
 "Уверенность не сохранена" = "Confiance non conservée";
 "Уверенность: %@. %@" = "Confiance: %@ %@";
 "Удалить" = "Supprimer";
@@ -779,6 +801,8 @@
 "Худи / Свитшот с начёсом" = "Hoody/Sweathot avec une coupe de cheveux";
 "Царапки" = "Écrasées";
 "Цель %.1f TOG, доступный комплект даёт %.1f TOG." = "Cible %.1f TOG, le kit disponible donne %.1f TOG.";
+"Цель ~%.1f TOG" = "Objectif ~%.1f TOG";
+"цель достигнута" = "objectif atteint";
 "цель одежда: %.1f TOG" = "Vêtements cibles: %.1f TOG";
 "ч" = "C'est quoi?";
 "Часто болеет" = "Souvent malade.";
@@ -813,6 +837,7 @@
 "Это экспериментальный ручной конструктор. Для прогноза и правил безопасности используйте вкладку «Одежда»." = "Il s'agit d'un constructeur manuel expérimental. Utilisez l'onglet Vêtements pour les règles de prédiction et de sécurité.";
 "ю" = "Oui.";
 "я" = "moi";
+"Язык приложения" = "Langue de l’application";
 "Яндекс Погода" = "Yandex Météo";
 "Яндекс Погода. Требует API-ключ тарифа «Погода»: developer.tech.yandex.ru" = "Yandex Weather Nécessite la clé API tarif Météo: developer.tech.yandex.ru";
 "Ясно" = "C'est bon.";
@@ -832,6 +857,3 @@
 "👶" = "👶";
 "📝 Онбординг" = "📝 Prise en main";
 "🧥 Весна · 2 года" = "🧥 Printemps · 2 ans";
-"Язык приложения" = "Langue de l’application";
-"Как в системе" = "Langue du système";
-"Изменения применяются сразу" = "Les modifications s’appliquent immédiatement";

@@ -80,10 +80,39 @@ private struct SkyKidCardModifier: ViewModifier {
     }
 }
 
+// MARK: - Glass card modifier (преобладающий в приложении вариант)
+
+/// Матовое стекло + тонкая рамка цветом контента.
+///
+/// Это не то же самое, что [SkyKidCardModifier]: там поверх стекла лежит
+/// белая подложка и белая рамка. Исторически по экранам разошёлся именно
+/// этот, более сдержанный вариант, и модификатор фиксирует его как есть —
+/// перевод всего приложения на один стиль карточек был бы редизайном, а не
+/// рефакторингом.
+private struct GlassCardModifier: ViewModifier {
+    var cornerRadius: CGFloat
+    var padding: CGFloat?
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius)
+
+        return content
+            .padding(padding ?? 16)
+            .background(.ultraThinMaterial, in: shape)
+            .overlay(shape.strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+    }
+}
+
 extension View {
     /// Адаптивный небесный фон + прозрачный навбар с правильным цветом иконок.
     func skyKidBackground() -> some View {
         modifier(SkyKidBackgroundModifier())
+    }
+
+    /// Стеклянная карточка со сдержанной рамкой.
+    /// `padding == nil` → дефолтные 16pt; передайте 0, чтобы задать отступы вручную.
+    func glassCard(cornerRadius: CGFloat = 16, padding: CGFloat? = nil) -> some View {
+        modifier(GlassCardModifier(cornerRadius: cornerRadius, padding: padding))
     }
 
     /// Карточка из матового стекла поверх градиента.

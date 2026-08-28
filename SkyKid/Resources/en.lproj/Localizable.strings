@@ -1,5 +1,6 @@
 /* Generated from Russian source strings. See scripts/generate_localizations.py. */
 
+"%.1f TOG" = "%.1f TOG";
 "%.1f мм" = "%.1f mm";
 "%1$@, %2$lld градусов, обновлено %3$@, %4$@" = "%1$@, %2$lld degrees, updated %3$@, %4$@";
 "%@ %@" = "%@ %@";
@@ -29,7 +30,9 @@
 "%lld мин" = "%lld min";
 "%lld нед." = "%lld weeks.";
 "%lld недель" = "%lld weeks";
+"%lld новых отметок" = "%lld new marks";
 "%lld особ." = "%lld people.";
+"%lld отметок" = "%lld marks";
 "%lld°" = "%lld°";
 "%lld° (ощущает холоднее)" = "%lld° (feels colder)";
 "%lld° · ощущается %lld°C" = "%lld° · Feels %lld°C";
@@ -37,6 +40,7 @@
 "%lld°C ·" = "%lld°C ·";
 "%lld°C · %@" = "%lld°C · %@";
 ")). Расчёт использует осторожные замены." = "The calculation uses cautious substitutions.";
+"+%lld:%02lld" = "+%lld:%02lld";
 "+0.3 TOG — мёрзнет быстрее" = "+0.3 TOG - freezes faster";
 "+1.5° к порогу одевания" = "+1.5° to the dressing threshold";
 "+35°" = "+35°";
@@ -115,6 +119,7 @@
 "Более подходящее время для прогулки: завтра %@–%@" = "More suitable time to walk: tomorrow %@-%@";
 "Более подходящее время по прогнозу" = "More suitable time according to the forecast";
 "ботинк" = "shoe";
+"Быстрые отметки" = "Quick marks";
 "Быстрый отзыв" = "Quick review";
 "В гардеробе не хватает: %@." = "The wardrobe is missing: %@.";
 "В гардеробе не хватает: %@. Подобрано %.1f из %.1f TOG." = "The wardrobe is missing: %@. Picked up %.1f from %.1f TOG.";
@@ -155,6 +160,7 @@
 "Влажность" = "Humidity";
 "Влажность (§2.3)" = "Humidity (§ 2.3)";
 "Во что был одет" = "What was he wearing?";
+"Во что одет" = "What they're wearing";
 "Возраст" = "Age.";
 "Возраст / активность" = "Age/activity";
 "Возраст не указан" = "Age not specified";
@@ -168,6 +174,9 @@
 "Все предметы каталога в наличии" = "All catalogue items are available";
 "Всего\nзаписей" = "All the records.";
 "встроенные царапки" = "scratching";
+"второй родитель" = "the other parent";
+"Второй родитель закончил прогулку" = "The other parent finished the walk";
+"Второй родитель начал прогулку" = "The other parent started a walk";
 "второй слой" = "second-layer";
 "Выберите более прохладное время и тень. Не накрывайте коляску пледом или плотной тканью; используйте штатную вентиляцию." = "Choose cooler times and shades. Don't cover the stroller with a plaid or thick cloth; use regular ventilation.";
 "Выберите один готовый вариант утепления. Дождевик требует вентиляции; плотной тканью коляску накрывать нельзя." = "Choose one ready-made insulation option. The raincoat requires ventilation; dense cloth can not cover the stroller.";
@@ -186,6 +195,7 @@
 "Голова малыша — главная зона теплообмена" = "The baby’s head is the main heat exchange zone";
 "Готово" = "Ready.";
 "Гроза" = "Storm";
+"Гуляет %@" = "%@ is out walking";
 "Данные ребёнка" = "Child's data";
 "Дата" = "Date.";
 "Дата и время прогулки" = "Date and time of walk";
@@ -244,6 +254,7 @@
 "Жаркий (%@%lld°)" = "Hot (%@%lld°)";
 "жарко" = "hot";
 "Жарко" = "Hot.";
+"Живая прогулка" = "Live walk";
 "Журнал прогулки" = "Walk-in";
 "Журнал прогулок" = "Walking magazine";
 "За 7 дней" = "7 days.";
@@ -279,6 +290,8 @@
 "Идеально" = "Perfect.";
 "Идут осадки — используйте штатную защиту от дождя и сохраняйте вентиляцию." = "Precipitation is coming - use regular rain protection and keep ventilation.";
 "Идёт дождь — нужна водонепроницаемая защита" = "It's raining, you need waterproof protection.";
+"Идёт сейчас" = "In progress";
+"Изменения применяются сразу" = "Changes apply immediately";
 "Изменить" = "Change.";
 "Изменить данные ребёнка" = "Change the child's data";
 "Изменить самочувствие, активность и условия прогулки" = "Change the state of health, activity and walking conditions";
@@ -306,6 +319,7 @@
 "й" = "oy";
 "к" = "toward";
 "Как будет двигаться" = "How will it move?";
+"Как в системе" = "Use system language";
 "Как гуляем" = "Like walking.";
 "Как получилась рекомендация" = "How did the recommendation come about?";
 "Как проверить комфорт" = "How to check comfort";
@@ -441,6 +455,7 @@
 "Нет метаданных" = "No metadata.";
 "Нет напоминаний" = "No reminders.";
 "Нет профиля" = "No profile.";
+"Нет связи · обновлено в %@" = "No connection · updated at %@";
 "ниже 0°C" = "below 0°C";
 "Низкая" = "Low.";
 "Низкая уверенность" = "Low confidence";
@@ -461,6 +476,7 @@
 "Обновление погоды · дождевик · осторожное окно прогулки" = "Weather update · raincoat · careful walk window";
 "Обновлено" = "Updated";
 "Обновляем рекомендацию" = "Updating the recommendation";
+"Обновляется в реальном времени" = "Updating in real time";
 "Обычная" = "Normal.";
 "обычный капор" = "corporal";
 "Ограничение подбора (§5.2)" = "Restriction of selection (§ 5.2)";
@@ -498,6 +514,7 @@
 "Осадки после защиты (§3.2)" = "Precipitation after protection (§ 3.2)";
 "Особенности здоровья" = "Features of health";
 "Особенности сердца/дыхания" = "Characteristics of the heart / breathing";
+"осталось" = "remaining";
 "Осторожно" = "Careful.";
 "от +5 до +15°C" = "+5 to +15°C";
 "Отзывы об одежде" = "Clothing reviews";
@@ -594,6 +611,8 @@
 "Проверьте после начала прогулки" = "Check after the walk begins";
 "Проверьте штатную вентиляцию и живот или заднюю поверхность шеи ребёнка. Снимите дождевик, когда осадки закончатся." = "Check the normal ventilation and the abdomen or back of the child's neck. Remove the raincoat when the precipitation is over.";
 "Прогулка" = "Walking.";
+"Прогулка завершена" = "Walk finished";
+"Прогулку ведёт %@" = "%@ is leading the walk";
 "Прогулку лучше отложить" = "It is better to postpone the walk.";
 "Прогулку лучше перенести" = "It is better to postpone the walk";
 "Прогулку лучше перенести на более прохладное время. Младенцу предлагайте обычные кормления чаще." = "It is better to postpone the walk to a cooler time. Offer normal feedings to the baby more often.";
@@ -702,6 +721,7 @@
 "Срок рождения" = "Date of birth";
 "строже пороги «не гулять»" = "Stricter \"no walk\" thresholds";
 "Сургут" = "surgut";
+"Таймлайн" = "Timeline";
 "Текущее\nтепло" = "Current heat";
 "Тема оформления" = "Theme of design";
 "температура" = "temperature";
@@ -734,6 +754,8 @@
 "Тёплый свитер / флис" = "Warm sweater/fleece";
 "у" = "at";
 "Уведомления" = "Notifications";
+"Уведомления о прогулке" = "Walk notifications";
+"Уведомления приходят, пока приложение открыто. Пуши на закрытое приложение появятся позже." = "Notifications arrive only while the app is open. Push notifications for a closed app are coming later.";
 "Уверенность не сохранена" = "Confidence not retained";
 "Уверенность: %@. %@" = "Confidence: %@. %@";
 "Удалить" = "Delete";
@@ -779,6 +801,8 @@
 "Худи / Свитшот с начёсом" = "Hoody/Sweatshot with a haircut";
 "Царапки" = "Scratches";
 "Цель %.1f TOG, доступный комплект даёт %.1f TOG." = "Target %.1f TOG, available kit gives %.1f TOG.";
+"Цель ~%.1f TOG" = "Target ~%.1f TOG";
+"цель достигнута" = "target reached";
 "цель одежда: %.1f TOG" = "Target clothing: %.1f TOG";
 "ч" = "?";
 "Часто болеет" = "Often sick.";
@@ -813,6 +837,7 @@
 "Это экспериментальный ручной конструктор. Для прогноза и правил безопасности используйте вкладку «Одежда»." = "This is an experimental handheld constructor. Use the Clothing tab for prediction and safety rules.";
 "ю" = "yo";
 "я" = "me";
+"Язык приложения" = "App language";
 "Яндекс Погода" = "Yandex Weather";
 "Яндекс Погода. Требует API-ключ тарифа «Погода»: developer.tech.yandex.ru" = "Yandex Weather Requires the Weather tariff API key: developer.tech.yandex.ru";
 "Ясно" = "Clear.";
@@ -832,6 +857,21 @@
 "👶" = "👶";
 "📝 Онбординг" = "📝 Onboarding";
 "🧥 Весна · 2 года" = "🧥 Spring · 2 years";
-"Язык приложения" = "App language";
-"Как в системе" = "Use system language";
-"Изменения применяются сразу" = "Changes apply immediately";
+
+"В люльке" = "In bassinet";
+"Выполнено" = "Completed";
+"Заезды в люльку" = "Bassinet sessions";
+"Закрыть" = "Close";
+"Детали прогулки" = "Walk details";
+"Изменения одежды" = "Clothing changes";
+"Не отмечен" = "Not recorded";
+"Не выполнено" = "Not completed";
+"Отметки" = "Events";
+"План" = "Plan";
+"Показывает длительность сна и другие итоги прогулки" = "Shows sleep duration and other walk results";
+"Сводка о прогулке" = "Walk summary";
+"Самочувствие" = "Well-being";
+"Сон" = "Sleep";
+"Сон не отмечен" = "Sleep not recorded";
+"Сон продолжался до завершения прогулки" = "Sleep continued until the walk ended";
+"Эпизоды сна" = "Sleep sessions";

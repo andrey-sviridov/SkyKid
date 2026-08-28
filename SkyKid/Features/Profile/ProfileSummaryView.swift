@@ -21,6 +21,7 @@ struct ProfileSummaryView: View {
                     AccountCard(profile: p)
                     if authService.isSignedIn {
                         FamilyCard()
+                        LiveWalkNotificationsCard()
                     }
                     infoCards(p)
                     wardrobeCard

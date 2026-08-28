@@ -12,7 +12,9 @@ final class SupabaseSyncService {
 
     private init() {}
 
-    private var client: SupabaseClient { SupabaseClientProvider.client }
+    /// Не `private` по той же причине, что и `syncContext` ниже: им
+    /// пользуется `SupabaseSyncService+LiveWalk` в соседнем файле.
+    var client: SupabaseClient { SupabaseClientProvider.client }
 
     /// Выгрузка разрешена только когда локальные данные уже привязаны к
     /// текущему аккаунту. Данные, созданные в автономном режиме, не должны
@@ -23,7 +25,10 @@ final class SupabaseSyncService {
     ///
     /// `familyID` обязателен: строки принадлежат семье, а `userID` остаётся
     /// лишь отметкой, кто из родителей сохранил запись последним.
-    private var syncContext: (familyID: UUID, userID: UUID)? {
+    ///
+    /// Не `private`: тем же гейтом пользуется публикация идущей прогулки в
+    /// `SupabaseSyncService+LiveWalk` — а `private` в Swift ограничен файлом.
+    var syncContext: (familyID: UUID, userID: UUID)? {
         let auth = SupabaseAuthService.shared
         guard auth.isLocalDataLinkedToCurrentAccount,
               let userID = auth.userID,

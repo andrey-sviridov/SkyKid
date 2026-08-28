@@ -18,8 +18,10 @@ struct ContentView: View {
     @State private var childProfileStore = ChildProfileStore.shared
     @State private var notificationService = NotificationService.shared
     @State private var authService = SupabaseAuthService.shared
+    @State private var liveWalkObserver = LiveWalkObserver.shared
     @State private var selectedTab = 0
     @State private var showWalkSetup = false
+    @State private var completedWalk: WalkLog?
     @State private var tabBeforeWalk = 0
     private let walkTag = 3
 
@@ -52,12 +54,22 @@ struct ContentView: View {
         // («unable to type-check this expression in reasonable time»).
         observedRootContent
         .onChange(of: scenePhase) { _, phase in
-            guard phase == .active else { return }
+            // Подписка на чужую прогулку живёт только на переднем плане:
+            // фоновых режимов у приложения нет, сокет в фоне всё равно рвётся.
+            guard phase == .active else {
+                if phase == .background { liveWalkObserver.stop() }
+                return
+            }
             activeWalkStore.refresh()
+            liveWalkObserver.start()
             Task { await refreshSharedFamilyData() }
             guard Date().timeIntervalSince(lastForegroundReload) > 30 * 60 else { return }
             lastForegroundReload = Date()
             Task { await weatherVM.reload() }
+        }
+        .onChange(of: liveWalkObserver.lastFinishedAt) { _, finishedAt in
+            guard finishedAt != nil else { return }
+            Task { await pullFinishedPartnerWalk() }
         }
         .sheet(isPresented: $showProfileSetup) {
             ChildProfileSetupView(profile: $childProfile)
@@ -70,6 +82,9 @@ struct ContentView: View {
                 walkContext: walkContextStore.context,
                 onStarted: { selectedTab = walkTag }
             )
+        }
+        .sheet(item: $completedWalk) { log in
+            WalkCompletionView(log: log)
         }
         .onChange(of: activeWalkStore.isActive) { wasActive, isActive in
             if wasActive && !isActive {
@@ -88,6 +103,7 @@ struct ContentView: View {
         .environment(notificationService)
         .environment(activeWalkStore)
         .environment(authService)
+        .environment(liveWalkObserver)
     }
 
     private var observedRootContent: some View {
@@ -253,11 +269,15 @@ struct ContentView: View {
 
     /// Тап по «Прогулке», когда прогулки нет, запускает новую, а не открывает
     /// пустую вкладку — поведение прежней круглой кнопки в самодельном баре.
+    ///
+    /// Чужая идущая прогулка вкладку открывает: иначе второй родитель не смог
+    /// бы её посмотреть — тап всегда предлагал бы завести свою.
     private var tabSelection: Binding<Int> {
         Binding {
             selectedTab
         } set: { newValue in
-            guard newValue == walkTag, !activeWalkStore.isActive else {
+            let hasWalkToShow = activeWalkStore.isActive || liveWalkObserver.partner != nil
+            guard newValue == walkTag, !hasWalkToShow else {
                 selectedTab = newValue
                 return
             }
@@ -332,22 +352,38 @@ struct ContentView: View {
             WalkTabView(
                 weather: weatherVM.weather,
                 profile: childProfile,
-                onChanged: refreshOutfitRecommendation
+                onChanged: refreshOutfitRecommendation,
+                onFinished: { completedWalk = $0 },
+                onStartOwnWalk: {
+                    tabBeforeWalk = selectedTab
+                    showWalkSetup = true
+                }
             )
         }
         .tabItem {
             // Пока прогулка идёт — символ в движении: живой таймер, который
             // был в круглой кнопке, теперь показывают Live Activity и сама
             // вкладка, а бару достаётся только признак «идёт».
-            Label(
-                L10n.text("Прогулка"),
-                systemImage: activeWalkStore.isActive ? "figure.walk.motion" : "figure.walk"
-            )
+            //
+            // Чужая прогулка отмечается двумя фигурами: сам пользователь
+            // никуда не идёт, и «бегущий человечек» тут вводил бы в
+            // заблуждение.
+            Label(L10n.text("Прогулка"), systemImage: walkTabIcon)
         }
         // Точка, а не число: считать тут нечего, нужен сам факт «идёт».
         // Символ взят явно — пустая строка в бейдже может не отрисоваться.
-        .badge(activeWalkStore.isActive ? Text(verbatim: "•") : nil)
+        .badge(isAnyWalkLive ? Text(verbatim: "•") : nil)
         .tag(walkTag)
+    }
+
+    private var isAnyWalkLive: Bool {
+        activeWalkStore.isActive || liveWalkObserver.partner != nil
+    }
+
+    private var walkTabIcon: String {
+        if activeWalkStore.isActive { return "figure.walk.motion" }
+        if liveWalkObserver.partner != nil { return "figure.2" }
+        return "figure.walk"
     }
 
     private var historyTab: some View {
@@ -434,6 +470,23 @@ struct ContentView: View {
         for log in remoteLogs.reversed() where !knownIDs.contains(log.id) {
             walkLogStore.add(log, profile: childProfile)
         }
+
+        // Идущие прогулки семьи сверяются независимо от Realtime — если
+        // сокет не поднялся, состояние всё равно будет верным.
+        await liveWalkObserver.refreshFromPull()
+    }
+
+    /// Чужая прогулка исчезла из слота — значит, её завершили.
+    ///
+    /// Гонка здесь штатная: `ActiveWalkStore.finish()` сперва отдаёт лог в
+    /// `WalkLogStore` (тот пушит его асинхронно), и только потом снимает
+    /// слот, поэтому удаление может доехать раньше самой записи. Отсюда
+    /// второй заход через пару секунд; если и он разошёлся — прогулка
+    /// появится при следующем возврате в приложение.
+    private func pullFinishedPartnerWalk() async {
+        await refreshSharedFamilyData()
+        try? await Task.sleep(for: .seconds(3))
+        await refreshSharedFamilyData()
     }
 
     // MARK: - Supabase sync (первый вход после установки/переустановки)
@@ -486,6 +539,10 @@ struct ContentView: View {
             // холодном старте, он видит только последующие переходы.
             await refreshSharedFamilyData()
         }
+
+        // По той же причине здесь стартует и подписка на живые прогулки:
+        // на холодном старте `scenePhase` её не поднимет.
+        liveWalkObserver.start()
     }
 }
 

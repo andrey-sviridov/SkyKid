@@ -3,10 +3,15 @@ import SwiftUI
 struct WalkEventRow: View {
     let event: WalkEvent
     let startDate: Date
+    /// В просмотре чужой прогулки кнопка «Назначить» была бы мёртвой —
+    /// менять чужую запись нельзя.
+    var showsReclassifyButton: Bool = true
     var onReclassify: () -> Void = {}
 
     private var color: Color { event.kind.color }
-    private var isUnassignedCheckpoint: Bool { event.kind == .checkpoint }
+    private var isUnassignedCheckpoint: Bool {
+        event.kind == .checkpoint && showsReclassifyButton
+    }
 
     private var subtitle: String? {
         if let id = event.garmentID { return GarmentCatalog.byID[id]?.name }

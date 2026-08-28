@@ -11,6 +11,7 @@
 		CB0000000000000000000002 /* KeychainStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000001 /* KeychainStoreTests.swift */; };
 		CB0000000000000000000004 /* ChildNameCipherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000003 /* ChildNameCipherTests.swift */; };
 		CB0000000000000000000006 /* AuthSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* AuthSyncTests.swift */; };
+		LIVEWALKTESTSBUILD /* LiveWalkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKTESTSFILE /* LiveWalkTests.swift */; };
 		CF3016AD05C7F67B8DD604A6 /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 701AF90ACAE91C070C53DA05 /* SupabaseConfig.swift */; };
 		B38502801A4831EBF4AEBE64 /* SupabaseClientProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31959B6E83940648759A9B1F /* SupabaseClientProvider.swift */; };
 		4D444A32EEFBADA6DC6DBA46 /* ChildNameCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3DAC29CEEE07861A2D647F2 /* ChildNameCipher.swift */; };
@@ -23,7 +24,30 @@
 		JOINFAMILYBUILD /* JoinFamilySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = JOINFAMILYFILE /* JoinFamilySheet.swift */; };
 		SIGNINPROVIDERBUILD /* SignInProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = SIGNINPROVIDERFILE /* SignInProvider.swift */; };
 		FAMILYMEMBERBUILD /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMILYMEMBERFILE /* FamilyMember.swift */; };
+		LIVEWALKSNAPBUILD /* LiveWalkSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKSNAPFILE /* LiveWalkSnapshot.swift */; };
+		LIVEWALKSVCBUILD /* SupabaseSyncService+LiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKSVCFILE /* SupabaseSyncService+LiveWalk.swift */; };
+		LIVEWALKPUBBUILD /* LiveWalkPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKPUBFILE /* LiveWalkPublisher.swift */; };
+		LIVEWALKOBSBUILD /* LiveWalkObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKOBSFILE /* LiveWalkObserver.swift */; };
+		LIVEWALKDETAILBUILD /* LiveWalkDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKDETAILFILE /* LiveWalkDetailView.swift */; };
+		LIVEWALKFOOTERBUILD /* LiveWalkStatusFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKFOOTERFILE /* LiveWalkStatusFooter.swift */; };
+		LIVEWALKROWBUILD /* LiveWalkInProgressRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKROWFILE /* LiveWalkInProgressRow.swift */; };
+		LIVEWALKNOTIFPREFSBUILD /* LiveWalkNotificationPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKNOTIFPREFSFILE /* LiveWalkNotificationPreferences.swift */; };
+		LIVEWALKNOTIFIERBUILD /* LiveWalkNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKNOTIFIERFILE /* LiveWalkNotifier.swift */; };
+		LIVEWALKNOTIFCONTENTBUILD /* LiveWalkNotificationContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKNOTIFCONTENTFILE /* LiveWalkNotificationContent.swift */; };
+		LIVEWALKNOTIFCARDBUILD /* LiveWalkNotificationsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = LIVEWALKNOTIFCARDFILE /* LiveWalkNotificationsCard.swift */; };
 		FAMILYMEMBERROWBUILD /* FamilyMemberRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAMILYMEMBERROWFILE /* FamilyMemberRow.swift */; };
+		SECTIONCARDBUILD /* SectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = SECTIONCARDFILE /* SectionCard.swift */; };
+		ELAPSEDTIMEBUILD /* ElapsedTimeText.swift in Sources */ = {isa = PBXBuildFile; fileRef = ELAPSEDTIMEFILE /* ElapsedTimeText.swift */; };
+		COUNTDOWNLBLBUILD /* CountdownLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = COUNTDOWNLBLFILE /* CountdownLabel.swift */; };
+		STATUSDOTBUILD /* StatusDotLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = STATUSDOTFILE /* StatusDotLabel.swift */; };
+		METRICTILEBUILD /* MetricTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = METRICTILEFILE /* MetricTile.swift */; };
+		WALKTIMERHDRBUILD /* WalkTimerHeaderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKTIMERHDRFILE /* WalkTimerHeaderCard.swift */; };
+		WALKTIMELINEBUILD /* WalkTimelineCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKTIMELINEFILE /* WalkTimelineCard.swift */; };
+		WALKQUICKACTBUILD /* WalkQuickActionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKQUICKACTFILE /* WalkQuickActionsCard.swift */; };
+		WALKSUMMARYBUILD /* WalkSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKSUMMARYFILE /* WalkSummary.swift */; };
+		WALKCOMPLETIONBUILD /* WalkCompletionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKCOMPLETIONFILE /* WalkCompletionView.swift */; };
+		WALKSUMMARYVIEWBUILD /* WalkSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKSUMMARYVIEWFILE /* WalkSummaryView.swift */; };
+		WALKSUMMARYTESTSBUILD /* WalkSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKSUMMARYTESTSFILE /* WalkSummaryTests.swift */; };
 		9F64ECECE3C18F326554C8AC /* SupabaseSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */; };
 		00B924BAF836AC1A63BA75DE /* WalkEventRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */; };
 		05021B7BF02ED6CF1760CFE9 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */; };
@@ -343,7 +367,29 @@
 		JOINFAMILYFILE /* JoinFamilySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinFamilySheet.swift; sourceTree = "<group>"; };
 		SIGNINPROVIDERFILE /* SignInProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInProvider.swift; sourceTree = "<group>"; };
 		FAMILYMEMBERFILE /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
+		LIVEWALKSNAPFILE /* LiveWalkSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkSnapshot.swift; sourceTree = "<group>"; };
+		LIVEWALKSVCFILE /* SupabaseSyncService+LiveWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SupabaseSyncService+LiveWalk.swift"; sourceTree = "<group>"; };
+		LIVEWALKPUBFILE /* LiveWalkPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkPublisher.swift; sourceTree = "<group>"; };
+		LIVEWALKOBSFILE /* LiveWalkObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkObserver.swift; sourceTree = "<group>"; };
+		LIVEWALKDETAILFILE /* LiveWalkDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkDetailView.swift; sourceTree = "<group>"; };
+		LIVEWALKFOOTERFILE /* LiveWalkStatusFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkStatusFooter.swift; sourceTree = "<group>"; };
+		LIVEWALKROWFILE /* LiveWalkInProgressRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkInProgressRow.swift; sourceTree = "<group>"; };
+		LIVEWALKNOTIFPREFSFILE /* LiveWalkNotificationPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkNotificationPreferences.swift; sourceTree = "<group>"; };
+		LIVEWALKNOTIFIERFILE /* LiveWalkNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkNotifier.swift; sourceTree = "<group>"; };
+		LIVEWALKNOTIFCONTENTFILE /* LiveWalkNotificationContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkNotificationContent.swift; sourceTree = "<group>"; };
+		LIVEWALKNOTIFCARDFILE /* LiveWalkNotificationsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveWalkNotificationsCard.swift; sourceTree = "<group>"; };
 		FAMILYMEMBERROWFILE /* FamilyMemberRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberRow.swift; sourceTree = "<group>"; };
+		SECTIONCARDFILE /* SectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionCard.swift; sourceTree = "<group>"; };
+		ELAPSEDTIMEFILE /* ElapsedTimeText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElapsedTimeText.swift; sourceTree = "<group>"; };
+		COUNTDOWNLBLFILE /* CountdownLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownLabel.swift; sourceTree = "<group>"; };
+		STATUSDOTFILE /* StatusDotLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusDotLabel.swift; sourceTree = "<group>"; };
+		METRICTILEFILE /* MetricTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricTile.swift; sourceTree = "<group>"; };
+		WALKTIMERHDRFILE /* WalkTimerHeaderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTimerHeaderCard.swift; sourceTree = "<group>"; };
+		WALKTIMELINEFILE /* WalkTimelineCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkTimelineCard.swift; sourceTree = "<group>"; };
+		WALKQUICKACTFILE /* WalkQuickActionsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkQuickActionsCard.swift; sourceTree = "<group>"; };
+		WALKSUMMARYFILE /* WalkSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSummary.swift; sourceTree = "<group>"; };
+		WALKCOMPLETIONFILE /* WalkCompletionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkCompletionView.swift; sourceTree = "<group>"; };
+		WALKSUMMARYVIEWFILE /* WalkSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSummaryView.swift; sourceTree = "<group>"; };
 		4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSyncService.swift; sourceTree = "<group>"; };
 		ECE8061C83759412BE23B087 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		EE0000000000000000000001 /* WeatherNormalizerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WeatherNormalizerTests.swift; sourceTree = "<group>"; };
@@ -429,6 +475,8 @@
 		CB0000000000000000000001 /* KeychainStoreTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KeychainStoreTests.swift; sourceTree = "<group>"; };
 		CB0000000000000000000003 /* ChildNameCipherTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChildNameCipherTests.swift; sourceTree = "<group>"; };
 		CB0000000000000000000005 /* AuthSyncTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthSyncTests.swift; sourceTree = "<group>"; };
+		LIVEWALKTESTSFILE /* LiveWalkTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveWalkTests.swift; sourceTree = "<group>"; };
+		WALKSUMMARYTESTSFILE /* WalkSummaryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WalkSummaryTests.swift; sourceTree = "<group>"; };
 		FF0000000000000000000001 /* WeatherThermalEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherThermalEffects.swift; sourceTree = "<group>"; };
 		FF0000000000000000000003 /* TransportExposureProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportExposureProfile.swift; sourceTree = "<group>"; };
 		FF0000000000000000000005 /* MicroclimateCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MicroclimateCalculatorTests.swift; sourceTree = "<group>"; };
@@ -520,6 +568,7 @@
 				C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */,
 				276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */,
 				E7253A4199F72E28D6571D6C /* OutfitSummaryCard.swift */,
+				LIVEWALKROWFILE /* LiveWalkInProgressRow.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -560,6 +609,11 @@
 			isa = PBXGroup;
 			children = (
 				3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */,
+				SECTIONCARDFILE /* SectionCard.swift */,
+				ELAPSEDTIMEFILE /* ElapsedTimeText.swift */,
+				COUNTDOWNLBLFILE /* CountdownLabel.swift */,
+				STATUSDOTFILE /* StatusDotLabel.swift */,
+				METRICTILEFILE /* MetricTile.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -583,6 +637,10 @@
 				4CD2B9498C05E597E5D730CF /* SupabaseSyncService.swift */,
 				FAMINVITECODEFILE /* FamilyInviteCode.swift */,
 				FAMILYMEMBERFILE /* FamilyMember.swift */,
+				LIVEWALKSNAPFILE /* LiveWalkSnapshot.swift */,
+				LIVEWALKSVCFILE /* SupabaseSyncService+LiveWalk.swift */,
+				LIVEWALKPUBFILE /* LiveWalkPublisher.swift */,
+				LIVEWALKOBSFILE /* LiveWalkObserver.swift */,
 			);
 			path = Sync;
 			sourceTree = "<group>";
@@ -610,6 +668,10 @@
 				1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */,
 				187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */,
 				7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */,
+				WALKTIMERHDRFILE /* WalkTimerHeaderCard.swift */,
+				WALKTIMELINEFILE /* WalkTimelineCard.swift */,
+				WALKQUICKACTFILE /* WalkQuickActionsCard.swift */,
+				LIVEWALKFOOTERFILE /* LiveWalkStatusFooter.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -634,6 +696,7 @@
 				FAMILYCARDFILE /* FamilyCard.swift */,
 				JOINFAMILYFILE /* JoinFamilySheet.swift */,
 				FAMILYMEMBERROWFILE /* FamilyMemberRow.swift */,
+				LIVEWALKNOTIFCARDFILE /* LiveWalkNotificationsCard.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -669,6 +732,8 @@
 				CB0000000000000000000001 /* KeychainStoreTests.swift */,
 				CB0000000000000000000003 /* ChildNameCipherTests.swift */,
 				CB0000000000000000000005 /* AuthSyncTests.swift */,
+				LIVEWALKTESTSFILE /* LiveWalkTests.swift */,
+				WALKSUMMARYTESTSFILE /* WalkSummaryTests.swift */,
 			);
 			path = SkyKidTests;
 			sourceTree = "<group>";
@@ -740,6 +805,9 @@
 			isa = PBXGroup;
 			children = (
 				FWHV /* WalkHistoryView.swift */,
+				WALKSUMMARYFILE /* WalkSummary.swift */,
+				WALKCOMPLETIONFILE /* WalkCompletionView.swift */,
+				WALKSUMMARYVIEWFILE /* WalkSummaryView.swift */,
 				F90000000000000000000003 /* FeedbackHistoryItem.swift */,
 				F90000000000000000000005 /* FeedbackHistorySection.swift */,
 				86032F82229890CCF345EF35 /* LogWalkSheet.swift */,
@@ -814,6 +882,9 @@
 			children = (
 				F0NS /* NotificationService.swift */,
 				F90000000000000000000001 /* SafeReminderContent.swift */,
+				LIVEWALKNOTIFPREFSFILE /* LiveWalkNotificationPreferences.swift */,
+				LIVEWALKNOTIFIERFILE /* LiveWalkNotifier.swift */,
+				LIVEWALKNOTIFCONTENTFILE /* LiveWalkNotificationContent.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -923,6 +994,7 @@
 			isa = PBXGroup;
 			children = (
 				FWTV /* WalkTabView.swift */,
+				LIVEWALKDETAILFILE /* LiveWalkDetailView.swift */,
 				FWSS /* WalkSetupSheet.swift */,
 				FAWV /* ActiveWalkView.swift */,
 				FWRS /* WalkEventReclassifySheet.swift */,
@@ -1143,6 +1215,8 @@
 				FD1000000000000000000007 /* AppLanguageTests.swift in Sources */,
 				CB0000000000000000000002 /* KeychainStoreTests.swift in Sources */,
 				CB0000000000000000000006 /* AuthSyncTests.swift in Sources */,
+				LIVEWALKTESTSBUILD /* LiveWalkTests.swift in Sources */,
+				WALKSUMMARYTESTSBUILD /* WalkSummaryTests.swift in Sources */,
 				CB0000000000000000000004 /* ChildNameCipherTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1260,7 +1334,29 @@
 				JOINFAMILYBUILD /* JoinFamilySheet.swift in Sources */,
 				SIGNINPROVIDERBUILD /* SignInProvider.swift in Sources */,
 				FAMILYMEMBERBUILD /* FamilyMember.swift in Sources */,
+				LIVEWALKSNAPBUILD /* LiveWalkSnapshot.swift in Sources */,
+				LIVEWALKSVCBUILD /* SupabaseSyncService+LiveWalk.swift in Sources */,
+				LIVEWALKPUBBUILD /* LiveWalkPublisher.swift in Sources */,
+				LIVEWALKOBSBUILD /* LiveWalkObserver.swift in Sources */,
+				LIVEWALKDETAILBUILD /* LiveWalkDetailView.swift in Sources */,
+				LIVEWALKFOOTERBUILD /* LiveWalkStatusFooter.swift in Sources */,
+				LIVEWALKROWBUILD /* LiveWalkInProgressRow.swift in Sources */,
+				LIVEWALKNOTIFPREFSBUILD /* LiveWalkNotificationPreferences.swift in Sources */,
+				LIVEWALKNOTIFIERBUILD /* LiveWalkNotifier.swift in Sources */,
+				LIVEWALKNOTIFCONTENTBUILD /* LiveWalkNotificationContent.swift in Sources */,
+				LIVEWALKNOTIFCARDBUILD /* LiveWalkNotificationsCard.swift in Sources */,
 				FAMILYMEMBERROWBUILD /* FamilyMemberRow.swift in Sources */,
+				SECTIONCARDBUILD /* SectionCard.swift in Sources */,
+				ELAPSEDTIMEBUILD /* ElapsedTimeText.swift in Sources */,
+				COUNTDOWNLBLBUILD /* CountdownLabel.swift in Sources */,
+				STATUSDOTBUILD /* StatusDotLabel.swift in Sources */,
+				METRICTILEBUILD /* MetricTile.swift in Sources */,
+				WALKTIMERHDRBUILD /* WalkTimerHeaderCard.swift in Sources */,
+				WALKTIMELINEBUILD /* WalkTimelineCard.swift in Sources */,
+				WALKQUICKACTBUILD /* WalkQuickActionsCard.swift in Sources */,
+				WALKSUMMARYBUILD /* WalkSummary.swift in Sources */,
+				WALKCOMPLETIONBUILD /* WalkCompletionView.swift in Sources */,
+				WALKSUMMARYVIEWBUILD /* WalkSummaryView.swift in Sources */,
 				9F64ECECE3C18F326554C8AC /* SupabaseSyncService.swift in Sources */,
 				AAWS /* ActiveWalkStore.swift in Sources */,
 				AWTV /* WalkTabView.swift in Sources */,
