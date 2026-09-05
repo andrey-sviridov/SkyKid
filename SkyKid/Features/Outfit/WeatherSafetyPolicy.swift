@@ -49,7 +49,7 @@ private extension WeatherSafetyPolicy {
             code: .coldExposureLimit,
             severity: .blocked,
             message: L10n.format(
-                "По консервативному правилу SkyKid прогулку лучше отложить: расчётно %.0f°C, возрастной ориентир приложения %d°C. Одежда не отменяет это ограничение.",
+                "Сейчас холоднее ориентира помощника: расчётно %.0f°C, ориентир для этого возраста %d°C. Выберите другое время или маршрут.",
                 context.effectiveTemperature,
                 Int(limits.coldBelow)
             ),
@@ -65,7 +65,7 @@ private extension WeatherSafetyPolicy {
             code: .heatExposureLimit,
             severity: .blocked,
             message: L10n.format(
-                "По консервативному правилу SkyKid прогулку лучше перенести: с учётом жары около %.0f°C, возрастной ориентир приложения %d°C.",
+                "Сейчас жарче ориентира помощника: с учётом жары около %.0f°C, ориентир для этого возраста %d°C. Выберите более прохладное время и тень.",
                 context.heatIndexTemperature,
                 Int(limits.hotAbove)
             ),

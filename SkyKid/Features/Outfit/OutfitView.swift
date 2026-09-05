@@ -72,12 +72,6 @@ struct OutfitView: View {
                         if let window = rec.walkWindow {
                             walkWindowCard(window)
                         }
-                        NavigationLink {
-                            ClothingCalculatorView(profile: profile, weather: weather)
-                        } label: {
-                            OutfitConstructorLinkCard()
-                        }
-                        .buttonStyle(.plain)
                         layersSection(layers: viewModel.displayLayers)
                         if let guidance = wardrobeGuidance(in: rec) {
                             WardrobeAlternativesCard(
@@ -85,17 +79,6 @@ struct OutfitView: View {
                                 fit: rec.fit,
                                 severity: guidance.severity
                             )
-                        }
-                        OutfitCalculationDetailsCard(
-                            recommendation: rec,
-                            weather: weather
-                        )
-                        if let summary = viewModel.personalizationSummary {
-                            PersonalizationStatusCard(summary: summary) {
-                                if viewModel.resetPersonalization() {
-                                    onFeedbackRecorded()
-                                }
-                            }
                         }
                         OutfitFeedbackSection(
                             feedback: viewModel.feedbackSent,
@@ -161,12 +144,12 @@ struct OutfitView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 HStack(spacing: 7) {
-                    Image(systemName: "hanger")
+                    Image(systemName: "wand.and.stars")
                         .font(.subheadline.weight(.semibold))
                     Text(
                         profile.map {
-                            L10n.format("Что надеть · %@", $0.name)
-                        } ?? L10n.text("Что надеть")
+                            L10n.format("Помощник · %@", $0.name)
+                        } ?? L10n.text("Помощник")
                     )
                         .font(.system(.headline, design: .rounded).weight(.semibold))
                 }
@@ -242,7 +225,7 @@ struct OutfitView: View {
         } else {
             VStack(spacing: 0) {
                 HStack {
-                    Label("Что надеть", systemImage: "hanger")
+                    Label(L10n.text("Комплект"), systemImage: "hanger")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                     Spacer()

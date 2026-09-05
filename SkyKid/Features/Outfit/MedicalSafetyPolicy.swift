@@ -40,7 +40,7 @@ enum MedicalSafetyPolicy {
             warnings.append(SafetyWarning(
                 code: .medicalPlanPriority,
                 severity: .info,
-                message: L10n.text("Включён более осторожный режим для недоношенности или особенностей сердца/дыхания. Индивидуальный план врача важнее расчёта SkyKid."),
+                message: L10n.text("Для этого профиля включён более осторожный режим. Если у вас есть индивидуальный план врача, ориентируйтесь на него."),
                 systemImage: "cross.case.fill"
             ))
         }
@@ -105,7 +105,7 @@ private extension MedicalSafetyPolicy {
                 code: .feverMedicalAttention,
                 severity: .blocked,
                 message: measurementNote
-                    + L10n.text("Ребёнку меньше 3 месяцев: прогулку отмените. При 38°C и выше немедленно обратитесь за медицинской помощью."),
+                    + L10n.text("Для ребёнка младше 3 месяцев при повышенной температуре я не подбираю прогулочный комплект. При 38°C и выше немедленно обратитесь за медицинской помощью."),
                 systemImage: "cross.case.fill"
             )
         }
@@ -113,7 +113,7 @@ private extension MedicalSafetyPolicy {
         return SafetyWarning(
             code: .feverStayHome,
             severity: .blocked,
-            message: L10n.text("При повышенной температуре прогулку отмените. SkyKid не оценивает тяжесть болезни; ориентируйтесь на состояние ребёнка и рекомендации врача."),
+            message: L10n.text("При повышенной температуре я не подбираю одежду для прогулки. Ориентируйтесь на состояние ребёнка и рекомендации врача."),
             systemImage: "thermometer.high"
         )
     }
@@ -126,7 +126,7 @@ private extension MedicalSafetyPolicy {
         return [SafetyWarning(
             code: .illnessNeedsCaution,
             severity: .caution,
-            message: L10n.text("ОРВИ без температуры и мороз: SkyKid не определяет, безопасна ли прогулка при болезни. Сократите или отложите выход; не закрывайте ребёнку рот и нос тканью."),
+            message: L10n.text("При простуде и морозе я не могу оценить состояние ребёнка по погоде. Сократите или отложите выход; не закрывайте ребёнку рот и нос тканью."),
             systemImage: "lungs.fill"
         )]
     }

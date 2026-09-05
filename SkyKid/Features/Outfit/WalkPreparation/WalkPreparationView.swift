@@ -26,7 +26,6 @@ struct WalkPreparationView: View {
                 healthSection
                 activitySection
                 transportSection
-                durationSection
                 insulationSection
             }
             .accessibilityIdentifier("walkPreparation.form")
@@ -132,20 +131,6 @@ struct WalkPreparationView: View {
         }
     }
 
-    // MARK: - Duration
-
-    private var durationSection: some View {
-        Section("Продолжительность") {
-            Picker("План прогулки", selection: walkTypeBinding) {
-                ForEach(WalkType.allCases) { walkType in
-                    Text("\(walkType.label) · \(walkType.detail)")
-                        .tag(walkType)
-                }
-            }
-            .pickerStyle(.navigationLink)
-        }
-    }
-
     // MARK: - Insulation
 
     @ViewBuilder
@@ -201,13 +186,6 @@ struct WalkPreparationView: View {
         Binding(
             get: { viewModel.context.activityLevel },
             set: { viewModel.context.activityLevel = $0 }
-        )
-    }
-
-    private var walkTypeBinding: Binding<WalkType> {
-        Binding(
-            get: { viewModel.context.walkType },
-            set: { viewModel.context.walkType = $0 }
         )
     }
 

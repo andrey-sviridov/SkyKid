@@ -56,9 +56,9 @@ private extension SafetyWarning.Severity {
         case .caution:
             return L10n.text("Осторожно")
         case .danger:
-            return L10n.text("Исправьте до выхода")
+            return L10n.text("Проверьте перед выходом")
         case .blocked:
-            return L10n.text("Прогулку отмените")
+            return L10n.text("Нужна осторожность")
         }
     }
 

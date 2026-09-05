@@ -43,14 +43,18 @@ SkyKid/
 │   │   ├── OutfitCombinationSolver.swift поиск доступных слоёв по TOG
 │   │   ├── OutfitAccessoryResolver.swift защита головы, рук и стоп
 │   │   ├── OutfitSolver.swift            оркестрация корпуса/аксессуаров/fit
-│   │   ├── ClothingRecommendationEngine.swift  Legacy CLO-движок
-│   │   ├── ClothingCalculatorView.swift  Вкладка 3 «Конструктор» — только SwiftUI views
-│   │   ├── WardrobeModel.swift           CLO-состояние и действия Конструктора
-│   │   ├── LegacyWardrobeAutoSelector.swift жадный CLO-подбор только Конструктора
 │   │   └── GarmentCatalog.swift          Единый каталог одежды и метаданных
+│   │
+│   ├── Walk/
+│   │   ├── WalkTabView.swift             Текущая и совместная прогулка
+│   │   ├── ActiveWalkView.swift           Таймер, одежда, быстрые отметки и журнал
+│   │   ├── WalkSetupSheet.swift           Подготовка и запуск прогулки
+│   │   └── Components/                   Карточки таймера, одежды, действий и отметок
 │   │
 │   ├── History/
 │   │   ├── WalkHistoryView.swift         Прогулки + история отзывов
+│   │   ├── WalkHistoryInsights.swift      Сводка последних 7 дней
+│   │   ├── Components/WalkHistoryInsightsCard.swift
 │   │   ├── FeedbackHistoryItem.swift     Presentation builder наблюдений
 │   │   └── FeedbackHistorySection.swift  Сворачиваемая карточка истории
 │   │
@@ -92,8 +96,7 @@ SkyKid/
 │       ├── PersonalizationModels.swift  контекст, наблюдение, state и summary
 │       ├── PersonalizationEngine.swift  повторяемые сигналы, дедупликация, лимиты
 │       ├── PersonalOffsetStore.swift    App Group persistence + миграция v1 → v2
-│       ├── WalkLog.swift                прогулка + optional-контекст feedback
-│       └── BiasStore.swift             TempZone + ClothingBiasEngine + BiasStore @MainActor
+│       └── WalkLog.swift                прогулка + optional-контекст feedback
 │   └── Storage/
 │       ├── RecommendationSnapshotStore.swift App Group persistence
 │       └── WalkLogStore.swift           журнал + синхронизация наблюдений
@@ -109,7 +112,7 @@ SkyKidWidget/
 
 **История миграции:**
 - `OutfitAdvisor.swift` удалён; основная вкладка использует TOG-пайплайн `OutfitRecommendationService` → `OutfitSolver`
-- `ClothingRecommendationEngine.swift` и `WardrobeModel.swift` сохранены только для legacy-вкладки «Конструктор»
+- Старый CLO-конструктор и его UI удалены; `UserWardrobeStore` используется для фактического гардероба
 - Виджет и Siri не пересчитывают одежду: они читают `OutfitRecommendationSnapshot`
 
 ---
@@ -124,10 +127,10 @@ SkyKidApp (@main)
     ├── [denied]          → DeniedView
     └── [authorized]      → TabView (5 вкладок)
          ├── 0  weatherTab    → NavigationStack → WeatherView
-         ├── 1  mapTab        → NavigationStack → RadarMapView
          ├── 2  outfitTab     → NavigationStack → OutfitView
-         ├── 3  calculatorTab → NavigationStack → ClothingCalculatorView
-         └── 4  profileTab    → NavigationStack → ProfileSummaryView
+         ├── 3  walkTab       → NavigationStack → WalkTabView
+         ├── 4  historyTab    → NavigationStack → WalkHistoryView
+         └── 5  profileTab    → NavigationStack → ProfileSummaryView
                                                    └── sheet → ChildProfileSetupView
 ```
 
@@ -145,6 +148,7 @@ SkyKidApp (@main)
 - `ChildPerceptionCard` (если профиль есть): эмодзи · имя · возраст · прогресс-бар комфорта · текст резюме · возрастная подсказка
 - `statsGrid`: Ветер (м/с) · Направление · Влажность (%) · Осадки (мм)
 - Градиент фона: 7 состояний по `weatherCode` и температуре
+- Время последнего обновления и предупреждение после 2 часов; обновление доступно в toolbar
 
 **Зависимости:** pure view — принимает `NormalizedWeather` + `ChildProfile?`; при сниженной уверенности показывает `WeatherDataQualityCard`.
 
@@ -191,36 +195,25 @@ let output = BuildOutfitRecommendationUseCase().execute(
 
 ---
 
-### 3.4 Вкладка «Конструктор» (ClothingCalculatorView + WardrobeModel)
+### 3.4 Вкладка «Прогулка» (WalkTabView)
 
-- `WeatherControlsCard`: слайдер −25…+35°C · иконка погоды · пикер возраста
-- `RiskMeterCard`: прогресс-бар CLO · отклонение · метка риска
-- `AlertCard`: экстремальная жара (≥ 30°C) и мороз (≤ −10°C)
-- `AutoSelectButton`: жадный авто-выбор одежды
-- `ComfortCheckCard`: нейтральная подсказка проверки комфорта без ложной атрибуции педиатру
-- `ClothingConstructorSection`: `LazyVGrid` из `GarmentCard`
+- Во время прогулки сразу видны таймер с погодой, список одежды и быстрые действия
+- Быстрые действия: сон/пробуждение, открытие/закрытие люльки и прежняя кнопка «Отметка»
+- Таблица «Отметки» отображается всегда; при пустом состоянии показывает спокойную заглушку
+- Последнюю отметку можно отменить; снятие одежды отражается отдельной строкой и может быть отменено
+- `WalkHistoryInsightsCard` появляется после двух прогулок и показывает прогулки, среднюю длительность, сон и комфорт за 7 дней
 
-**Инициализация:** `weather.apparentTemperature` → начальная температура слайдера
-
-**Сброс (`resetAll()`):**
-- Температура → `model.weatherTemperature` (последняя актуальная погода с вкладки «Погода»)
-- Вся выбранная одежда → снимается
-- Кнопка «Сбросить» активна если температура изменена вручную ИЛИ есть выбранная одежда
-
-**`onChange(of: weather?.apparentTemperature)`:** обновляет `model.weatherTemperature` при обновлении погоды
-
-**CLO-формула:**
-```
-requiredHeat = max(0, (24 − temperature) × 0.5) × 0.85 если active && t < 15
-currentHeat  = Σ(selectedItems.heatValue)
-heatDeviation = currentHeat − requiredHeat
-```
-
-**GarmentCatalog:** один список для личного гардероба, основного TOG-решателя и legacy-Конструктора. Каждая позиция содержит возраст, TOG/CLO, покрываемые зоны, назначение и группу несовместимости. Скрытый набор solver-предметов удалён.
+`UserWardrobeStore` остаётся единственным источником фактической одежды. Старый ручной CLO-конструктор удалён.
 
 ---
 
-### 3.5 Вкладка «Профиль» (ProfileSummaryView)
+### 3.5 Вкладка «История» (WalkHistoryView)
+
+- Список завершённых прогулок
+- Сводка последних 7 дней при наличии достаточного числа прогулок
+- История отзывов и персонализации
+
+### 3.6 Вкладка «Профиль» (ProfileSummaryView)
 
 - Аватар (градиентный круг + эмодзи пола)
 - Карточки: день рождения · возрастная группа · срок рождения · температурная склонность · устойчивые тепловые особенности
@@ -337,8 +330,6 @@ struct WalkContext: Equatable, Sendable {
 | `wg_updated_at` | Double | Unix timestamp обновления |
 | `wg_latitude` | Double | Последняя известная широта |
 | `wg_longitude` | Double | Последняя известная долгота |
-| `bias_v1_index` | [String] | Индекс ключей BiasStore |
-| `bias_v1_<key>_<ts>` | Data (JSON) | Массив FeedbackEvent |
 | `weatherProvider` | String | Активный провайдер |
 | `owmApiKey` | String | Ключ OpenWeatherMap |
 | `wapiApiKey` | String | Ключ WeatherAPI.com |
@@ -379,95 +370,9 @@ protocol WeatherService: Sendable {
 
 ---
 
-## 6. Legacy ClothingRecommendationEngine
+## 6–7. Удалённый legacy-код
 
-Этот раздел описывает только изолированный CLO-конструктор. Основная вкладка «Одежда», виджет и Siri его не вызывают.
-
-### 6.1 Формула effectiveTemp
-
-```
-EffectiveTemp = feelsLike
-              + activityLevel.temperatureAdjustment    // −2 / 0 / +3
-              + ageGroup.temperatureOffset              // −5 … 0
-              + walkType.temperatureAdjustment          // −1.5 … +1
-              + healthFeatures.Σ(temperatureAdjustment) // −6 … +1.5 (сумма флагов)
-              + temperaturePreferenceOffset             // ручная поправка
-              + learnedBias                            // из BiasStore (−3 … +3)
-```
-
-### 6.2 Структура результата
-
-```swift
-struct LayeredOutfit: Equatable, Sendable {
-    effectiveTemp: Double
-    baseLayer:    Layer?    // нательный слой — всегда
-    midLayer:     Layer?    // утеплитель; nil при t ≥ 18°C
-    outerLayer:   Layer?    // куртка / конверт; nil в жару без осадков
-    accessories: [Layer]    // шапка, перчатки, шарф, обувь
-    // computed: allLayers = [base, mid, outer].compactMap{$0} + accessories
-}
-
-struct LayeredOutfit.Layer: Equatable, Sendable, Identifiable {
-    name:        String    // русское название
-    systemImage: String    // SF Symbol
-    reason:      String    // пояснение
-    // id = name + systemImage
-}
-```
-
-### 6.3 Стратегии (OCP)
-
-| Стратегия | Применяется при | Особенности |
-|---|---|---|
-| `StandardLayerStrategy` | toddler, preschool, schoolAge, teen | Шарф vs бафф по возрасту; ветровка при > 7 м/с |
-| `InfantLayerStrategy` | infant, baby | Конверт вместо куртки; шапка всегда; пинетки при t < 5 |
-
-Новый контекст → новый тип, реализующий `protocol LayerStrategy: Sendable`. Существующие стратегии не изменяются.
-
-### 6.4 Типичный вызов
-
-```swift
-// Только legacy-вкладка «Конструктор»
-let bias   = BiasStore.shared.currentBias(for: profile, feelsLike: weather.apparentTemperature)
-let outfit = ClothingRecommendationEngine.recommend(weather: weather, profile: profile, learnedBias: bias)
-```
-
----
-
-## 7. Адаптивный Bias — BiasStore
-
-### 7.1 Температурные зоны (TempZone)
-
-| Зона | Диапазон feelsLike |
-|---|---|
-| `.freezing` | < 0°C |
-| `.cold` | 0–10°C |
-| `.mild` | 10–20°C |
-| `.warm` | > 20°C |
-
-### 7.2 Формула (ClothingBiasEngine — pure static)
-
-```
-w_i   = exp(−0.02 · daysSince_i)         // half-life ≈ 35 дней
-raw   = Σ(vote_i · w_i) / Σ(w_i)         // vote: tooCold = −1, tooWarm = +1
-conf  = min(1.0, Σ(w_i) / 3.0)           // уверенность (3 взвешенных события = 100%)
-bias  = raw · 3°C · conf                  // ∈ [−3, +3°C]
-```
-
-Лимит: 60 событий на профиль, старейшие удаляются. Ключ хранения: `"\(name)_\(Int(birthday.timeIntervalSince1970))"`.
-
-### 7.3 UserFeedback
-
-```swift
-enum UserFeedback {
-    case tooCold      // записывается в BiasStore
-    case comfortable  // только анимация, в BiasStore не пишется
-    case tooWarm      // записывается в BiasStore
-}
-```
-
----
-
+Старый CLO-конструктор, `ClothingRecommendationEngine`, `WardrobeModel` и связанный с ними адаптивный `BiasStore` удалены из production-приложения. Основная рекомендация использует TOG-пайплайн `OutfitRecommendationService` → `OutfitSolver`, а персонализация прогулок — `PersonalizationEngine` и `PersonalOffsetStore`.
 ## 8. ChildProfileSetupView — секции формы
 
 ### Карточка 1: Основная информация
@@ -594,8 +499,9 @@ ContentView
 │   ├── OutfitViewModel       ← presentation state, PersonalOffsetStore
 │   └── WalkPreparationView   → explicit WalkContext update
 │
-├── ClothingCalculatorView    ← NormalizedWeather?, ChildProfile?
-│   └── WardrobeModel         ← GarmentCatalog
+├── WalkTabView               ← ActiveWalkStore, LiveWalkObserver
+│   ├── ActiveWalkView        ← таймер, одежда, быстрые действия, отметки
+│   └── WalkHistoryInsights   ← WalkLog[] за последние 7 дней
 │
 └── ProfileSummaryView        ← ChildProfile
     └── ChildProfileSetupView ← ChildProfileStore ← AppGroup

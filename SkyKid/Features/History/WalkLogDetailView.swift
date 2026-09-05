@@ -26,7 +26,6 @@ struct WalkLogDetailView: View {
                 infoCard
                 if !log.outfitItemIDs.isEmpty { outfitCard }
                 if log.isLiveTracked { timelineCard }
-                deleteButton
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
@@ -34,6 +33,20 @@ struct WalkLogDetailView: View {
         .skyKidBackground()
         .navigationTitle("Прогулка")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button(role: .destructive) {
+                        deleteLog()
+                    } label: {
+                        Label(L10n.text("Удалить прогулку"), systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+                .accessibilityLabel(L10n.text("Действия"))
+            }
+        }
         .sheet(isPresented: $showAddEvent) {
             AddWalkEventSheet(walkStart: log.date) { event in
                 log.events.append(event)
@@ -175,18 +188,12 @@ struct WalkLogDetailView: View {
 
     private var infoCard: some View {
         VStack(spacing: 0) {
-            infoRow(icon: "calendar", label: L10n.text("Дата"),
+            infoRow(icon: "calendar.clock", label: L10n.text("Дата и время"),
                     value: log.date.formatted(
                         .dateTime
                             .day()
                             .month(.wide)
                             .year()
-                            .locale(L10n.locale)
-                    ))
-            Divider().padding(.leading, 52)
-            infoRow(icon: "clock", label: L10n.text("Время"),
-                    value: log.date.formatted(
-                        .dateTime
                             .hour()
                             .minute()
                             .locale(L10n.locale)
@@ -197,9 +204,6 @@ struct WalkLogDetailView: View {
                 label: L10n.text("Длительность"),
                 value: durationString
             )
-            Divider().padding(.leading, 52)
-            infoRow(icon: "thermometer.medium", label: L10n.text("Температура"),
-                    value: "\(Int(log.weatherTemperature.rounded()))°C")
         }
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
@@ -248,23 +252,12 @@ struct WalkLogDetailView: View {
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
     }
 
-    private var deleteButton: some View {
-        Button(role: .destructive) {
-            if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
-                store.delete(at: IndexSet(integer: idx))
-                onChanged()
-            }
-            dismiss()
-        } label: {
-            Label("Удалить прогулку", systemImage: "trash")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.red)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.red.opacity(0.2), lineWidth: 1))
+    private func deleteLog() {
+        if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
+            store.delete(at: IndexSet(integer: idx))
+            onChanged()
         }
-        .buttonStyle(.plain)
+        dismiss()
     }
 
     private var durationString: String {

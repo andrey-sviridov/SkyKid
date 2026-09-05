@@ -135,12 +135,27 @@ final class ActiveWalkStore {
         liveActivity.update(for: walk, lastEvent: walk.events.last)
     }
 
-    func removeEvent(id: UUID) {
-        guard var walk = current else { return }
-        walk.events.removeAll { $0.id == id }
-        current = walk
+    /// Отменяет последнюю отметку и возвращает набор одежды в состояние до
+    /// неё. Нужна именно одна кнопка «Отменить», чтобы исправление не требовало
+    /// искать нужную строку в таймлайне.
+    func undoLastEvent() {
+        guard let walk = current,
+              let updatedWalk = WalkEventUndo.apply(to: walk)
+        else { return }
+
+        current = updatedWalk
         save()
-        liveActivity.update(for: walk, lastEvent: walk.events.last)
+        liveActivity.update(for: updatedWalk, lastEvent: updatedWalk.events.last)
+    }
+
+    func removeEvent(id: UUID) {
+        guard let walk = current,
+              let updatedWalk = WalkEventUndo.apply(to: walk, eventID: id)
+        else { return }
+
+        current = updatedWalk
+        save()
+        liveActivity.update(for: updatedWalk, lastEvent: updatedWalk.events.last)
     }
 
     /// Назначает конкретное действие ранее поставленной контрольной точке

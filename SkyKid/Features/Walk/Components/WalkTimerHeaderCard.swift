@@ -19,7 +19,7 @@ struct WalkTimerHeaderCard: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             weatherLine
 
             if let ownerName {
@@ -40,7 +40,7 @@ struct WalkTimerHeaderCard: View {
                 .foregroundStyle(tone.onColor.opacity(0.9))
             }
         }
-        .padding(20)
+        .padding(16)
         .frame(maxWidth: .infinity)
         .background(
             SkyKidTheme.weatherGradient(for: walk.weatherCode),

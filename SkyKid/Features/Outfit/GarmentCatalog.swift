@@ -238,7 +238,7 @@ enum ThermalRisk: Equatable {
 
 struct GarmentItem: Identifiable, Hashable, Sendable {
     let id: String
-    let heatValue: Double          // CLO-analogue (WardrobeModel)
+    let heatValue: Double          // legacy catalogue metric used by compatibility tests
     let tog: Double                // TOG value (OutfitSolver §5.1)
     let layer: GarmentLayer
     let symbol: String

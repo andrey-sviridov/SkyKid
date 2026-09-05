@@ -337,7 +337,7 @@ final class OutfitCalculatorTests: XCTestCase {
         )
 
         let warning = recommendation.warnings.first { $0.code == .feverStayHome }
-        XCTAssertTrue(warning?.message.contains("прогулку отмените") == true)
+        XCTAssertTrue(warning?.message.contains("не подбираю одежду для прогулки") == true)
         XCTAssertFalse(warning?.message.contains("15–20") == true)
     }
 

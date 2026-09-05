@@ -157,17 +157,4 @@ enum GarmentCatalog {
 
 `BodyZone`: корпус, руки, ноги, голова, шея, кисти и стопы. `GarmentUse` отделяет прогулочную одежду, аксессуары, утепление коляски, сон и утилитарные предметы.
 
-## WardrobeModel (`Features/Outfit/WardrobeModel.swift`)
-
-`@MainActor @Observable final class`.
-
-| Свойство | Описание |
-|---|---|
-| `temperature: Double` | Вход: слайдер −25…+35 |
-| `ageGroup: WardrobeAgeGroup` | .newborn / .active |
-| `selectedItems: Set<GarmentItem>` | Выбранные предметы |
-| `requiredHeat` | `max(0, (24 − temp) × 0.5)` × 0.85 для .active при temp < 15 |
-| `currentHeat` | Сумма CLO selectedItems |
-| `heatDeviation` | currentHeat − requiredHeat |
-| `riskLevel: ThermalRisk` | Зональная оценка + safety overrides |
-| `autoSelect()` | Жадный алгоритм → selectedItems |
+Старый `WardrobeModel` и его ручной CLO-конструктор удалены. Выбор доступных вещей для основного сценария выполняется через `UserWardrobeStore` и `OutfitSolver`.

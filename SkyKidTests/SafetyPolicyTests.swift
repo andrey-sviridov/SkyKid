@@ -85,7 +85,7 @@ final class SafetyPolicyTests: XCTestCase {
         let warning = result.warnings.first { $0.code == .coldExposureLimit }
 
         XCTAssertEqual(warning?.severity, .blocked)
-        XCTAssertTrue(warning?.message.contains("консервативному правилу SkyKid") == true)
+        XCTAssertTrue(warning?.message.contains("ориентира помощника") == true)
         XCTAssertTrue(warning?.blocksScenario == true)
     }
 

@@ -88,7 +88,9 @@ struct ChildProfileSetupView: View {
                         togCard
                     }
                     preferencesCard
-                    previewCard
+                    if !isEditing {
+                        previewCard
+                    }
                     saveButton
                 }
                 .padding(.horizontal, 20)

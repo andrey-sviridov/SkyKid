@@ -11,7 +11,7 @@ struct EmptyHistoryCard: View {
             VStack(spacing: 6) {
                 Text("Нет записей о прогулках")
                     .font(.headline)
-                Text("Нажмите +, чтобы записать первую прогулку. Повторяющиеся оценки в похожих условиях помогут точнее подбирать одежду.")
+                Text("Нажмите +, чтобы записать первую прогулку.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

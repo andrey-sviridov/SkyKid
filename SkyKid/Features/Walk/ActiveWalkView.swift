@@ -38,7 +38,11 @@ struct ActiveWalkView: View {
                         targetTOG: walk.targetTOG
                     )
 
-                    WalkQuickActionsCard(eventCount: walk.events.count) { kind in
+                    WalkQuickActionsCard(
+                        eventCount: walk.events.count,
+                        isSleeping: walk.isSleeping,
+                        showsBassinette: walk.transportMode == .pramBassinette
+                    ) { kind in
                         store.logEvent(kind)
                     }
 
@@ -46,7 +50,8 @@ struct ActiveWalkView: View {
                         events: walk.events,
                         startDate: walk.startDate,
                         onReclassify: { reclassifyingEvent = $0 },
-                        onDelete: { store.removeEvent(id: $0.id) }
+                        onDelete: { store.removeEvent(id: $0.id) },
+                        onUndoLast: { store.undoLastEvent() }
                     )
                 }
                 .padding(.horizontal, 16)
@@ -111,6 +116,7 @@ struct ActiveWalkView: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("walk.finish")
     }
 
     private func finish(_ level: BabyComfortLevel) {

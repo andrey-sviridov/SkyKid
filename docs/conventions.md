@@ -25,7 +25,7 @@
 
 ## SOLID-специфичное
 
-- Safety constraints в `WardrobeModel.riskLevel` — через guards `isExtremeHeat`/`isExtremeCold` **перед** зональной логикой. Порядок проверок не менять.
+- Safety constraints применяются в `SafetyRulesEngine` и специализированных policy-модулях до итогового отображения рекомендации. Порядок приоритетов проверяется тестами.
 - Основная рекомендация одежды проходит только через `OutfitRecommendationService` и `OutfitSolver`; legacy CLO-подборщик не может подменять их результат
 - UI, журнал, виджет и Siri получают результат только из `BuildOutfitRecommendationUseCase` / `OutfitRecommendationSnapshot`; запасный параллельный расчёт запрещён
 - Температуры берутся из `OutfitRecommendation.temperatures`, а не из поиска `CalcStep` по текстовой метке
@@ -50,7 +50,7 @@
 - Формулировка погодного окна не может обещать, что условия «безопасны» или однозначно «подходят»
 - Release-сборка основного приложения должна проходить `scripts/validate-clinical-release.sh`. Нельзя вручную ставить `approved`: статус заполняется только по письменному решению лицензированного педиатра, а digest должен соответствовать текущим файлам из `docs/clinical-policy-inputs.xcfilelist`
 - `GarmentCatalog.byID` / `byLayer` — единственный источник данных гардероба; не создавать дублирующих lookup-таблиц
-- `idealBandCLO = 0.2` — `private static let` в `WardrobeModel`; все ссылки через `Self.idealBandCLO`
+- Основной решатель использует TOG-пайплайн; старый CLO-конструктор не является частью production-сценария.
 
 ## Accessibility
 
@@ -74,9 +74,8 @@
 - `ChildProfileStore.swift` — только основной таргет (виджет не использует)
 - Новые файлы в `Core/` или `Features/` нужно добавлять в `project.pbxproj` вручную (pbxproj использует custom IDs F001–F021+)
 
-## Производительность (ClothingCalculatorView)
+## Производительность
 
-- `ClothingConstructorSection` получает `selectedItems: Set<GarmentItem>` — value type; при сдвиге слайдера температуры секция **не** перерисовывается
-- `RiskMeterCard` получает только примитивные типы — view identity стабильна
-- `GarmentItem.id: String` (не UUID) — стабильный идентификатор между кадрами
-- `RiskMeterBar.gradient` — `private static let`, создаётся один раз
+- Для списка одежды и отметок используются стабильные идентификаторы, чтобы изменения одной строки не перестраивали весь экран.
+- Сводка истории вычисляется только для недавних прогулок и не участвует в расчёте рекомендации одежды.
+- Интерактивные действия прогулки обновляют один `ActiveWalkStore`, после чего состояние сохраняется и синхронизируется с Live Activity.

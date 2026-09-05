@@ -22,7 +22,7 @@ struct GetOutfitRecommendationIntent: AppIntent {
         let store = AppGroupRecommendationSnapshotStore()
         guard let snapshot = store.load() else {
             throw SkyKidIntentError(
-                errorDescription: "Откройте SkyKid, чтобы обновить погоду и безопасную рекомендацию"
+                errorDescription: "Откройте SkyKid, обновите погоду и проверьте самочувствие ребёнка перед выходом."
             )
         }
         guard snapshot.isFresh() else {

@@ -53,9 +53,7 @@
 		05021B7BF02ED6CF1760CFE9 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */; };
 		0AC3A553C3F50E19097D00A5 /* WardrobeItemRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F88BE7805FC5DCF66F8A0C4 /* WardrobeItemRow.swift */; };
 		0B8C14AF621B51C83D7577B1 /* WalkDurationFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022FFE02828ABB54176BC587 /* WalkDurationFormatter.swift */; };
-		0C2AB4E4CF18FD57A84125F5 /* GarmentChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */; };
 		0CC66532B6245A1A514F6028 /* GarmentIconPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E612A9CF3F86C6A4E1E2C9F5 /* GarmentIconPreviewSheet.swift */; };
-		0E1BE61EEB9C12EEF46C50B0 /* AutoSelectButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EF89407C18D7849AD6CE3E /* AutoSelectButton.swift */; };
 		112CBDE2E3BA64279E359489 /* WalkLogRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */; };
 		17D10F40EF89310B36736B4C /* OutfitCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */; };
 		1E31DFD1C82635B2F6F3C38C /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
@@ -65,22 +63,16 @@
 		26421E5AC57BE5070350F34B /* ComfortLevelSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */; };
 		2C05E8BDC0B573B969E9B7DE /* TOGCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */; };
 		3959FCD4D57850EA76C93738 /* AddWalkEventSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08ACE7426C6A8B55C00407D1 /* AddWalkEventSheet.swift */; };
-		3A2D35413E4B9696050E7385 /* StatsHeaderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */; };
 		48EE3988618308CA1F261E03 /* OutfitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */; };
 		4A6EE286E4B4E015FB160AFB /* MicroclimateCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08D2D238BD9B3BE6CCE1A80 /* MicroclimateCalculator.swift */; };
 		4BC1CD15A5A4B0680C65DEF3 /* GarmentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 359FC12BF7C73BEDCC726FE8 /* GarmentPickerSheet.swift */; };
-		4D9039D4347748F2C3F75868 /* GarmentListRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00854279D3849AD1162F7F10 /* GarmentListRow.swift */; };
 		5080C3C7DCC1FE25D50419A8 /* HourlyForecastCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */; };
-		520CC73C85DF3EBD606F7ABB /* EditPinnedItemsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C492673BFB90E7C0420427DD /* EditPinnedItemsSheet.swift */; };
 		607C60C4B84A20BECC8EE41D /* WalkWeatherSnapshotCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */; };
 		6607D78575D0AC8014AF5801 /* EmptyHistoryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59234723319C252DD95250BA /* EmptyHistoryCard.swift */; };
 		66137106ADA97E90613DC653 /* WalkOutfitChipsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */; };
 		7C78A303045B58319838A80A /* GarmentPhotoPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D28115CB15B1C082DF9B4D07 /* GarmentPhotoPreviewSheet.swift */; };
-		8276D5EC44DEF3C1EFF90D62 /* PinnedItemsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320D7A7A60159A788FFB07A2 /* PinnedItemsCard.swift */; };
-		884D8FB1CBA6199460D33F67 /* OutfitConstructorLinkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A839E64963E0CAF1D8A8F97 /* OutfitConstructorLinkCard.swift */; };
 		8EA756B783DF34228081F501 /* PersonalOffsetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */; };
 		91DECA886D70F096722D44BF /* CancelWalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */; };
-		948AC5E3D92786BE22DD5AA6 /* WeatherControlsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36421A330DA08B5AF9728389 /* WeatherControlsCard.swift */; };
 		97F5DCB61D116CBCBC41826C /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBDE49626C11D86115DF7B77 /* KeychainStore.swift */; };
 		9988F1D868295BA065812FC5 /* ComfortLevelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */; };
 		A001 /* SkyKidApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* SkyKidApp.swift */; };
@@ -94,13 +86,9 @@
 		A014 /* ChildProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F014 /* ChildProfile.swift */; };
 		A015 /* ChildProfileSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F015 /* ChildProfileSetupView.swift */; };
 		A016 /* ChildWeatherPerception.swift in Sources */ = {isa = PBXBuildFile; fileRef = F016 /* ChildWeatherPerception.swift */; };
-		A017 /* ClothingCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F017 /* ClothingCalculatorView.swift */; };
 		A018 /* ChildProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F018 /* ChildProfileStore.swift */; };
 		A019 /* WeatherServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = F019 /* WeatherServiceProtocol.swift */; };
 		A020 /* GarmentCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F020 /* GarmentCatalog.swift */; };
-		A021 /* WardrobeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021 /* WardrobeModel.swift */; };
-		A022 /* ClothingRecommendationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F022 /* ClothingRecommendationEngine.swift */; };
-		A023 /* BiasStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F023 /* BiasStore.swift */; };
 		A024 /* OpenWeatherMapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F024 /* OpenWeatherMapService.swift */; };
 		A025 /* WeatherServiceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F025 /* WeatherServiceSettings.swift */; };
 		A026 /* WeatherAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F026 /* WeatherAPIService.swift */; };
@@ -131,7 +119,6 @@
 		AWSS /* WalkSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWSS /* WalkSetupSheet.swift */; };
 		AWTO /* WeatherTone.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTO /* WeatherTone.swift */; };
 		AWTV /* WalkTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWTV /* WalkTabView.swift */; };
-		B57F918A27C56E0E8B368B48 /* StatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F89AD9F5FE561BFB06281AB2 /* StatCard.swift */; };
 		B5927FF61A603C84E91D8218 /* PlannedDurationCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */; };
 		BA171B595519DD293986CBBE /* DurationPickerCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */; };
 		BACW /* ActiveWalk.swift in Sources */ = {isa = PBXBuildFile; fileRef = FACW /* ActiveWalk.swift */; };
@@ -143,7 +130,6 @@
 		BB000000000000000000000A /* BuildOutfitRecommendationUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000009 /* BuildOutfitRecommendationUseCase.swift */; };
 		BB000000000000000000000C /* OutfitViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000000000B /* OutfitViewModel.swift */; };
 		BB000000000000000000000E /* OutfitFeedbackSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000000000D /* OutfitFeedbackSection.swift */; };
-		BB0000000000000000000010 /* LegacyConstructorNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000000000000000000000F /* LegacyConstructorNoticeCard.swift */; };
 		BB0000000000000000000011 /* OutfitOutputModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */; };
 		BGRM /* GearModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394C0803F4348866DB8BF4DA /* GearModels.swift */; };
 		BWAA /* WalkActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = FWAA /* WalkActivityAttributes.swift */; };
@@ -152,8 +138,6 @@
 		C18859BE5A58F4A292889E5A /* PermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F6E8F8096CD2BD8BB84FCB /* PermissionView.swift */; };
 		C4FB8D13DD72F2DEA4CEE00E /* LogWalkSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86032F82229890CCF345EF35 /* LogWalkSheet.swift */; };
 		C541EC7E544C30E907F3553B /* GenderButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B9089E661B3297212103B52 /* GenderButton.swift */; };
-		C74A9214A993B7BA45E864C6 /* RiskMeterBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39DE49D8731D6827C133DFD4 /* RiskMeterBar.swift */; };
-		CA582AB0E66B1AAEFCDE6F98 /* RiskMeterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14A61546E16B8FA2F87EEFB7 /* RiskMeterCard.swift */; };
 		CC0000000000000000000002 /* ChildThermalProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000001 /* ChildThermalProfile.swift */; };
 		CC0000000000000000000003 /* ChildThermalProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000001 /* ChildThermalProfile.swift */; };
 		CC0000000000000000000005 /* WalkContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0000000000000000000004 /* WalkContext.swift */; };
@@ -173,7 +157,6 @@
 		DD0000000000000000000004 /* NormalizedWeather.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000003 /* NormalizedWeather.swift */; };
 		DD0000000000000000000006 /* WeatherNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000005 /* WeatherNormalizer.swift */; };
 		DD0000000000000000000008 /* WeatherDataQualityCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0000000000000000000007 /* WeatherDataQualityCard.swift */; };
-		DD74ECDE4F0A1475F6844A66 /* TemperatureNoWalkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0B0C61AB9235A432DC639 /* TemperatureNoWalkCard.swift */; };
 		DEC402649260087CE142BCC6 /* SafetyRulesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBB05756B2851EB6CF8BD55 /* SafetyRulesEngine.swift */; };
 		DF38455243DD3A28A4461881 /* DeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FDF8B3A99B9823238F06EA6 /* DeniedView.swift */; };
 		EB613DBE94E905560844ED06 /* WalkTOGVerdict.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA76C1E4B57E56EA101AF5C2 /* WalkTOGVerdict.swift */; };
@@ -196,7 +179,8 @@
 		F70000000000000000000004 /* PersonalizationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70000000000000000000003 /* PersonalizationEngine.swift */; };
 		F70000000000000000000006 /* PersonalizationStatusCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70000000000000000000005 /* PersonalizationStatusCard.swift */; };
 		F70000000000000000000008 /* PersonalizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70000000000000000000007 /* PersonalizationTests.swift */; };
-		F7C3327A9C24DE1A9235AC18 /* ClothingConstructorSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 295CF83C0932EB0539AAF061 /* ClothingConstructorSection.swift */; };
+		HISTORYINSIGHTSCARDBUILD /* WalkHistoryInsightsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = HISTORYINSIGHTSCARDFILE /* WalkHistoryInsightsCard.swift */; };
+		HISTORYINSIGHTSBUILD /* WalkHistoryInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = HISTORYINSIGHTSFILE /* WalkHistoryInsights.swift */; };
 		F80000000000000000000002 /* OutfitParentSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000001 /* OutfitParentSummary.swift */; };
 		F80000000000000000000004 /* ParentOutfitSummaryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000003 /* ParentOutfitSummaryCard.swift */; };
 		F80000000000000000000006 /* OutfitCalculationDetailsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80000000000000000000005 /* OutfitCalculationDetailsCard.swift */; };
@@ -209,10 +193,12 @@
 		F90000000000000000000008 /* TransportMode+Presentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90000000000000000000007 /* TransportMode+Presentation.swift */; };
 		F9000000000000000000000A /* BackgroundScenarioTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90000000000000000000009 /* BackgroundScenarioTests.swift */; };
 		F94E09BE167EB286CDC877F0 /* EffectiveTemperatureCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547831DAA43B9BBCF7C08EBA /* EffectiveTemperatureCalculator.swift */; };
-		FA0000000000000000000002 /* ComfortCheckCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0000000000000000000001 /* ComfortCheckCard.swift */; };
 		FA894C0891B25B104B5F09F2 /* WalkScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 733EA56854858B226733586C /* WalkScheduleView.swift */; };
 		FB0000000000000000000002 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000000000000000000001 /* L10n.swift */; };
 		FB0000000000000000000004 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000000000000000000001 /* L10n.swift */; };
+		WALKFLOWTESTSBUILD /* WalkFlowPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKFLOWTESTSFILE /* WalkFlowPresentationTests.swift */; };
+		WALKUNDOBUILD /* WalkEventUndo.swift in Sources */ = {isa = PBXBuildFile; fileRef = WALKUNDOFILE /* WalkEventUndo.swift */; };
+		WFRESHBUILD /* WeatherFreshness.swift in Sources */ = {isa = PBXBuildFile; fileRef = WFRESHFILE /* WeatherFreshness.swift */; };
 		FC0000000000000000000001 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000010 /* Localizable.strings */; };
 		FC0000000000000000000002 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FC0000000000000000000020 /* InfoPlist.strings */; };
 		FD1000000000000000000002 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1000000000000000000001 /* AppLanguage.swift */; };
@@ -271,26 +257,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		00854279D3849AD1162F7F10 /* GarmentListRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentListRow.swift; sourceTree = "<group>"; };
 		022FFE02828ABB54176BC587 /* WalkDurationFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDurationFormatter.swift; sourceTree = "<group>"; };
 		08ACE7426C6A8B55C00407D1 /* AddWalkEventSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWalkEventSheet.swift; sourceTree = "<group>"; };
 		0A4AF5BBA29EAF6086B51119 /* OutfitSolver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitSolver.swift; sourceTree = "<group>"; };
 		0C3745237D8D078599AC5A7B /* OutfitCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitCalculatorTests.swift; sourceTree = "<group>"; };
 		0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HourlyForecastCard.swift; sourceTree = "<group>"; };
-		14A61546E16B8FA2F87EEFB7 /* RiskMeterCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskMeterCard.swift; sourceTree = "<group>"; };
 		14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitOutputModels.swift; sourceTree = "<group>"; };
 		187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannedDurationCard.swift; sourceTree = "<group>"; };
 		1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkOutfitChipsCard.swift; sourceTree = "<group>"; };
 		1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventRow.swift; sourceTree = "<group>"; };
 		276751C833F62B43E35D7ABB /* ComfortLevelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortLevelCard.swift; sourceTree = "<group>"; };
-		295CF83C0932EB0539AAF061 /* ClothingConstructorSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingConstructorSection.swift; sourceTree = "<group>"; };
 		2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkDateTimeCard.swift; sourceTree = "<group>"; };
-		320D7A7A60159A788FFB07A2 /* PinnedItemsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinnedItemsCard.swift; sourceTree = "<group>"; };
 		359FC12BF7C73BEDCC726FE8 /* GarmentPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentPickerSheet.swift; sourceTree = "<group>"; };
-		36421A330DA08B5AF9728389 /* WeatherControlsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherControlsCard.swift; sourceTree = "<group>"; };
 		394C0803F4348866DB8BF4DA /* GearModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GearModels.swift; sourceTree = "<group>"; };
-		39DE49D8731D6827C133DFD4 /* RiskMeterBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RiskMeterBar.swift; sourceTree = "<group>"; };
-		3A839E64963E0CAF1D8A8F97 /* OutfitConstructorLinkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitConstructorLinkCard.swift; sourceTree = "<group>"; };
 		3B86B6060B5C96BDFB2FB9FC /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		3B9089E661B3297212103B52 /* GenderButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenderButton.swift; sourceTree = "<group>"; };
 		3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogRow.swift; sourceTree = "<group>"; };
@@ -299,18 +278,15 @@
 		547831DAA43B9BBCF7C08EBA /* EffectiveTemperatureCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EffectiveTemperatureCalculator.swift; sourceTree = "<group>"; };
 		59234723319C252DD95250BA /* EmptyHistoryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyHistoryCard.swift; sourceTree = "<group>"; };
 		5F88BE7805FC5DCF66F8A0C4 /* WardrobeItemRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeItemRow.swift; sourceTree = "<group>"; };
-		61E0B0C61AB9235A432DC639 /* TemperatureNoWalkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureNoWalkCard.swift; sourceTree = "<group>"; };
 		7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkWeatherSnapshotCard.swift; sourceTree = "<group>"; };
 		733EA56854858B226733586C /* WalkScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkScheduleView.swift; sourceTree = "<group>"; };
 		7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortLevelSheet.swift; sourceTree = "<group>"; };
 		76F6E8F8096CD2BD8BB84FCB /* PermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionView.swift; sourceTree = "<group>"; };
 		7FDF8B3A99B9823238F06EA6 /* DeniedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeniedView.swift; sourceTree = "<group>"; };
 		86032F82229890CCF345EF35 /* LogWalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWalkSheet.swift; sourceTree = "<group>"; };
-		8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentChip.swift; sourceTree = "<group>"; };
 		9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitConfig.swift; sourceTree = "<group>"; };
 		952FD97BC23BAC46B803A9B2 /* TOGCalculator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TOGCalculator.swift; sourceTree = "<group>"; };
 		98352411F7F430C375933E52 /* OutfitRecommendationService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitRecommendationService.swift; sourceTree = "<group>"; };
-		A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsHeaderCard.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF01 /* OutfitSafetyWarningsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitSafetyWarningsSection.swift; sourceTree = "<group>"; };
 		AA11BB22CC33DD44EE55FF03 /* OutfitCheckHintCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitCheckHintCard.swift; sourceTree = "<group>"; };
 		BB0000000000000000000001 /* OutfitRecommendationSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitRecommendationSnapshot.swift; sourceTree = "<group>"; };
@@ -319,11 +295,8 @@
 		BB0000000000000000000009 /* BuildOutfitRecommendationUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildOutfitRecommendationUseCase.swift; sourceTree = "<group>"; };
 		BB000000000000000000000B /* OutfitViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitViewModel.swift; sourceTree = "<group>"; };
 		BB000000000000000000000D /* OutfitFeedbackSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitFeedbackSection.swift; sourceTree = "<group>"; };
-		BB000000000000000000000F /* LegacyConstructorNoticeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyConstructorNoticeCard.swift; sourceTree = "<group>"; };
 		C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderPickerView.swift; sourceTree = "<group>"; };
 		C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationPickerCard.swift; sourceTree = "<group>"; };
-		C492673BFB90E7C0420427DD /* EditPinnedItemsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditPinnedItemsSheet.swift; sourceTree = "<group>"; };
-		C9EF89407C18D7849AD6CE3E /* AutoSelectButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoSelectButton.swift; sourceTree = "<group>"; };
 		CC0000000000000000000001 /* ChildThermalProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildThermalProfile.swift; sourceTree = "<group>"; };
 		CC0000000000000000000004 /* WalkContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkContext.swift; sourceTree = "<group>"; };
 		CC0000000000000000000006 /* WalkContextStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkContextStore.swift; sourceTree = "<group>"; };
@@ -402,6 +375,7 @@
 		F002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		F003 /* WeatherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherView.swift; sourceTree = "<group>"; };
 		F004 /* WeatherViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherViewModel.swift; sourceTree = "<group>"; };
+		WFRESHFILE /* WeatherFreshness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherFreshness.swift; sourceTree = "<group>"; };
 		F008 /* OutfitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutfitView.swift; sourceTree = "<group>"; };
 		F010 /* OpenMeteoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenMeteoService.swift; sourceTree = "<group>"; };
 		F012 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
@@ -409,13 +383,9 @@
 		F014 /* ChildProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfile.swift; sourceTree = "<group>"; };
 		F015 /* ChildProfileSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileSetupView.swift; sourceTree = "<group>"; };
 		F016 /* ChildWeatherPerception.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildWeatherPerception.swift; sourceTree = "<group>"; };
-		F017 /* ClothingCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingCalculatorView.swift; sourceTree = "<group>"; };
 		F018 /* ChildProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChildProfileStore.swift; sourceTree = "<group>"; };
 		F019 /* WeatherServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherServiceProtocol.swift; sourceTree = "<group>"; };
 		F020 /* GarmentCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GarmentCatalog.swift; sourceTree = "<group>"; };
-		F021 /* WardrobeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeModel.swift; sourceTree = "<group>"; };
-		F022 /* ClothingRecommendationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClothingRecommendationEngine.swift; sourceTree = "<group>"; };
-		F023 /* BiasStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiasStore.swift; sourceTree = "<group>"; };
 		F024 /* OpenWeatherMapService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenWeatherMapService.swift; sourceTree = "<group>"; };
 		F025 /* WeatherServiceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherServiceSettings.swift; sourceTree = "<group>"; };
 		F026 /* WeatherAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherAPIService.swift; sourceTree = "<group>"; };
@@ -447,13 +417,11 @@
 		F80000000000000000000007 /* WardrobeAlternativesCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WardrobeAlternativesCard.swift; sourceTree = "<group>"; };
 		F80000000000000000000009 /* OutfitPresentationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OutfitPresentationTests.swift; sourceTree = "<group>"; };
 		F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancelWalkSheet.swift; sourceTree = "<group>"; };
-		F89AD9F5FE561BFB06281AB2 /* StatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatCard.swift; sourceTree = "<group>"; };
 		F90000000000000000000001 /* SafeReminderContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeReminderContent.swift; sourceTree = "<group>"; };
 		F90000000000000000000003 /* FeedbackHistoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackHistoryItem.swift; sourceTree = "<group>"; };
 		F90000000000000000000005 /* FeedbackHistorySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackHistorySection.swift; sourceTree = "<group>"; };
 		F90000000000000000000007 /* TransportMode+Presentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TransportMode+Presentation.swift"; sourceTree = "<group>"; };
 		F90000000000000000000009 /* BackgroundScenarioTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackgroundScenarioTests.swift; sourceTree = "<group>"; };
-		FA0000000000000000000001 /* ComfortCheckCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComfortCheckCard.swift; sourceTree = "<group>"; };
 		FACW /* ActiveWalk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalk.swift; sourceTree = "<group>"; };
 		FAWS /* ActiveWalkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalkStore.swift; sourceTree = "<group>"; };
 		FAWV /* ActiveWalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveWalkView.swift; sourceTree = "<group>"; };
@@ -477,15 +445,19 @@
 		CB0000000000000000000005 /* AuthSyncTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AuthSyncTests.swift; sourceTree = "<group>"; };
 		LIVEWALKTESTSFILE /* LiveWalkTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveWalkTests.swift; sourceTree = "<group>"; };
 		WALKSUMMARYTESTSFILE /* WalkSummaryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WalkSummaryTests.swift; sourceTree = "<group>"; };
+		WALKFLOWTESTSFILE /* WalkFlowPresentationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WalkFlowPresentationTests.swift; sourceTree = "<group>"; };
 		FF0000000000000000000001 /* WeatherThermalEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherThermalEffects.swift; sourceTree = "<group>"; };
 		FF0000000000000000000003 /* TransportExposureProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportExposureProfile.swift; sourceTree = "<group>"; };
 		FF0000000000000000000005 /* MicroclimateCalculatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MicroclimateCalculatorTests.swift; sourceTree = "<group>"; };
 		FWAA /* WalkActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkActivityAttributes.swift; sourceTree = "<group>"; };
 		FWER /* WalkEventReclassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifier.swift; sourceTree = "<group>"; };
 		FWHV /* WalkHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryView.swift; sourceTree = "<group>"; };
+		HISTORYINSIGHTSFILE /* WalkHistoryInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryInsights.swift; sourceTree = "<group>"; };
+		HISTORYINSIGHTSCARDFILE /* WalkHistoryInsightsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkHistoryInsightsCard.swift; sourceTree = "<group>"; };
 		FWLC /* WalkLiveActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLiveActivityController.swift; sourceTree = "<group>"; };
 		FWLG /* WalkLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLog.swift; sourceTree = "<group>"; };
 		FWLS /* WalkLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkLogStore.swift; sourceTree = "<group>"; };
+		WALKUNDOFILE /* WalkEventUndo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventUndo.swift; sourceTree = "<group>"; };
 		FWQI /* WalkQuickMarkIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkQuickMarkIntents.swift; sourceTree = "<group>"; };
 		FWRS /* WalkEventReclassifySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkEventReclassifySheet.swift; sourceTree = "<group>"; };
 		FWSS /* WalkSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkSetupSheet.swift; sourceTree = "<group>"; };
@@ -543,7 +515,6 @@
 			children = (
 				0FCE7D548B36CEFABA89978D /* HourlyForecastCard.swift */,
 				C079F4B0B04D26115ECE83C8 /* ProviderPickerView.swift */,
-				F89AD9F5FE561BFB06281AB2 /* StatCard.swift */,
 				DD0000000000000000000007 /* WeatherDataQualityCard.swift */,
 			);
 			path = Components;
@@ -560,9 +531,9 @@
 		7AC719E80F878FF73101421C /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				A0B121CBE89751A6A1BA0863 /* StatsHeaderCard.swift */,
 				59234723319C252DD95250BA /* EmptyHistoryCard.swift */,
 				3EBB39D806A0B082E18C8AE9 /* WalkLogRow.swift */,
+				HISTORYINSIGHTSCARDFILE /* WalkHistoryInsightsCard.swift */,
 				2ADBF2458EE028207EE82A9C /* WalkDateTimeCard.swift */,
 				E687DA74A4AF7405010D4A9A /* WalkTemperatureCard.swift */,
 				C0C66EDA84B182D27AB1E8A3 /* DurationPickerCard.swift */,
@@ -579,7 +550,6 @@
 				AA11BB22CC33DD44EE55FF01 /* OutfitSafetyWarningsSection.swift */,
 				AA11BB22CC33DD44EE55FF03 /* OutfitCheckHintCard.swift */,
 				BB000000000000000000000D /* OutfitFeedbackSection.swift */,
-				BB000000000000000000000F /* LegacyConstructorNoticeCard.swift */,
 				CC000000000000000000000C /* WalkContextSummaryCard.swift */,
 				EE5000000000000000000007 /* OutfitFitCard.swift */,
 				F6000000000000000000000D /* OutfitBlockedScenarioView.swift */,
@@ -587,20 +557,9 @@
 				F80000000000000000000003 /* ParentOutfitSummaryCard.swift */,
 				F80000000000000000000005 /* OutfitCalculationDetailsCard.swift */,
 				F80000000000000000000007 /* WardrobeAlternativesCard.swift */,
-				FA0000000000000000000001 /* ComfortCheckCard.swift */,
-				36421A330DA08B5AF9728389 /* WeatherControlsCard.swift */,
-				14A61546E16B8FA2F87EEFB7 /* RiskMeterCard.swift */,
-				39DE49D8731D6827C133DFD4 /* RiskMeterBar.swift */,
-				C9EF89407C18D7849AD6CE3E /* AutoSelectButton.swift */,
-				320D7A7A60159A788FFB07A2 /* PinnedItemsCard.swift */,
-				C492673BFB90E7C0420427DD /* EditPinnedItemsSheet.swift */,
-				295CF83C0932EB0539AAF061 /* ClothingConstructorSection.swift */,
-				00854279D3849AD1162F7F10 /* GarmentListRow.swift */,
-				61E0B0C61AB9235A432DC639 /* TemperatureNoWalkCard.swift */,
 				E6429ABCB54EE2A136C314AA /* GarmentIconView.swift */,
 				E612A9CF3F86C6A4E1E2C9F5 /* GarmentIconPreviewSheet.swift */,
 				D28115CB15B1C082DF9B4D07 /* GarmentPhotoPreviewSheet.swift */,
-				3A839E64963E0CAF1D8A8F97 /* OutfitConstructorLinkCard.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -664,7 +623,6 @@
 				7381D73ED458CD4D049A3D58 /* ComfortLevelSheet.swift */,
 				F8223BFFD4109225A6E27CE7 /* CancelWalkSheet.swift */,
 				1F409BC47A7F1FD054EF08F6 /* WalkEventRow.swift */,
-				8C904FAF6D22F15C06DFEB81 /* GarmentChip.swift */,
 				1C63A39395BB20487CF4AC65 /* WalkOutfitChipsCard.swift */,
 				187CA0FB5A317DF797E1B971 /* PlannedDurationCard.swift */,
 				7083F07D210064691BCAD216 /* WalkWeatherSnapshotCard.swift */,
@@ -734,6 +692,7 @@
 				CB0000000000000000000005 /* AuthSyncTests.swift */,
 				LIVEWALKTESTSFILE /* LiveWalkTests.swift */,
 				WALKSUMMARYTESTSFILE /* WalkSummaryTests.swift */,
+				WALKFLOWTESTSFILE /* WalkFlowPresentationTests.swift */,
 			);
 			path = SkyKidTests;
 			sourceTree = "<group>";
@@ -805,6 +764,7 @@
 			isa = PBXGroup;
 			children = (
 				FWHV /* WalkHistoryView.swift */,
+				HISTORYINSIGHTSFILE /* WalkHistoryInsights.swift */,
 				WALKSUMMARYFILE /* WalkSummary.swift */,
 				WALKCOMPLETIONFILE /* WalkCompletionView.swift */,
 				WALKSUMMARYVIEWFILE /* WalkSummaryView.swift */,
@@ -853,7 +813,6 @@
 				F70000000000000000000003 /* PersonalizationEngine.swift */,
 				F018 /* ChildProfileStore.swift */,
 				F0WD /* UserWardrobeStore.swift */,
-				F023 /* BiasStore.swift */,
 				F2150346EACA826B74B94C3E /* PersonalOffsetStore.swift */,
 				FWLG /* WalkLog.swift */,
 				FWTO /* WeatherTone.swift */,
@@ -901,10 +860,7 @@
 				CC0000000000000000000010 /* WalkPreparation */,
 				F020 /* GarmentCatalog.swift */,
 				EE5000000000000000000001 /* GarmentCompatibilityPolicy.swift */,
-				F021 /* WardrobeModel.swift */,
 				EE5000000000000000000009 /* LegacyWardrobeAutoSelector.swift */,
-				F017 /* ClothingCalculatorView.swift */,
-				F022 /* ClothingRecommendationEngine.swift */,
 				9132D0C4B3D6285DB74AADDB /* OutfitConfig.swift */,
 				394C0803F4348866DB8BF4DA /* GearModels.swift */,
 				14FFF0927A8E0E7056FDCD92 /* OutfitOutputModels.swift */,
@@ -984,6 +940,7 @@
 				BB0000000000000000000004 /* RecommendationSnapshotStore.swift */,
 				FWLS /* WalkLogStore.swift */,
 				FAWS /* ActiveWalkStore.swift */,
+				WALKUNDOFILE /* WalkEventUndo.swift */,
 				FWER /* WalkEventReclassifier.swift */,
 				EBDE49626C11D86115DF7B77 /* KeychainStore.swift */,
 			);
@@ -1010,6 +967,7 @@
 			children = (
 				F003 /* WeatherView.swift */,
 				F004 /* WeatherViewModel.swift */,
+				WFRESHFILE /* WeatherFreshness.swift */,
 				16F285F67629CF43499F31B7 /* Components */,
 			);
 			path = Weather;
@@ -1217,6 +1175,7 @@
 				CB0000000000000000000006 /* AuthSyncTests.swift in Sources */,
 				LIVEWALKTESTSBUILD /* LiveWalkTests.swift in Sources */,
 				WALKSUMMARYTESTSBUILD /* WalkSummaryTests.swift in Sources */,
+				WALKFLOWTESTSBUILD /* WalkFlowPresentationTests.swift in Sources */,
 				CB0000000000000000000004 /* ChildNameCipherTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1233,22 +1192,20 @@
 				FD1000000000000000000002 /* AppLanguage.swift in Sources */,
 				A003 /* WeatherView.swift in Sources */,
 				A004 /* WeatherViewModel.swift in Sources */,
+				WFRESHBUILD /* WeatherFreshness.swift in Sources */,
 				5080C3C7DCC1FE25D50419A8 /* HourlyForecastCard.swift in Sources */,
 				F8BE03DA1DF521672FDB4E99 /* ProviderPickerView.swift in Sources */,
-				B57F918A27C56E0E8B368B48 /* StatCard.swift in Sources */,
 				A008 /* OutfitView.swift in Sources */,
 				F6000000000000000000000E /* OutfitBlockedScenarioView.swift in Sources */,
 				F70000000000000000000006 /* PersonalizationStatusCard.swift in Sources */,
 				F80000000000000000000004 /* ParentOutfitSummaryCard.swift in Sources */,
 				F80000000000000000000006 /* OutfitCalculationDetailsCard.swift in Sources */,
 				F80000000000000000000008 /* WardrobeAlternativesCard.swift in Sources */,
-				FA0000000000000000000002 /* ComfortCheckCard.swift in Sources */,
 				FB0000000000000000000002 /* L10n.swift in Sources */,
 				F90000000000000000000008 /* TransportMode+Presentation.swift in Sources */,
 				AA11BB22CC33DD44EE55FF02 /* OutfitSafetyWarningsSection.swift in Sources */,
 				AA11BB22CC33DD44EE55FF04 /* OutfitCheckHintCard.swift in Sources */,
 				BB000000000000000000000E /* OutfitFeedbackSection.swift in Sources */,
-				BB0000000000000000000010 /* LegacyConstructorNoticeCard.swift in Sources */,
 				CC000000000000000000000D /* WalkContextSummaryCard.swift in Sources */,
 				CC0000000000000000000009 /* WalkPreparationViewModel.swift in Sources */,
 				CC000000000000000000000B /* WalkPreparationView.swift in Sources */,
@@ -1276,7 +1233,6 @@
 				C541EC7E544C30E907F3553B /* GenderButton.swift in Sources */,
 				0AC3A553C3F50E19097D00A5 /* WardrobeItemRow.swift in Sources */,
 				FD1000000000000000000005 /* AppLanguagePickerCard.swift in Sources */,
-				A017 /* ClothingCalculatorView.swift in Sources */,
 				A018 /* ChildProfileStore.swift in Sources */,
 				BB0000000000000000000005 /* RecommendationSnapshotStore.swift in Sources */,
 				A0NS /* NotificationService.swift in Sources */,
@@ -1285,10 +1241,7 @@
 				A019 /* WeatherServiceProtocol.swift in Sources */,
 				A020 /* GarmentCatalog.swift in Sources */,
 				EE5000000000000000000002 /* GarmentCompatibilityPolicy.swift in Sources */,
-				A021 /* WardrobeModel.swift in Sources */,
 				EE500000000000000000000A /* LegacyWardrobeAutoSelector.swift in Sources */,
-				A022 /* ClothingRecommendationEngine.swift in Sources */,
-				A023 /* BiasStore.swift in Sources */,
 				A024 /* OpenWeatherMapService.swift in Sources */,
 				A025 /* WeatherServiceSettings.swift in Sources */,
 				A026 /* WeatherAPIService.swift in Sources */,
@@ -1359,6 +1312,7 @@
 				WALKSUMMARYVIEWBUILD /* WalkSummaryView.swift in Sources */,
 				9F64ECECE3C18F326554C8AC /* SupabaseSyncService.swift in Sources */,
 				AAWS /* ActiveWalkStore.swift in Sources */,
+				WALKUNDOBUILD /* WalkEventUndo.swift in Sources */,
 				AWTV /* WalkTabView.swift in Sources */,
 				AWSS /* WalkSetupSheet.swift in Sources */,
 				AAWV /* ActiveWalkView.swift in Sources */,
@@ -1367,7 +1321,6 @@
 				26421E5AC57BE5070350F34B /* ComfortLevelSheet.swift in Sources */,
 				91DECA886D70F096722D44BF /* CancelWalkSheet.swift in Sources */,
 				00B924BAF836AC1A63BA75DE /* WalkEventRow.swift in Sources */,
-				0C2AB4E4CF18FD57A84125F5 /* GarmentChip.swift in Sources */,
 				66137106ADA97E90613DC653 /* WalkOutfitChipsCard.swift in Sources */,
 				B5927FF61A603C84E91D8218 /* PlannedDurationCard.swift in Sources */,
 				607C60C4B84A20BECC8EE41D /* WalkWeatherSnapshotCard.swift in Sources */,
@@ -1379,23 +1332,14 @@
 				AWER /* WalkEventReclassifier.swift in Sources */,
 				AWRS /* WalkEventReclassifySheet.swift in Sources */,
 				AWHV /* WalkHistoryView.swift in Sources */,
+				HISTORYINSIGHTSBUILD /* WalkHistoryInsights.swift in Sources */,
+				HISTORYINSIGHTSCARDBUILD /* WalkHistoryInsightsCard.swift in Sources */,
 				F90000000000000000000004 /* FeedbackHistoryItem.swift in Sources */,
 				F90000000000000000000006 /* FeedbackHistorySection.swift in Sources */,
 				05021B7BF02ED6CF1760CFE9 /* FlowLayout.swift in Sources */,
-				948AC5E3D92786BE22DD5AA6 /* WeatherControlsCard.swift in Sources */,
-				CA582AB0E66B1AAEFCDE6F98 /* RiskMeterCard.swift in Sources */,
-				C74A9214A993B7BA45E864C6 /* RiskMeterBar.swift in Sources */,
-				0E1BE61EEB9C12EEF46C50B0 /* AutoSelectButton.swift in Sources */,
-				8276D5EC44DEF3C1EFF90D62 /* PinnedItemsCard.swift in Sources */,
-				520CC73C85DF3EBD606F7ABB /* EditPinnedItemsSheet.swift in Sources */,
-				F7C3327A9C24DE1A9235AC18 /* ClothingConstructorSection.swift in Sources */,
-				4D9039D4347748F2C3F75868 /* GarmentListRow.swift in Sources */,
-				DD74ECDE4F0A1475F6844A66 /* TemperatureNoWalkCard.swift in Sources */,
 				D776E54C249B984806600AD3 /* GarmentIconView.swift in Sources */,
 				0CC66532B6245A1A514F6028 /* GarmentIconPreviewSheet.swift in Sources */,
 				7C78A303045B58319838A80A /* GarmentPhotoPreviewSheet.swift in Sources */,
-				884D8FB1CBA6199460D33F67 /* OutfitConstructorLinkCard.swift in Sources */,
-				3A2D35413E4B9696050E7385 /* StatsHeaderCard.swift in Sources */,
 				6607D78575D0AC8014AF5801 /* EmptyHistoryCard.swift in Sources */,
 				112CBDE2E3BA64279E359489 /* WalkLogRow.swift in Sources */,
 				EFA48FD52BA4B047FFC8CA1E /* WalkDateTimeCard.swift in Sources */,

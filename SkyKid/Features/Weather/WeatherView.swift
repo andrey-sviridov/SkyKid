@@ -5,6 +5,7 @@ import SwiftUI
 struct WeatherView: View {
     let weather: NormalizedWeather
     let cityName: String
+    var weatherUpdatedAt: Date?
     var currentProvider: WeatherProvider = .openMeteo
     var onProviderChange: ((WeatherProvider, String?) -> Void)?
 
@@ -18,6 +19,9 @@ struct WeatherView: View {
             }
         }
         .skyKidBackground()
+        .toolbar {
+            providerToolbarItem
+        }
         .sheet(isPresented: $showProviderSheet) {
             ProviderPickerView(
                 current: currentProvider,
@@ -63,26 +67,52 @@ struct WeatherView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            // Attribution chip — не навязчивый, но доступный
-            Button {
-                showProviderSheet = true
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: weather.source.systemImage)
-                        .font(.system(size: 9, weight: .medium))
-                    Text(weather.source.displayName)
-                        .font(.system(size: 11, weight: .medium))
-                }
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Color.primary.opacity(0.08), in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 4)
-            .padding(.bottom, 40)
+            freshnessLine
+
+            .padding(.bottom, 28)
         }
         .padding(.horizontal, 24)
+    }
+
+    private var freshnessLine: some View {
+        Group {
+            if let weatherUpdatedAt {
+                let freshness = WeatherFreshness(updatedAt: weatherUpdatedAt)
+                VStack(spacing: 4) {
+                    Label(
+                        L10n.format(
+                            "Обновлено в %@",
+                            weatherUpdatedAt.formatted(.dateTime.hour().minute().locale(L10n.locale))
+                        ),
+                        systemImage: freshness.isStale
+                            ? "exclamationmark.triangle"
+                            : "checkmark.circle"
+                    )
+                    .foregroundStyle(freshness.isStale ? Color.orange : Color.secondary)
+
+                    if freshness.isStale {
+                        Text(L10n.text("Обновите погоду перед прогулкой"))
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .font(.caption2)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(freshnessAccessibilityLabel(for: freshness))
+                .accessibilityIdentifier("weather.freshness")
+            }
+        }
+    }
+
+    private func freshnessAccessibilityLabel(for freshness: WeatherFreshness) -> String {
+        guard let weatherUpdatedAt else { return L10n.text("Нет данных") }
+        let updated = L10n.format(
+            "Обновлено в %@",
+            weatherUpdatedAt.formatted(.dateTime.hour().minute().locale(L10n.locale))
+        )
+        return freshness.isStale
+            ? "\(updated). \(L10n.text("Обновите погоду перед прогулкой"))"
+            : updated
     }
 
     // MARK: - Cards (стеклянные карточки на градиенте)
@@ -98,7 +128,7 @@ struct WeatherView: View {
             if !weather.hourly.isEmpty {
                 HourlyForecastCard(hourly: weather.hourly)
             }
-            statsGrid
+            compactStats
         }
         .padding(.horizontal, 20)
         .padding(.top, 28)
@@ -106,33 +136,34 @@ struct WeatherView: View {
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: - Stats grid
+    // MARK: - Compact stats
 
-    private var statsGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
-            StatCard(icon: "wind", color: .teal, title: L10n.text("Ветер"),
-                     value: displayValue(
-                        for: .windSpeed,
-                        value: L10n.format(
-                            "%lld м/с",
-                            Int(weather.windSpeed.rounded())
-                        )
-                     ))
-            StatCard(
-                icon: "location.north.fill",
-                color: .orange,
-                title: L10n.text("Направление"),
-                     value: displayValue(for: .windDirection, value: weather.windDirectionLabel),
-                iconRotation: Double(weather.windDirection)
+    private var compactStats: some View {
+        HStack(spacing: 0) {
+            MetricTile(
+                icon: "wind",
+                color: .teal,
+                value: displayValue(
+                    for: .windSpeed,
+                    value: L10n.format("%lld м/с", Int(weather.windSpeed.rounded()))
+                ),
+                label: L10n.text("Ветер")
             )
-            StatCard(icon: "humidity.fill", color: .blue, title: L10n.text("Влажность"),
-                     value: displayValue(for: .humidity, value: "\(weather.humidity)%"))
-            StatCard(icon: "cloud.rain.fill", color: .indigo, title: L10n.text("Осадки"),
-                     value: displayValue(
-                        for: .precipitation,
-                        value: L10n.format("%.1f мм", weather.precipitation)
-                     ))
+
+            Divider().frame(height: 48)
+
+            MetricTile(
+                icon: "cloud.rain.fill",
+                color: .indigo,
+                value: displayValue(
+                    for: .precipitation,
+                    value: L10n.format("%.1f мм", weather.precipitation)
+                ),
+                label: L10n.text("Осадки")
+            )
         }
+        .padding(.vertical, 14)
+        .glassCard(cornerRadius: 18, padding: 0)
     }
 
     private func displayValue(for field: WeatherField, value: String) -> String {
@@ -143,6 +174,18 @@ struct WeatherView: View {
             return "~\(value)"
         case .unavailable:
             return L10n.text("Нет данных")
+        }
+    }
+
+    // Источник остаётся доступным, но не занимает место в основном прогнозе.
+    private var providerToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                showProviderSheet = true
+            } label: {
+                Image(systemName: "ellipsis.circle")
+            }
+            .accessibilityLabel(L10n.text("Источник данных"))
         }
     }
 

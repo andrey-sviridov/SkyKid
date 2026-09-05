@@ -6,6 +6,7 @@ import SwiftUI
 /// самочувствие и основные отметки таймлайна.
 struct WalkSummaryView: View {
     let log: WalkLog
+    @State private var showDetails = false
 
     private var summary: WalkSummary {
         WalkSummaryBuilder.make(from: log)
@@ -15,14 +16,19 @@ struct WalkSummaryView: View {
         ScrollView {
             VStack(spacing: 16) {
                 metricsGrid
-                detailsCard
 
                 if summary.isSleepInProgressAtFinish {
                     sleepNote
                 }
 
-                if !log.outfitItemIDs.isEmpty {
-                    outfitCard
+                detailsToggle
+
+                if showDetails {
+                    detailsCard
+
+                    if !log.outfitItemIDs.isEmpty {
+                        outfitCard
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -31,6 +37,34 @@ struct WalkSummaryView: View {
         .skyKidBackground()
         .navigationTitle(L10n.text("Сводка о прогулке"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var detailsToggle: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showDetails.toggle()
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "list.bullet.rectangle")
+                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.text("Подробнее"))
+                        .font(.subheadline.weight(.semibold))
+                    Text(L10n.text("Эпизоды сна и дополнительные данные"))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(showDetails ? 180 : 0))
+            }
+            .padding(14)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Sections
@@ -90,31 +124,6 @@ struct WalkSummaryView: View {
                 )
             }
 
-            summaryRow(
-                icon: "hanger",
-                label: L10n.text("Изменения одежды"),
-                value: String(summary.garmentChangeCount)
-            )
-
-            summaryRow(
-                icon: "flag.fill",
-                label: L10n.text("Отметки"),
-                value: String(summary.eventCount)
-            )
-
-            if let planned = summary.plannedDurationMinutes {
-                summaryRow(
-                    icon: "target",
-                    label: L10n.text("План"),
-                    value: plannedStatus(planned: planned)
-                )
-            }
-
-            summaryRow(
-                icon: "thermometer.medium",
-                label: L10n.text("Температура"),
-                value: L10n.format("%lld°C", Int(summary.weatherTemperature.rounded()))
-            )
         }
     }
 
@@ -158,22 +167,6 @@ struct WalkSummaryView: View {
 
     private var sleepLabel: String {
         summary.hasSleepData ? L10n.text("Сон") : L10n.text("Сон не отмечен")
-    }
-
-    private func plannedStatus(planned: Int) -> String {
-        guard let didReach = summary.didReachPlannedDuration else { return "—" }
-        if didReach {
-            return L10n.format(
-                "%@ · %@",
-                L10n.text("Выполнено"),
-                WalkDurationFormatter.string(minutes: planned)
-            )
-        }
-        return L10n.format(
-            "%@ · %@",
-            L10n.text("Не выполнено"),
-            WalkDurationFormatter.string(minutes: planned)
-        )
     }
 
     private func summaryRow(icon: String, label: String, value: String) -> some View {

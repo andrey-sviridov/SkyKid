@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Карточка «Во что одет»: чипы одежды + «＋», суммарный TOG и вердикт.
+/// Карточка «Во что одет»: список одежды, снятие вещей, суммарный TOG и вердикт.
 struct WalkOutfitChipsCard: View {
     @Binding var selectedIDs: [String]
     let profile: ChildProfile?
@@ -28,18 +28,29 @@ struct WalkOutfitChipsCard: View {
         SectionCard(
             title: L10n.text("Во что одет"),
             systemImage: "hanger",
-            spacing: 14
+            spacing: 12
         ) {
-            FlowLayout(spacing: 8) {
-                ForEach(items) { item in
-                    GarmentChip(item: item, onRemove: isEditable ? { remove(item) } : nil)
-                }
-                if isEditable {
-                    addChip
+            ForEach(items) { item in
+                garmentRow(item)
+                if item.id != items.last?.id {
+                    Divider().padding(.leading, 40)
                 }
             }
 
-            verdictBar
+            if items.isEmpty {
+                Text(L10n.text("Одежда не выбрана"))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 4)
+            }
+
+            if isEditable {
+                addRow
+            }
+
+            if !items.isEmpty {
+                verdictBar
+            }
         } trailing: {
             Text(L10n.format("%.1f TOG", effectiveTOG))
                 .font(.subheadline.weight(.bold))
@@ -57,21 +68,50 @@ struct WalkOutfitChipsCard: View {
         onRemove(item.id)
     }
 
-    private var addChip: some View {
-        Button { showPicker = true } label: {
-            HStack(spacing: 5) {
-                Image(systemName: "plus")
-                Text("Добавить")
-            }
-            .font(.caption.weight(.medium))
-            .foregroundStyle(.blue)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .background(Color.blue.opacity(0.10), in: Capsule())
-            .overlay(
-                Capsule().strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [4]))
-                    .foregroundStyle(Color.blue.opacity(0.5))
+    private func garmentRow(_ item: GarmentItem) -> some View {
+        HStack(spacing: 10) {
+            GarmentIconView(
+                item: item,
+                isSelected: true,
+                accentColor: .blue,
+                size: 30,
+                shape: .roundedRectangle(8)
             )
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.name)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(1)
+                Text(L10n.format("%.2f TOG", item.tog))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 8)
+
+            if isEditable {
+                Button {
+                    remove(item)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.format("Снять %@", item.name))
+            }
+        }
+        .contentShape(Rectangle())
+    }
+
+    private var addRow: some View {
+        Button { showPicker = true } label: {
+            Label(L10n.text("Добавить одежду"), systemImage: "plus.circle.fill")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.blue)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 6)
         }
         .buttonStyle(.plain)
     }

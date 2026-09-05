@@ -73,11 +73,15 @@ ContentView
             └─ FeedbackHistoryItemBuilder → FeedbackHistorySection
 
 ContentView
-  └─ ClothingCalculatorView(profile?)
-       └─ WardrobeModel
-            ├─ riskLevel → ThermalRisk (CLO-формула + safety overrides)
-            └─ LegacyWardrobeAutoSelector → selectedItems: Set<GarmentItem>
-                 └─ GarmentCatalog.byID / .byLayer
+  ├─ WalkTabView
+  │    └─ ActiveWalkView
+  │         ├─ WalkTimerHeaderCard
+  │         ├─ WalkOutfitChipsCard → UserWardrobeStore
+  │         ├─ WalkQuickActionsCard
+  │         └─ WalkTimelineCard → ActiveWalkStore
+  └─ WalkHistoryView
+       ├─ WalkHistoryInsightsCard → последние 7 дней
+       └─ FeedbackHistorySection → PersonalOffsetStore
 
 Виджет
   └─ ClothingStatusProvider.getTimeline()
@@ -97,13 +101,13 @@ NotificationService
   └─ rain cover → ventilation and thermal check
 ```
 
-`WardrobeModel` и `LegacyWardrobeAutoSelector` остаются legacy-логикой только отдельного ручного «Конструктора». Они не связаны с `OutfitView`, виджетом, Siri или журналом прогулок.
+Старый ручной CLO-конструктор удалён из приложения вместе с его UI и состоянием. Основной расчёт одежды выполняется через `OutfitSolver`, а состав реального гардероба хранится в `UserWardrobeStore`.
 
 Все погодные адаптеры завершаются одной границей `WeatherNormalizer`. Доменные вычислители не знают формат конкретного API и получают вместе со значениями метаданные качества. UI показывает фактический `WeatherSource`, поэтому заглушка WeatherKit не выдаётся за данные Apple.
 
 `EffectiveTemperatureCalculator` не зависит от транспорта и вычисляет каждый погодный вклад один раз. `TransportExposureProfile` — отдельная policy-модель без UI и сети; `MicroclimateCalculator` применяет её к готовым компонентам. Утепление конвертом и пледом остаётся обязанностью `OutfitSolver`, что исключает двойной учёт.
 
-`GarmentCatalog` является общей доменной базой вещей. Основной `OutfitSolver` получает снимок реального гардероба через `WalkContext`, а совместимость и поиск комбинации делегирует небольшим чистым компонентам. `LegacyWardrobeAutoSelector` не участвует в снимке рекомендации.
+`GarmentCatalog` является общей доменной базой вещей. Основной `OutfitSolver` получает снимок реального гардероба через `WalkContext`, а совместимость и поиск комбинации делегирует небольшим чистым компонентам.
 
 `ChildProfile` остаётся границей миграции и legacy-совместимости. Основной расчёт принимает `ChildThermalProfile` и `WalkContext` явно. Временный контекст не кодируется и не записывается в App Group.
 

@@ -35,14 +35,9 @@ struct WalkCompletionView: View {
                         .background(Color.blue, in: RoundedRectangle(cornerRadius: 16))
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("walk.completion.summary")
                     .accessibilityHint(L10n.text("Показывает длительность сна и другие итоги прогулки"))
 
-                    Button(L10n.text("Готово")) {
-                        dismiss()
-                    }
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.vertical, 4)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 20)
@@ -72,8 +67,6 @@ struct WalkCompletionView: View {
                     .foregroundStyle(.green)
             }
 
-            Text(L10n.text("Прогулка завершена"))
-                .font(.title2.weight(.semibold))
             Text(log.date.formatted(.dateTime.day().month(.wide).hour().minute().locale(L10n.locale)))
                 .font(.caption)
                 .foregroundStyle(.secondary)

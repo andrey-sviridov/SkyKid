@@ -162,7 +162,7 @@ SwiftUI-представление не меняет эти решения. Ур
 
 ## Legacy CLO-конструктор
 
-`WardrobeModel`, `LegacyWardrobeAutoSelector` и `ClothingRecommendationEngine` обслуживают только отдельную вкладку «Конструктор». Они не являются источником итоговой рекомендации во вкладке «Одежда».
+Старый CLO-конструктор удалён. Источником итоговой рекомендации остаются `OutfitRecommendationService` и `OutfitSolver`, а фактический состав вещей — `UserWardrobeStore`.
 
 До завершения миграции запрещено:
 

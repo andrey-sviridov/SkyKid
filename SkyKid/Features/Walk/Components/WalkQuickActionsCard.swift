@@ -2,33 +2,33 @@ import SwiftUI
 
 // MARK: - WalkQuickActionsCard
 
-/// Ряд быстрых отметок: одно нажатие — одно событие на таймлайне.
+/// Быстрые переключатели состояния и нейтральная отметка для последующего
+/// переназначения в таймлайне.
 ///
-/// Набор здесь фиксированный и совпадает по смыслу с кнопками Live Activity,
-/// но не по форме: на локскрине сон и люлька — тумблеры, а тут пять
-/// самостоятельных кнопок.
 struct WalkQuickActionsCard: View {
     /// Нужен для тактильного отклика: считаем не нажатия, а реально
     /// появившиеся события — иначе отклик срабатывал бы и когда запись
     /// не прошла.
     let eventCount: Int
+    let isSleeping: Bool
+    var showsBassinette: Bool = true
     let onTap: (WalkEventKind) -> Void
-
-    private let kinds: [WalkEventKind] = [
-        .openedBassinette, .closedBassinette, .sleep, .wake, .checkpoint
-    ]
 
     var body: some View {
         SectionCard(title: L10n.text("Быстрые отметки"), systemImage: "bolt.fill") {
             FlowLayout(spacing: 10) {
-                ForEach(kinds) { kind in
-                    button(kind)
+                stateButton(isSleeping ? .wake : .sleep)
+                if showsBassinette {
+                    stateButton(.openedBassinette)
+                    stateButton(.closedBassinette)
                 }
+                stateButton(.checkpoint)
             }
         }
+        .accessibilityIdentifier("walk.quickActions")
     }
 
-    private func button(_ kind: WalkEventKind) -> some View {
+    private func stateButton(_ kind: WalkEventKind) -> some View {
         let color = kind.color
 
         return Button {

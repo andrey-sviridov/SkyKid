@@ -11,6 +11,7 @@ struct ProfileSummaryView: View {
     @State private var showEdit = false
     @State private var notificationsOn = false
     @State private var showWalkSchedule = false
+    @State private var showSettings = false
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
 
     var body: some View {
@@ -21,16 +22,13 @@ struct ProfileSummaryView: View {
                     AccountCard(profile: p)
                     if authService.isSignedIn {
                         FamilyCard()
-                        LiveWalkNotificationsCard()
                     }
-                    infoCards(p)
+                    if hasAdditionalProfileDetails(p) {
+                        infoCards(p)
+                    }
                     wardrobeCard
-                    notificationsCard
-                    walkScheduleCard
-                    themeCard
-                    AppLanguagePickerCard()
-                    siriCard
-                    editButton
+                    remindersCard
+                    appSettingsCard
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
@@ -48,14 +46,28 @@ struct ProfileSummaryView: View {
     // MARK: - Name header
 
     private func nameHeader(_ p: ChildProfile) -> some View {
-        VStack(spacing: 4) {
-            Text(p.name)
-                .font(.title2.weight(.bold))
-            Text(p.ageLabel + " · " + p.ageGroup.description)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(p.name)
+                    .font(.title2.weight(.bold))
+                Text(p.ageLabel + " · " + p.ageGroup.description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 8)
+
+            Button {
+                showEdit = true
+            } label: {
+                Image(systemName: "pencil")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.blue)
+                    .frame(width: 40, height: 40)
+                    .background(Color.blue.opacity(0.10), in: Circle())
+            }
+            .accessibilityLabel(L10n.text("Изменить данные ребёнка"))
         }
-        .frame(maxWidth: .infinity)
         .padding(.vertical, 14)
         .padding(.horizontal, 16)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
@@ -65,43 +77,21 @@ struct ProfileSummaryView: View {
     // MARK: - Info cards
 
     private func infoCards(_ p: ChildProfile) -> some View {
-        let ageOffset = p.ageGroup.temperatureOffset
         let showHealth = !p.stableTraits.isEmpty
         let showTempPref = p.temperaturePreferenceOffset != 0
+        let showPrematurity = p.gestationalAgeWeeks < 40
 
         return VStack(spacing: 1) {
-            infoRow(icon: "birthday.cake.fill", color: .pink,
-                    title: L10n.text("День рождения"),
-                    value: p.birthday.formatted(
-                        .dateTime
-                            .day()
-                            .month(.wide)
-                            .year()
-                            .locale(L10n.locale)
-                    ),
-                    isFirst: true, isLast: false)
-
-            infoRow(icon: "figure.child", color: .orange,
-                    title: L10n.text("Возрастная группа"),
-                    value: p.ageGroup.description,
-                    isFirst: false, isLast: false)
-
-            infoRow(icon: "heart.text.square.fill", color: .pink,
+            if showPrematurity {
+                infoRow(
+                    icon: "heart.text.square.fill",
+                    color: .pink,
                     title: L10n.text("Срок рождения"),
-                    value: p.gestationalAgeWeeks < 40
-                        ? L10n.format("%lld недель", p.gestationalAgeWeeks)
-                        : L10n.text("Доношенный"),
-                    isFirst: false, isLast: false)
-
-            infoRow(icon: "thermometer.medium", color: .blue,
-                    title: L10n.text("Возрастная поправка"),
-                    value: ageOffset == 0
-                        ? L10n.text("Как у взрослого")
-                        : L10n.format(
-                            "%lld° (ощущает холоднее)",
-                            Int(ageOffset)
-                        ),
-                    isFirst: false, isLast: !showTempPref && !showHealth)
+                    value: L10n.format("%lld недель", p.gestationalAgeWeeks),
+                    isFirst: true,
+                    isLast: !showTempPref && !showHealth
+                )
+            }
 
             if showTempPref {
                 let off = p.temperaturePreferenceOffset
@@ -113,16 +103,24 @@ struct ProfileSummaryView: View {
                             : off > 1
                                 ? L10n.format("Жаркий (%@%lld°)", sign, Int(off))
                                 : L10n.text("Нейтрально"),
-                        isFirst: false, isLast: !showHealth)
+                        isFirst: !showPrematurity,
+                        isLast: !showHealth)
             }
 
             if showHealth {
                 infoRow(icon: "cross.case.fill", color: .red,
                         title: L10n.text("Особенности здоровья"),
                         value: p.stableTraits.map(\.label).sorted().joined(separator: ", "),
-                        isFirst: false, isLast: true)
+                        isFirst: !showPrematurity && !showTempPref,
+                        isLast: true)
             }
         }
+    }
+
+    private func hasAdditionalProfileDetails(_ p: ChildProfile) -> Bool {
+        p.gestationalAgeWeeks < 40
+            || p.temperaturePreferenceOffset != 0
+            || !p.stableTraits.isEmpty
     }
 
     private func infoRow(icon: String, color: Color, title: String, value: String,
@@ -157,41 +155,114 @@ struct ProfileSummaryView: View {
         .padding(.vertical, 0.5)
     }
 
-    // MARK: - Walk schedule card
+    // MARK: - Reminders
 
-    private var walkScheduleCard: some View {
-        Button { showWalkSchedule = true } label: {
+    private var remindersCard: some View {
+        VStack(spacing: 0) {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 9)
-                        .fill(Color.teal.opacity(0.13))
+                        .fill(Color.orange.opacity(0.13))
                         .frame(width: 36, height: 36)
-                    Image(systemName: "calendar.badge.clock")
+                    Image(systemName: "bell.badge.fill")
                         .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.teal)
+                        .foregroundStyle(.orange)
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Расписание прогулок")
+                    Text("Напоминания")
                         .font(.body)
-                        .foregroundStyle(.primary)
-                    Text(walkScheduleSummary)
+                    Text("Погода и самочувствие ребёнка")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+                Toggle("", isOn: $notificationsOn)
+                    .labelsHidden()
+                    .tint(.orange)
+                    .onChange(of: notificationsOn) { _, on in
+                        Task {
+                            let actual = await notificationService.setEnabled(on)
+                            if actual != notificationsOn { notificationsOn = actual }
+                        }
+                    }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 13)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+
+            Divider()
+                .padding(.vertical, 4)
+
+            Button { showWalkSchedule = true } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "calendar.badge.clock")
+                        .foregroundStyle(.teal)
+                        .frame(width: 36, height: 36)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Расписание прогулок")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                        Text(walkScheduleSummary)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
         .sheet(isPresented: $showWalkSchedule) {
             WalkScheduleView()
         }
+    }
+
+    // MARK: - Secondary settings
+
+    private var appSettingsCard: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showSettings.toggle()
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24)
+                    Text("Настройки приложения")
+                        .font(.body)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(showSettings ? 180 : 0))
+                }
+                .contentShape(Rectangle())
+                .padding(.vertical, 2)
+            }
+            .buttonStyle(.plain)
+
+            if showSettings {
+                Divider()
+                    .padding(.vertical, 12)
+
+                VStack(spacing: 12) {
+                    themeCard
+                    AppLanguagePickerCard()
+                    if authService.isSignedIn {
+                        LiveWalkNotificationsCard()
+                    }
+                    siriCard
+                }
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     private var walkScheduleSummary: String {
@@ -249,42 +320,6 @@ struct ProfileSummaryView: View {
                 owned,
                 total
             )
-    }
-
-    // MARK: - Notifications card
-
-    private var notificationsCard: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(Color.orange.opacity(0.13))
-                    .frame(width: 36, height: 36)
-                Image(systemName: "bell.badge.fill")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(.orange)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Уведомления")
-                    .font(.body)
-                Text("Обновление погоды · дождевик · осторожное окно прогулки")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Toggle("", isOn: $notificationsOn)
-                .labelsHidden()
-                .tint(.orange)
-                .onChange(of: notificationsOn) { _, on in
-                    Task {
-                        let actual = await notificationService.setEnabled(on)
-                        if actual != notificationsOn { notificationsOn = actual }
-                    }
-                }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 13)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
     // MARK: - Theme card
@@ -381,23 +416,6 @@ struct ProfileSummaryView: View {
         .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
     }
 
-    // MARK: - Edit button
-
-    private var editButton: some View {
-        Button { showEdit = true } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "pencil")
-                    .font(.body.weight(.medium))
-                Text("Изменить данные ребёнка")
-                    .font(.body.weight(.medium))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 15)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-    }
 }
 
 // MARK: - Previews

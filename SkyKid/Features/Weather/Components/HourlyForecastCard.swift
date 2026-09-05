@@ -6,9 +6,9 @@ struct HourlyForecastCard: View {
     private var next24: [HourlyForecast] {
         let now = Date()
         return Array(
-            hourly
+                hourly
                 .filter { $0.time >= now.addingTimeInterval(-1800) }
-                .prefix(24)
+                .prefix(6)
         )
     }
 

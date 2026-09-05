@@ -101,7 +101,7 @@ struct OutfitFeedbackSection: View {
     private func confirmationBanner(feedback: UserFeedback) -> some View {
         Label(
             confirmationMessage ?? L10n.text("Наблюдение сохранено"),
-            systemImage: "brain.headset"
+            systemImage: "checkmark.circle.fill"
         )
             .font(.subheadline.weight(.medium))
             .foregroundStyle(accent(for: feedback))

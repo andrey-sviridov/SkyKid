@@ -303,6 +303,7 @@ struct ContentView: View {
                     WeatherView(
                         weather:          w,
                         cityName:         cityName,
+                        weatherUpdatedAt: weatherVM.weatherUpdatedAt,
                         currentProvider:  weatherVM.currentProvider,
                         onProviderChange: { provider, key in weatherVM.switchProvider(provider, apiKey: key) }
                     )
@@ -343,7 +344,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .tabItem { Label(L10n.text("Одежда"), systemImage: "hanger") }
+        .tabItem { Label(L10n.text("Помощник"), systemImage: "wand.and.stars") }
         .tag(2)
     }
 
@@ -422,6 +423,8 @@ struct ContentView: View {
             } label: {
                 Image(systemName: "arrow.clockwise")
             }
+            .accessibilityLabel(L10n.text("Обновить погоду"))
+            .accessibilityHint(L10n.text("Загрузить актуальные погодные данные"))
             .disabled(weatherVM.isLoading)
         }
     }

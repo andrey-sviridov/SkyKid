@@ -12,19 +12,44 @@ struct WalkTimelineCard: View {
     var isEditable: Bool = true
     var onReclassify: (WalkEvent) -> Void = { _ in }
     var onDelete: (WalkEvent) -> Void = { _ in }
+    var onUndoLast: (() -> Void)? = nil
 
     private var sortedEvents: [WalkEvent] {
         events.sorted { $0.timestamp > $1.timestamp }
     }
 
     var body: some View {
-        if !events.isEmpty {
-            SectionCard(title: L10n.text("Таймлайн"), systemImage: "list.bullet.rectangle") {
+        SectionCard(
+            title: L10n.text("Отметки"),
+            systemImage: "list.bullet.rectangle"
+        ) {
+            if sortedEvents.isEmpty {
+                HStack(spacing: 10) {
+                    Image(systemName: "tray")
+                        .foregroundStyle(.tertiary)
+                    Text(L10n.text("Пока нет отметок"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            } else {
                 ForEach(sortedEvents) { event in
                     row(event)
                 }
             }
+        } trailing: {
+            if isEditable && !sortedEvents.isEmpty, let onUndoLast {
+                Button(action: onUndoLast) {
+                    Text(L10n.text("Отменить"))
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .foregroundStyle(.blue)
+                .accessibilityLabel(L10n.text("Отменить последнюю отметку"))
+            }
         }
+        .accessibilityIdentifier("walk.timeline")
     }
 
     @ViewBuilder

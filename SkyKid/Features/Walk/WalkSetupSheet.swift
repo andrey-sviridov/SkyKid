@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Экран создания прогулки: дата/время, снапшот погоды, целевая длительность,
-/// набор одежды с TOG-вердиктом и кнопка «Начать прогулку».
+/// Экран создания прогулки: короткий снапшот погоды, набор одежды и кнопка
+/// «Начать прогулку». Редкие параметры остаются в меню «Дополнительно».
 struct WalkSetupSheet: View {
     var weather: NormalizedWeather?
     var profile: ChildProfile?
@@ -11,8 +11,6 @@ struct WalkSetupSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(ActiveWalkStore.self) private var store
-    @State private var startDate: Date = .now
-    @State private var didEditStartDate = false
     @State private var plannedMinutes: Int? = nil
     @State private var selectedIDs: [String] = []
 
@@ -25,8 +23,6 @@ struct WalkSetupSheet: View {
             ScrollView {
                 VStack(spacing: 16) {
                     WalkWeatherSnapshotCard(weather: weather)
-                    startTimeCard
-                    PlannedDurationCard(minutes: $plannedMinutes)
                     WalkOutfitChipsCard(
                         selectedIDs: $selectedIDs,
                         profile: profile,
@@ -43,9 +39,8 @@ struct WalkSetupSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Отмена") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Начать") { startWalk() }
-                        .fontWeight(.semibold)
+                ToolbarItem(placement: .topBarTrailing) {
+                    additionalOptionsMenu
                 }
             }
             .safeAreaInset(edge: .bottom) { startButton }
@@ -55,27 +50,23 @@ struct WalkSetupSheet: View {
         }
     }
 
-    private var startTimeCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Начало прогулки", systemImage: "calendar.clock")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-            DatePicker(
-                "",
-                selection: Binding(
-                    get: { startDate },
-                    set: { startDate = $0; didEditStartDate = true }
-                ),
-                in: ...Date.now,
-                displayedComponents: [.date, .hourAndMinute]
-            )
-            .datePickerStyle(.compact)
-            .labelsHidden()
-            .frame(maxWidth: .infinity, alignment: .leading)
+    private var additionalOptionsMenu: some View {
+        Menu {
+            Button(L10n.text("Без цели")) {
+                plannedMinutes = nil
+            }
+            ForEach([30, 60, 90, 120], id: \.self) { minutes in
+                Button(WalkDurationFormatter.string(minutes: minutes)) {
+                    plannedMinutes = minutes
+                }
+            }
+        } label: {
+            Image(systemName: plannedMinutes == nil ? "ellipsis.circle" : "target")
         }
-        .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
+        .accessibilityLabel(L10n.text("Дополнительные настройки"))
+        .accessibilityValue(
+            plannedMinutes.map(WalkDurationFormatter.string(minutes:)) ?? L10n.text("Без цели")
+        )
     }
 
     private var startButton: some View {
@@ -101,11 +92,8 @@ struct WalkSetupSheet: View {
     }
 
     private func startWalk() {
-        // Если пользователь не трогал дату/время вручную, старт — это момент
-        // нажатия «Начать», а не момент открытия этого экрана: иначе таймер
-        // на старте уже «нёс» время, потраченное на настройку прогулки.
         let walk = ActiveWalk(
-            startDate: didEditStartDate ? startDate : .now,
+            startDate: .now,
             plannedDurationMinutes: plannedMinutes,
             weatherTemperature: weather?.temperature ?? 12,
             apparentTemperature: weather?.apparentTemperature ?? weather?.temperature ?? 12,

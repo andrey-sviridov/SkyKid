@@ -42,11 +42,14 @@ struct ParentOutfitSummaryCard: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Рекомендация для ребёнка")
+            Label(L10n.text("Помощник"), systemImage: "wand.and.stars")
                 .font(.headline)
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 1)
-                .minimumScaleFactor(0.85)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundStyle(.indigo)
+
+            Text(L10n.text("Сверяю погоду, возраст и гардероб"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             headerMetadata
         }
@@ -75,14 +78,14 @@ struct ParentOutfitSummaryCard: View {
     }
 
     private var confidenceBadge: some View {
-        Label(confidenceLabel, systemImage: confidenceImage)
+        Label(L10n.text("Качество данных"), systemImage: confidenceImage)
             .font(.caption.weight(.semibold))
             .foregroundStyle(confidenceTint)
             .fixedSize(horizontal: true, vertical: false)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(
                 L10n.format(
-                    "Уверенность: %@. %@",
+                    "Качество данных: %@. %@",
                     confidenceLabel,
                     summary.confidenceReason
                 )

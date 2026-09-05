@@ -8,31 +8,33 @@ struct WalkContextSummaryCard: View {
 
     var body: some View {
         Button(action: onEdit) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 Image(systemName: "figure.walk.motion")
-                    .font(.title3.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.indigo)
-                    .frame(width: 38, height: 38)
-                    .background(.indigo.opacity(0.12), in: RoundedRectangle(cornerRadius: 11))
+                    .frame(width: 28, height: 28)
+                    .background(.indigo.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Собираемся гулять")
-                        .font(.subheadline.weight(.semibold))
+                    Text("Условия прогулки")
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(.primary)
                     Text(summary)
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Spacer(minLength: 8)
                 Image(systemName: "slider.horizontal.3")
+                    .font(.caption)
                     .foregroundStyle(.indigo)
             }
-            .padding(14)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 17))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
             .overlay(
-                RoundedRectangle(cornerRadius: 17)
+                RoundedRectangle(cornerRadius: 14)
                     .strokeBorder(.indigo.opacity(0.25), lineWidth: 1)
             )
         }

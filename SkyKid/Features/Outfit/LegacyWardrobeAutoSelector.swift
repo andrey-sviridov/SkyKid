@@ -2,8 +2,8 @@ import Foundation
 
 // MARK: - LegacyWardrobeAutoSelector
 
-/// Старый CLO-подбор используется только вкладкой «Конструктор».
-/// Основная рекомендация всегда проходит через OutfitSolver.
+/// Compatibility selector kept for regression coverage of the original
+/// wardrobe catalogue. The production recommendation uses OutfitSolver.
 enum LegacyWardrobeAutoSelector {
     static func selectItems(
         temperature: Double,
@@ -198,5 +198,24 @@ enum LegacyWardrobeAutoSelector {
             if deviation >= -4.0 { return .slightlyCold }
             return .dangerouslyCold
         }
+    }
+}
+
+// MARK: - WardrobePinnedItemsStore
+
+/// Kept with the compatibility selector so removing the old constructor does
+/// not change the persisted pinned-items format or its migration behaviour.
+enum WardrobePinnedItemsStore {
+    private static let storageKey = "pinned_wardrobe"
+
+    static func loadIDs() -> Set<String> {
+        guard let ids = AppGroup.defaults.stringArray(forKey: storageKey) else {
+            return ["diaper"]
+        }
+        return Set(ids.map { GarmentCatalog.canonicalID(for: $0) })
+    }
+
+    static func saveIDs(_ ids: Set<String>) {
+        AppGroup.defaults.set(Array(ids).sorted(), forKey: storageKey)
     }
 }
