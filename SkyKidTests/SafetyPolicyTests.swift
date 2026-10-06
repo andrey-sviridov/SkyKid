@@ -5,6 +5,63 @@ import XCTest
 
 final class SafetyPolicyTests: XCTestCase {
 
+    // MARK: - Supported age scope
+
+    func test_ageScope_acceptsNewbornAndExactTwelveMonthBoundary() {
+        let calendar = fixedCalendar
+        let now = date("2026-09-06")
+
+        XCTAssertEqual(
+            AgeSafetyPolicy.scope(for: date("2026-09-06"), now: now, calendar: calendar),
+            .supported
+        )
+        XCTAssertEqual(
+            AgeSafetyPolicy.scope(for: date("2025-09-06"), now: now, calendar: calendar),
+            .supported
+        )
+    }
+
+    func test_ageScope_rejectsJustOverTwelveMonthsAndFutureBirthdays() {
+        let calendar = fixedCalendar
+        let now = date("2026-09-06")
+
+        XCTAssertEqual(
+            AgeSafetyPolicy.scope(for: date("2025-09-05"), now: now, calendar: calendar),
+            .olderThanMaximum
+        )
+        XCTAssertEqual(
+            AgeSafetyPolicy.scope(for: date("2026-09-07"), now: now, calendar: calendar),
+            .futureBirthDate
+        )
+    }
+
+    func test_ageScope_birthdayRangeUsesSameCalendarBoundary() {
+        let calendar = fixedCalendar
+        let now = date("2026-09-06")
+        let range = AgeSafetyPolicy.supportedBirthdayRange(now: now, calendar: calendar)
+
+        XCTAssertEqual(range.lowerBound, date("2025-09-06"))
+        XCTAssertTrue(range.upperBound >= now)
+        XCTAssertEqual(
+            AgeSafetyPolicy.scope(for: range.lowerBound, now: now, calendar: calendar),
+            .supported
+        )
+    }
+
+    func test_ageScope_legacyOlderProfileIsLimitedWithoutMutation() {
+        let calendar = fixedCalendar
+        let now = date("2026-09-06")
+        let birthday = date("2024-09-06")
+        let profile = ChildThermalProfile(
+            name: "Старший",
+            gender: .boy,
+            birthday: birthday
+        )
+
+        XCTAssertFalse(AgeSafetyPolicy.isSupported(profile, now: now, calendar: calendar))
+        XCTAssertEqual(profile.birthday, birthday)
+    }
+
     // MARK: - Age and medical limits
 
     func test_agePolicy_usesCorrectedAgeTable() {
@@ -29,6 +86,26 @@ final class SafetyPolicyTests: XCTestCase {
         XCTAssertEqual(result.exposureLimits.hotAbove, 28)
         XCTAssertTrue(result.exposureLimits.usesAdditionalMedicalCaution)
         XCTAssertTrue(result.warnings.contains { $0.code == .medicalPlanPriority })
+    }
+
+    func test_medicalPolicy_diagnosisExplainsTOGLimitationWithoutBlocking() {
+        let profile = makeProfile(
+            ageMonths: 8,
+            stableTraits: [.anemia]
+        )
+        let result = MedicalSafetyPolicy.evaluate(
+            makeContext(profile: profile),
+            ageLimits: AgeSafetyPolicy.limits(for: profile)
+        )
+
+        let warning = result.warnings.first {
+            $0.code == .medicalRecommendationLimited
+        }
+        XCTAssertEqual(warning?.severity, .info)
+        XCTAssertTrue(warning?.message.contains("не меняют числовой расчёт") == true)
+        XCTAssertTrue(warning?.message.contains("врача") == true)
+        XCTAssertFalse(warning?.blocksScenario == true)
+        XCTAssertFalse(result.blocksWalk)
     }
 
     // MARK: - Blocking scenarios
@@ -131,7 +208,7 @@ final class SafetyPolicyTests: XCTestCase {
         XCTAssertFalse(message.contains("без крема"))
     }
 
-    func test_highUVGuidanceUsesReviewedPeakWindow() {
+    func test_highUVGuidanceUsesMeasuredValueWithoutFixedGlobalHours() {
         let profile = makeProfile(ageMonths: 8)
         let result = WeatherSafetyPolicy.evaluate(
             makeContext(
@@ -144,8 +221,25 @@ final class SafetyPolicyTests: XCTestCase {
             .first(where: { $0.code == .walkTimeWarning })?
             .message ?? ""
 
-        XCTAssertTrue(message.contains("10:00–16:00"))
-        XCTAssertFalse(message.contains("11:00–16:00"))
+        XCTAssertTrue(message.contains("Высокий UV 7"))
+        XCTAssertTrue(message.contains("тень"))
+        XCTAssertFalse(message.contains("10:00"))
+        XCTAssertFalse(message.contains("16:00"))
+    }
+
+    func test_rainCoverGuidanceCalmlyRequiresVentilation() {
+        let profile = makeProfile(ageMonths: 8)
+        var walkContext = makeWalkContext(for: profile)
+        walkContext.rainCover = .present_on
+        let warnings = TransportSafetyPolicy.evaluate(makeContext(
+            microclimateTemperature: 18,
+            profile: profile,
+            walkContext: walkContext
+        ))
+        let message = warnings.first { $0.code == .rainCoverVentilation }?.message ?? ""
+
+        XCTAssertTrue(message.contains("вентиляц"))
+        XCTAssertFalse(message.contains("безопас"))
     }
 
     func test_carSeatWarningUsesHarnessActionInsteadOfInventedTOGLimit() {
@@ -243,5 +337,17 @@ private extension SafetyPolicyTests {
             profile: profile,
             walkContext: walkContext ?? makeWalkContext(for: profile)
         )
+    }
+
+    var fixedCalendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        return calendar
+    }
+
+    func date(_ value: String) -> Date {
+        let formatter = ISO8601DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        return formatter.date(from: "\(value)T00:00:00Z")!
     }
 }

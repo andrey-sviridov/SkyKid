@@ -10,30 +10,56 @@ struct WalkHistoryView: View {
     var onPersonalizationChange: () -> Void = {}
 
     @Environment(WalkLogStore.self) private var store
+    @Environment(PersonalOffsetStore.self) private var personalizationStore
     @State private var showLog = false
     @State private var editingLog: WalkLog? = nil
     @State private var selectedLog: WalkLog? = nil
+    @State private var pendingDeletionIDs: Set<UUID> = []
 
-    private var insights: WalkHistoryInsights? {
-        WalkHistoryInsights.make(from: store.logs)
+    private var personalizationSummary: PersonalizationSummary? {
+        guard let profile, let recommendation, let walkContext else { return nil }
+        return personalizationStore.summary(
+            for: profile,
+            context: .recommendation(recommendation, walkContext: walkContext)
+        )
+    }
+
+    private var insights: WalkHistoryInsights {
+        WalkHistoryInsights.learning(from: personalizationSummary)
+    }
+
+    private var feedbackItems: [FeedbackHistoryItem] {
+        guard let profile else { return [] }
+        return FeedbackHistoryItemBuilder.make(
+            from: personalizationStore.feedbackHistory(for: profile)
+        )
+    }
+
+    private var visibleLogs: [WalkLog] {
+        store.logs.filter { !pendingDeletionIDs.contains($0.id) }
     }
 
     var body: some View {
         List {
-            if let insights {
-                WalkHistoryInsightsCard(insights: insights)
+            ThermalLearningCard(insights: insights)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 6, trailing: 16))
+
+            if !feedbackItems.isEmpty {
+                FeedbackHistorySection(items: feedbackItems)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 6, trailing: 16))
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
             }
 
-            if store.logs.isEmpty {
+            if visibleLogs.isEmpty {
                 EmptyHistoryCard()
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: insights == nil ? 12 : 6, leading: 16, bottom: 0, trailing: 16))
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 0, trailing: 16))
             } else {
-                ForEach(store.logs) { log in
+                ForEach(visibleLogs) { log in
                     Button { selectedLog = log } label: {
                         WalkLogRow(log: log)
                             .contentShape(Rectangle())
@@ -44,10 +70,7 @@ struct WalkHistoryView: View {
                     .listRowInsets(EdgeInsets(top: 5, leading: 16, bottom: 5, trailing: 16))
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
-                            if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
-                                store.delete(at: IndexSet(integer: idx))
-                                onPersonalizationChange()
-                            }
+                            delete(log)
                         } label: {
                             Label("Удалить", systemImage: "trash")
                         }
@@ -103,6 +126,16 @@ struct WalkHistoryView: View {
         }
     }
 
+    private func delete(_ log: WalkLog) {
+        withAnimation { _ = pendingDeletionIDs.insert(log.id) }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(250))
+            store.delete(id: log.id)
+            pendingDeletionIDs.remove(log.id)
+            onPersonalizationChange()
+        }
+    }
+
 }
 
 // MARK: - Previews
@@ -112,6 +145,7 @@ struct WalkHistoryView: View {
     NavigationStack {
         WalkHistoryView(weather: .mock, profile: .mock)
             .environment(WalkLogStore.shared)
+            .environment(PersonalOffsetStore.shared)
     }
 }
 #endif

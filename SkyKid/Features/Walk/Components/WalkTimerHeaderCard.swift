@@ -2,34 +2,36 @@ import SwiftUI
 
 // MARK: - WalkTimerHeaderCard
 
-/// Шапка прогулки: погода на момент старта, живой таймер и остаток до цели,
-/// всё на weather-градиенте.
+/// Шапка прогулки: живой таймер и остаток до цели.
 ///
 /// Общая для своего экрана прогулки и для просмотра прогулки второго
 /// родителя — поэтому принимает `ActiveWalk` и не знает ни про стор, ни про
 /// то, можно ли что-то менять.
 struct WalkTimerHeaderCard: View {
     let walk: ActiveWalk
-    var weather: NormalizedWeather?
     /// Имя того, кто ведёт прогулку. `nil` — это своя прогулка, подписывать нечего.
     var ownerName: String?
 
-    private var tone: SkyKidTheme.WeatherTone {
-        SkyKidTheme.WeatherTone(weatherCode: walk.weatherCode)
-    }
-
     var body: some View {
         VStack(spacing: 8) {
-            weatherLine
-
             if let ownerName {
                 Text(ownerName)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(tone.onColor.opacity(0.9))
+                    .foregroundStyle(.secondary)
             }
 
-            ElapsedTimeText(since: walk.startDate, size: .hero)
-                .foregroundStyle(tone.onColor)
+            Text(L10n.text("Прогулка идёт"))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text(durationText(at: context.date))
+                    .font(.system(size: 48, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .accessibilityLabel(
+                        L10n.format("Длительность прогулки: %@", durationText(at: context.date))
+                    )
+            }
 
             if let planned = walk.plannedDurationMinutes {
                 CountdownLabel(
@@ -37,37 +39,23 @@ struct WalkTimerHeaderCard: View {
                     ongoingText: L10n.text("осталось"),
                     finishedText: L10n.text("цель достигнута")
                 )
-                .foregroundStyle(tone.onColor.opacity(0.9))
+                .foregroundStyle(.secondary)
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity)
         .background(
-            SkyKidTheme.weatherGradient(for: walk.weatherCode),
+            .thinMaterial,
             in: RoundedRectangle(cornerRadius: 20)
         )
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.white.opacity(0.28), lineWidth: 1))
-        .shadow(color: tone.colors.first?.opacity(0.35) ?? .clear, radius: 12, y: 4)
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.1), lineWidth: 1))
     }
 
-    private var weatherLine: some View {
-        HStack(spacing: 10) {
-            Image(systemName: weather?.conditionIcon ?? "cloud.fill")
-                .font(.title2)
-                .symbolRenderingMode(.multicolor)
-                .foregroundStyle(tone.onColor)
-
-            Text(L10n.format("%lld°C", Int(walk.weatherTemperature.rounded())))
-                .font(.headline)
-                .foregroundStyle(tone.onColor)
-
-            Spacer()
-
-            if let description = weather?.conditionDescription {
-                Text(description)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(tone.onColor.opacity(0.9))
-            }
-        }
+    private func durationText(at now: Date) -> String {
+        let totalSeconds = Int(walk.elapsedSeconds(now: now))
+        let hours = totalSeconds / 3_600
+        let minutes = (totalSeconds % 3_600) / 60
+        let seconds = totalSeconds % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
 }

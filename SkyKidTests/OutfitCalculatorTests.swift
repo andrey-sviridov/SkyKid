@@ -264,15 +264,15 @@ final class OutfitCalculatorTests: XCTestCase {
 
     // MARK: Boundary Cases
 
-    // BC-1: gestationalAgeWeeks=40 → no prematurity bonus
-    func test_BC1_termBirth_noPretermBonus() {
+    // BC-1: gestational age does not add a numeric TOG adjustment
+    func test_BC1_pretermBirth_doesNotChangeThermalTarget() {
         let profile = makeProfile(ageMonths: 1, gestWeeks: 40)
         let term_delta = TOGCalculator.calculate(.init(T_micro: 0, profile: profile, personalOffset: 0))
         var premProfile = makeProfile(ageMonths: 1, gestWeeks: 28)
         premProfile.gestationalAgeWeeks = 28
         let prem_delta = TOGCalculator.calculate(.init(T_micro: 0, profile: premProfile, personalOffset: 0))
-        XCTAssertGreaterThan(prem_delta.TOG_required, term_delta.TOG_required,
-                             "BC-1: preterm should require more TOG than term")
+        XCTAssertEqual(prem_delta.TOG_required, term_delta.TOG_required, accuracy: 0.001,
+                       "BC-1: prematurity must not add an unreviewed TOG adjustment")
     }
 
     // BC-2: carSeat transport → carSeatBulkyCoatWarning when TOG_required > 1.5
@@ -293,25 +293,73 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertTrue(hasCarSeatWarning, "BC-2: carSeatBulkyCoatWarning expected at T=−5°C")
     }
 
-    // BC-3: fever → hard cap, TOG_required ≤ TOG_base
-    func test_BC3_fever_hardCap() {
+    // BC-3: fever is a safety gate, not a numeric TOG adjustment
+    func test_BC3_feverDoesNotChangeThermalTarget() {
         let profile = makeProfile(ageMonths: 2, healthConditions: [.fever])
+        let healthyProfile = makeProfile(ageMonths: 2)
         let T_micro = 5.0
         let result = TOGCalculator.calculate(.init(T_micro: T_micro, profile: profile, personalOffset: 0))
-        XCTAssertLessThanOrEqual(result.TOG_required, result.TOG_base + 0.01,
-                                 "BC-3: fever hard cap — TOG_required must not exceed TOG_base")
+        let healthy = TOGCalculator.calculate(.init(T_micro: T_micro, profile: healthyProfile, personalOffset: 0))
+        XCTAssertEqual(result.TOG_required, healthy.TOG_required, accuracy: 0.001,
+                       "BC-3: fever must not change the thermal arithmetic")
+        XCTAssertFalse(result.steps.contains { $0.label.contains("Здоровье") })
     }
 
-    func test_BC3_fever_hardCapWinsOverPositivePersonalOffset() {
+    func test_BC3_feverDoesNotChangePositivePersonalOffset() {
         let profile = makeProfile(ageMonths: 2, healthConditions: [.fever])
+        let healthyProfile = makeProfile(ageMonths: 2)
         let result = TOGCalculator.calculate(.init(
             T_micro: 5,
             profile: profile,
             personalOffset: OutfitConfig.TOG.maxPersonalOffsetTOG
         ))
+        let healthy = TOGCalculator.calculate(.init(
+            T_micro: 5,
+            profile: healthyProfile,
+            personalOffset: OutfitConfig.TOG.maxPersonalOffsetTOG
+        ))
 
-        XCTAssertLessThanOrEqual(result.TOG_required, result.TOG_base + 0.01,
-                                 "Safety cap must be applied after personalization")
+        XCTAssertEqual(result.TOG_required, healthy.TOG_required, accuracy: 0.001,
+                       "BC-3: medical gating must not be implemented as a TOG cap")
+    }
+
+    func test_medicalAndThermalTraitsDoNotChangeTOGArithmetic() {
+        let baselineProfile = makeProfile(ageMonths: 4).thermalProfile
+        let context = makeWalkContext(profile: baselineProfile)
+        let baseline = TOGCalculator.calculate(.init(
+            T_micro: 5,
+            profile: baselineProfile,
+            walkContext: context,
+            personalOffset: 0
+        ))
+
+        for trait in StableThermalTrait.allCases {
+            var profile = baselineProfile
+            profile.stableTraits = [trait]
+            let result = TOGCalculator.calculate(.init(
+                T_micro: 5,
+                profile: profile,
+                walkContext: context,
+                personalOffset: 0
+            ))
+
+            XCTAssertEqual(
+                result.TOG_required,
+                baseline.TOG_required,
+                accuracy: 0.001,
+                "Trait \(trait.rawValue) must not add an unreviewed TOG adjustment"
+            )
+        }
+
+        var feverContext = context
+        feverContext.healthStatus = .fever
+        let combined = TOGCalculator.calculate(.init(
+            T_micro: 5,
+            profile: baselineProfile,
+            walkContext: feverContext,
+            personalOffset: 0
+        ))
+        XCTAssertEqual(combined.TOG_required, baseline.TOG_required, accuracy: 0.001)
     }
 
     func test_feverWarning_underThreeMonthsRequiresMedicalAttention() {
@@ -480,7 +528,7 @@ final class OutfitCalculatorTests: XCTestCase {
             walkContext: feverContext
         )
 
-        XCTAssertLessThan(fever.targetTOG, healthy.targetTOG)
+        XCTAssertEqual(fever.targetTOG, healthy.targetTOG, accuracy: 0.001)
         XCTAssertTrue(fever.warnings.contains { $0.code == .feverStayHome })
         XCTAssertTrue(profile.stableTraits.isEmpty)
     }
@@ -517,8 +565,8 @@ final class OutfitCalculatorTests: XCTestCase {
                        "BC-7: offset should be clamped at maxPersonalOffsetTOG after many cold feedbacks")
     }
 
-    // BC-8: correctedAgeWeeks < 0 → prematurity offset applied
-    func test_BC8_correctedAgeNegative_pretermApplied() {
+    // BC-8: correctedAgeWeeks < 0 still affects safety policy, not TOG arithmetic
+    func test_BC8_correctedAgeNegative_doesNotChangeThermalTarget() {
         // gestWeeks = 28 → 12 weeks preterm; baby born 4 weeks ago
         // correctedAgeWeeks = 4 - 12 = -8 (negative!)
         let birthday4w = Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
@@ -528,14 +576,14 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertLessThan(profile.correctedAgeWeeks, 0, "BC-8: correctedAgeWeeks should be negative")
 
         let result = TOGCalculator.calculate(.init(T_micro: 5.0, profile: profile, personalOffset: 0))
-        // TOG_required should include pretermDelta
+        // The same chronological age must produce the same thermal target.
         let withoutPreterm: Double = {
             var p2 = profile
             p2.gestationalAgeWeeks = 40
             return TOGCalculator.calculate(.init(T_micro: 5.0, profile: p2, personalOffset: 0)).TOG_required
         }()
-        XCTAssertGreaterThan(result.TOG_required, withoutPreterm - 0.01,
-                             "BC-8: prematurity should add TOG_required")
+        XCTAssertEqual(result.TOG_required, withoutPreterm, accuracy: 0.001,
+                       "BC-8: prematurity must not add an unreviewed TOG adjustment")
     }
 
     // MARK: §5.6 Double-insulation overheat guard
@@ -587,25 +635,6 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertFalse(hasHeavySuit, "OG-2: at +5°C the solver should pick demi (2.25), not a heavy suit")
         let hasOverheat = rec.warnings.contains { $0.code == .overheatPriority }
         XCTAssertFalse(hasOverheat, "OG-2: no heavy suit → no double-insulation warning")
-    }
-
-    // MARK: - Shared wardrobe auto-selection
-
-    func test_autoSelector_warmInfant_doesNotUseNonThermalBib() {
-        let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
-        let selected = LegacyWardrobeAutoSelector.selectItems(
-            temperature: 22,
-            ageGroup: profile.wardrobeAgeGroup
-        )
-        let selectedIDs = Set(selected.map(\.id))
-        let heat = selected.reduce(0.0) { $0 + $1.heatValue }
-        let requiredHeat = (26.0 - 22.0) * 0.5
-
-        XCTAssertFalse(selectedIDs.contains("bib"), "Bib is functional, not thermal, and must not be auto-selected")
-        XCTAssertEqual(GarmentCatalog.byID["bib"]!.heatValue, 0, accuracy: 0.001,
-                       "Bib must not contribute to thermal risk")
-        XCTAssertEqual(heat, requiredHeat, accuracy: 0.25,
-                       "Warm infant auto-selection should be thermally close to target")
     }
 
     func test_recommendationUsesOutfitSolverOutput() {
@@ -692,6 +721,7 @@ final class OutfitCalculatorTests: XCTestCase {
             recommendation: recommendation,
             childName: profile.name,
             childAgeLabel: profile.ageLabel,
+            childBirthday: profile.thermalProfile.birthday,
             cityName: "Алматы",
             generatedAt: generatedAt
         )
@@ -709,10 +739,10 @@ final class OutfitCalculatorTests: XCTestCase {
         let store = RecordingRecommendationSnapshotStore()
         let useCase = BuildOutfitRecommendationUseCase(recommendationService: .shared, snapshotStore: store)
         let profile = makeProfile(ageMonths: 5)
-        let generatedAt = Date(timeIntervalSince1970: 1_750_100_000)
+        let generatedAt = Date()
 
         let walkContext = makeWalkContext(profile: profile.thermalProfile)
-        let output = useCase.execute(
+        let output = try! useCase.execute(
             weather: makeWeather(T: 14, V: 3),
             profile: profile.thermalProfile,
             walkContext: walkContext,
@@ -730,7 +760,8 @@ final class OutfitCalculatorTests: XCTestCase {
         let useCase = BuildOutfitRecommendationUseCase(recommendationService: .shared, snapshotStore: store)
         let viewModel = WeatherViewModel(
             service: StubWeatherService(),
-            outfitUseCase: useCase
+            outfitUseCase: useCase,
+            cachedWeatherProvider: { nil }
         )
         let profile = makeProfile(ageMonths: 5)
         let context = makeWalkContext(profile: profile.thermalProfile)
@@ -743,6 +774,7 @@ final class OutfitCalculatorTests: XCTestCase {
             recommendation: existingRecommendation,
             childName: profile.name,
             childAgeLabel: profile.ageLabel,
+            childBirthday: profile.thermalProfile.birthday,
             cityName: "Алматы"
         ))
 
@@ -773,6 +805,7 @@ final class OutfitCalculatorTests: XCTestCase {
             recommendation: recommendation,
             childName: "Тест",
             childAgeLabel: "3 месяца",
+            childBirthday: makeProfile().thermalProfile.birthday,
             cityName: "Алматы",
             generatedAt: generatedAt,
             timeToLive: 30
@@ -799,26 +832,6 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertFalse(itemIDs.contains("bodi_kr"), "Old 6-12 short-sleeve body duplicate must stay hidden")
         XCTAssertEqual(bodyNames.sorted(), ["Боди, длинный рукав", "Боди, короткий рукав"],
                        "Infant catalog should not show visually identical body duplicates")
-    }
-
-    func test_autoSelector_infantUsesCanonicalBodyIDs() {
-        let selected = LegacyWardrobeAutoSelector.selectItems(temperature: 12, ageGroup: .infant)
-        let selectedIDs = Set(selected.map(\.id))
-
-        XCTAssertFalse(selectedIDs.contains("bodi_st_kr"))
-        XCTAssertFalse(selectedIDs.contains("bodi_kr"))
-        XCTAssertTrue(selectedIDs.contains("bodi_short") || selectedIDs.contains("bodi_long"))
-    }
-
-    func test_autoSelector_hotOutdoorInfant_keepsLightBodyCoverage() {
-        let selected = LegacyWardrobeAutoSelector.selectItems(temperature: 27, ageGroup: .infant)
-        let selectedIDs = Set(selected.map(\.id))
-
-        XCTAssertTrue(selectedIDs.contains("diaper"), "Diaper remains the pinned baseline")
-        XCTAssertTrue(selectedIDs.contains("bodi_short") || selectedIDs.contains("pesochnik"),
-                      "Outdoor hot-weather recommendation should not leave the infant in diaper only")
-        XCTAssertFalse(selectedIDs.contains("fleece_overall"))
-        XCTAssertFalse(selectedIDs.contains("demi_overall"))
     }
 
     func test_displayOutfit_hotOutdoorInfant_hasBodyLayer() {
@@ -863,13 +876,18 @@ final class OutfitCalculatorTests: XCTestCase {
 
     // MARK: - Wardrobe self-heal migration
 
-    // WM-1: устаревшая схема (старый каталог) → гардероб сбрасывается в полный.
-    // Это и есть фикс «всегда 2 предмета»: стэйл-ID больше не схлопывают подбор.
-    func test_WM1_staleSchema_reseedsToFullCatalog() {
+    // WM-1: legacy subset preserves explicit yes/no choices.
+    func test_WM1_legacySubsetPreservesExplicitChoices() {
         let all: Set<String> = ["diaper", "slip", "winter"]
-        let result = UserWardrobeStore.migratedOwnedIDs(
-            saved: ["diaper"], seen: nil, storedVersion: 0, allIDs: all)
-        XCTAssertEqual(result, all, "WM-1: устаревшая схема должна вернуть полный каталог")
+        let result = UserWardrobeStore.migratedState(
+            savedOwned: ["diaper", "slip"],
+            savedUnavailable: nil,
+            seen: all,
+            storedVersion: 4,
+            allIDs: all
+        )
+        XCTAssertEqual(result.confirmedOwnedIDs, ["diaper", "slip"])
+        XCTAssertEqual(result.unavailableIDs, ["winter"])
     }
 
     // WM-2: текущая схема → мёртвые ID отбрасываются, выбор пользователя сохраняется.
@@ -890,15 +908,53 @@ final class OutfitCalculatorTests: XCTestCase {
                        "WM-2: старые ID боди должны мигрировать в единые позиции")
     }
 
-    // WM-3: новый предмет каталога (нет в snapshot seen) → авто-владение;
-    // ранее снятый предмет остаётся снятым.
-    func test_WM3_currentSchema_autoOwnsNewItems() {
+    // WM-3: catalog additions remain unknown; explicit facts remain unchanged.
+    func test_WM3_currentSchema_keepsNewItemsUnknown() {
         let all: Set<String> = ["diaper", "slip", "winter", "fleece_overall"]
-        let result = UserWardrobeStore.migratedOwnedIDs(
-            saved: ["diaper", "slip"], seen: ["diaper", "slip", "winter"],
-            storedVersion: UserWardrobeStore.currentSchemaVersion, allIDs: all)
-        XCTAssertTrue(result.contains("fleece_overall"), "WM-3: новый предмет авто-добавлен")
-        XCTAssertFalse(result.contains("winter"), "WM-3: снятый предмет остаётся снятым")
+        let result = UserWardrobeStore.migratedState(
+            savedOwned: ["diaper", "slip"],
+            savedUnavailable: ["winter"],
+            seen: ["diaper", "slip", "winter"],
+            storedVersion: UserWardrobeStore.currentSchemaVersion,
+            allIDs: all
+        )
+        XCTAssertEqual(result.confirmedOwnedIDs, ["diaper", "slip"])
+        XCTAssertEqual(result.unavailableIDs, ["winter"])
+        XCTAssertFalse(result.confirmedOwnedIDs.contains("fleece_overall"))
+        XCTAssertFalse(result.unavailableIDs.contains("fleece_overall"))
+    }
+
+    func test_WM4_legacyFullSeedBecomesUnknownInsteadOfOwned() {
+        let all: Set<String> = ["diaper", "slip", "winter"]
+        let result = UserWardrobeStore.migratedState(
+            savedOwned: all,
+            savedUnavailable: nil,
+            seen: all,
+            storedVersion: 4,
+            allIDs: all
+        )
+
+        XCTAssertEqual(result.confirmedOwnedIDs, ["diaper"])
+        XCTAssertTrue(result.unavailableIDs.isEmpty)
+    }
+
+    func test_WM5_freshStoreStartsUnknownAndPersistsExplicitAnswers() {
+        let suite = "OutfitCalculatorTests.wardrobe.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let all: Set<String> = ["diaper", "slip", "winter"]
+        let store = UserWardrobeStore(defaults: defaults, catalogIDs: all)
+
+        XCTAssertEqual(store.ownership(of: "slip"), .unknown)
+        XCTAssertEqual(store.ownedIDs, all, "Unknown items remain solver candidates")
+
+        store.setOwnership(.owned, for: "slip")
+        store.setOwnership(.unavailable, for: "winter")
+
+        let restored = UserWardrobeStore(defaults: defaults, catalogIDs: all)
+        XCTAssertEqual(restored.ownership(of: "slip"), .owned)
+        XCTAssertEqual(restored.ownership(of: "winter"), .unavailable)
+        XCTAssertEqual(restored.ownedIDs, ["diaper", "slip"])
     }
 
     // MARK: - Underdressed wardrobe gap (cold-safety)
@@ -1058,6 +1114,73 @@ final class OutfitCalculatorTests: XCTestCase {
         XCTAssertEqual(TOGCalculator.baseTOG(30.0), 0.2, accuracy: 0.001)
         // Below min: T=-20 → 8.0
         XCTAssertEqual(TOGCalculator.baseTOG(-20.0), 8.0, accuracy: 0.001)
+    }
+
+    func test_longWalkDoesNotReuseErrandsAdjustment() {
+        let profile = makeProfile(ageMonths: 3, activity: .calmAwake)
+        var regularContext = makeWalkContext(profile: profile.thermalProfile)
+        regularContext.walkType = .regular
+        var longContext = regularContext
+        longContext.walkType = .long
+
+        let regular = TOGCalculator.calculate(.init(
+            T_micro: 15,
+            profile: profile.thermalProfile,
+            walkContext: regularContext,
+            personalOffset: 0
+        ))
+        let long = TOGCalculator.calculate(.init(
+            T_micro: 15,
+            profile: profile.thermalProfile,
+            walkContext: longContext,
+            personalOffset: 0
+        ))
+
+        XCTAssertEqual(
+            long.TOG_required,
+            regular.TOG_required,
+            accuracy: 0.001,
+            "A long walk must not reduce the thermal target through the legacy errands adjustment"
+        )
+    }
+
+    func test_longWalkThermalTargetIsMonotonicAcrossRepresentativeContexts() {
+        let profile = makeProfile(ageMonths: 3)
+        let contexts: [(temperature: Double, activity: BabyActivityLevel)] = [
+            (-15, .sleeping),
+            (15, .calmAwake),
+            (27, .activeInStroller)
+        ]
+
+        for context in contexts {
+            var regularContext = makeWalkContext(
+                profile: profile.thermalProfile,
+                activity: context.activity
+            )
+            regularContext.walkType = .regular
+            var longContext = regularContext
+            longContext.walkType = .long
+
+            let regular = TOGCalculator.calculate(.init(
+                T_micro: context.temperature,
+                profile: profile.thermalProfile,
+                walkContext: regularContext,
+                personalOffset: 0
+            ))
+            let long = TOGCalculator.calculate(.init(
+                T_micro: context.temperature,
+                profile: profile.thermalProfile,
+                walkContext: longContext,
+                personalOffset: 0
+            ))
+
+            XCTAssertGreaterThanOrEqual(
+                long.TOG_required,
+                regular.TOG_required,
+                "Long walk must not lower TOG at T_micro=\(context.temperature)°C"
+            )
+            XCTAssertEqual(long.TOG_required, regular.TOG_required, accuracy: 0.001)
+        }
     }
 
     // MARK: Integration smoke test

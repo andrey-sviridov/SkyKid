@@ -284,12 +284,13 @@ enum ChildGender: String, Codable, CaseIterable, Sendable {
 }
 
 struct ChildProfile: Equatable {
-    static let currentSchemaVersion = 2
+    static let currentSchemaVersion = 3
 
+    var id: UUID
     var thermalProfile: ChildThermalProfile
 
     // These compatibility fields are kept only for the isolated legacy engine
-    // and decoding old call sites. They are never persisted in schema v2 and
+    // and decoding old call sites. They are never persisted in schema v3 and
     // are not consumed by the main recommendation pipeline.
     var activityLevel: ActivityLevel = .moderate
     var walkType: WalkType = .regular
@@ -297,7 +298,8 @@ struct ChildProfile: Equatable {
     var healthConditions: Set<HealthCondition> = []
     var babyActivityLevel: BabyActivityLevel = .calmAwake
 
-    init(name: String, gender: ChildGender, birthday: Date) {
+    init(id: UUID = UUID(), name: String, gender: ChildGender, birthday: Date) {
+        self.id = id
         thermalProfile = ChildThermalProfile(
             name: name,
             gender: gender,
@@ -381,7 +383,7 @@ struct ChildProfile: Equatable {
 
 extension ChildProfile: Codable {
     enum CodingKeys: String, CodingKey {
-        case schemaVersion, thermalProfile
+        case schemaVersion, id, thermalProfile
         case name, gender, birthday, activityLevel, walkType, healthFeatures
         case temperaturePreferenceOffset, strollerType
         case gestationalAgeWeeks, healthConditions, babyActivityLevel
@@ -393,10 +395,12 @@ extension ChildProfile: Codable {
             ChildThermalProfile.self,
             forKey: .thermalProfile
         ) {
+            id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
             self.thermalProfile = thermalProfile
             return
         }
 
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
         let name = try container.decode(String.self, forKey: .name)
         let gender = try container.decode(ChildGender.self, forKey: .gender)
         let birthday = try container.decode(Date.self, forKey: .birthday)
@@ -441,6 +445,7 @@ extension ChildProfile: Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(Self.currentSchemaVersion, forKey: .schemaVersion)
+        try container.encode(id, forKey: .id)
         try container.encode(thermalProfile, forKey: .thermalProfile)
     }
 }
@@ -592,7 +597,17 @@ enum AppGroup {
 
     static func loadProfile() -> ChildProfile? {
         guard let data = defaults.data(forKey: profileKey) else { return nil }
-        return try? JSONDecoder().decode(ChildProfile.self, from: data)
+        guard let profile = try? JSONDecoder().decode(ChildProfile.self, from: data) else {
+            return nil
+        }
+
+        // A legacy payload has no UUID. ChildProfile generates one while
+        // decoding; persist the upgraded representation so it is generated
+        // only once for this stored profile.
+        if let upgradedData = try? JSONEncoder().encode(profile), upgradedData != data {
+            defaults.set(upgradedData, forKey: profileKey)
+        }
+        return profile
     }
 
     static func deleteProfile() {

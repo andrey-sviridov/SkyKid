@@ -58,3 +58,46 @@ struct GarmentIconView: View {
             .foregroundStyle(isSelected ? accentColor : .secondary)
     }
 }
+
+// MARK: - RecommendedGarmentRow
+
+struct RecommendedGarmentRow: View {
+    let garment: OutfitGarmentPresentation
+    var accentColor: Color = .indigo
+
+    var body: some View {
+        HStack(spacing: 12) {
+            garmentImage
+                .accessibilityHidden(true)
+
+            Text(garment.name)
+                .font(.body.weight(.medium))
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(10)
+        .background(Color.primary.opacity(0.055), in: RoundedRectangle(cornerRadius: 13))
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var garmentImage: some View {
+        if let item = GarmentCatalog.byID[garment.id] {
+            GarmentIconView(
+                item: item,
+                isSelected: true,
+                accentColor: accentColor,
+                size: 48,
+                shape: .roundedRectangle(12)
+            )
+        } else {
+            Image(systemName: garment.systemImage)
+                .font(.system(size: 19, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(accentColor)
+                .frame(width: 48, height: 48)
+                .background(accentColor.opacity(0.13), in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
+}

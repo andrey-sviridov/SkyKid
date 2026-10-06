@@ -5,7 +5,7 @@ import Foundation
 /// Small, deterministic model for showing whether the weather snapshot is
 /// recent enough to use for a walk.
 struct WeatherFreshness: Equatable {
-    static let defaultStaleAfter: TimeInterval = 2 * 60 * 60
+    static let defaultStaleAfter: TimeInterval = RecommendationFreshnessPolicy.defaultStaleAfter
 
     let updatedAt: Date?
     let now: Date
@@ -26,8 +26,14 @@ struct WeatherFreshness: Equatable {
         return max(0, now.timeIntervalSince(updatedAt))
     }
 
+    var state: RecommendationFreshnessState {
+        RecommendationFreshnessPolicy(
+            now: now,
+            staleAfter: staleAfter
+        ).state(for: updatedAt)
+    }
+
     var isStale: Bool {
-        guard let age else { return true }
-        return age >= staleAfter
+        state != .fresh
     }
 }

@@ -15,14 +15,14 @@ enum WeatherSafetyPolicy {
 
         if context.effectiveTemperature < limits.coldBelow {
             warnings.append(coldExposureWarning(context, limits: limits))
-            nextSaferWindow = findNextSaferWindow(
-                hourly: context.weather.hourly,
+            nextSaferWindow = findNextBetterWindow(
+                context: context,
                 limits: limits
             )
         } else if context.heatIndexTemperature > limits.hotAbove {
             warnings.append(heatExposureWarning(context, limits: limits))
-            nextSaferWindow = findNextSaferWindow(
-                hourly: context.weather.hourly,
+            nextSaferWindow = findNextBetterWindow(
+                context: context,
                 limits: limits
             )
         }
@@ -156,8 +156,8 @@ private extension WeatherSafetyPolicy {
                 code: .walkTimeWarning,
                 severity: .caution,
                 message: isYoungInfant
-                    ? L10n.format("Высокий UV %d: младенца до 6 месяцев держите в тени и вне прямого солнца; выбирайте лёгкую закрывающую одежду и широкополую панаму. Избегайте пиковых часов 10:00–16:00.", uvValue)
-                    : L10n.format("Высокий UV %d: выбирайте тень, лёгкую закрывающую одежду и широкополую панаму; избегайте пиковых часов 10:00–16:00.", uvValue),
+                    ? L10n.format("Высокий UV %d: младенца до 6 месяцев держите в тени и вне прямого солнца; выбирайте лёгкую закрывающую одежду и широкополую панаму.", uvValue)
+                    : L10n.format("Высокий UV %d: выбирайте тень, лёгкую закрывающую одежду и широкополую панаму.", uvValue),
                 systemImage: "sun.max.fill"
             )]
         }
@@ -173,34 +173,40 @@ private extension WeatherSafetyPolicy {
     }
 }
 
-// MARK: - Next safer window
+// MARK: - Next better window
 
 private extension WeatherSafetyPolicy {
-    static func findNextSaferWindow(
-        hourly: [HourlyForecast],
+    static func findNextBetterWindow(
+        context: SafetyAssessmentContext,
         limits: OutdoorSafetyLimits
     ) -> DateInterval? {
         let now = Date()
-        let horizon = now.addingTimeInterval(24 * 3_600)
-        let candidates = hourly
-            .filter { $0.time >= now && $0.time <= horizon }
-            .sorted { $0.time < $1.time }
-
-        func isWithinProductLimits(_ forecast: HourlyForecast) -> Bool {
-            forecast.apparentTemperature > limits.coldBelow
-                && forecast.apparentTemperature < limits.hotAbove
-                && forecast.precipProbability < 50
+        let current = WalkWindowCandidate(
+            time: now,
+            apparentTemperature: context.weather.apparentTemperature,
+            windKmh: context.weather.windSpeed,
+            gustKmh: context.weather.windGust,
+            precipitationProbability: context.weather.precipitation > 0 ? 100 : 0,
+            uvIndex: context.weather.status(for: .uvIndex).quality == .unavailable
+                ? nil : context.weather.uvIndex
+        )
+        let hourly = context.weather.hourly.map {
+            WalkWindowCandidate(
+                time: $0.time,
+                apparentTemperature: $0.apparentTemperature,
+                windKmh: nil,
+                gustKmh: nil,
+                precipitationProbability: $0.precipProbability,
+                uvIndex: nil
+            )
         }
-
-        for index in 0..<max(0, candidates.count - 1) {
-            let first = candidates[index]
-            let second = candidates[index + 1]
-            guard second.time.timeIntervalSince(first.time) <= 3_601 else { continue }
-            if isWithinProductLimits(first) && isWithinProductLimits(second) {
-                return DateInterval(start: first.time, duration: 2 * 3_600)
-            }
-        }
-
-        return nil
+        return WalkWindowScorer.suggestion(
+            current: current,
+            hourly: hourly,
+            limits: limits,
+            forecastUpdatedAt: now,
+            confidence: context.weather.confidence.level,
+            now: now
+        )?.interval
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 
+#if DEBUG
 struct ProviderPickerView: View {
     let current: WeatherProvider
     let onSelect: (WeatherProvider, String?) -> Void
@@ -151,3 +152,4 @@ private struct ProviderRow: View {
         .buttonStyle(.plain)
     }
 }
+#endif

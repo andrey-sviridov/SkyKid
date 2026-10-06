@@ -1,7 +1,6 @@
 import ActivityKit
 import WidgetKit
 import SwiftUI
-import AppIntents
 
 // MARK: - WalkLiveActivityWidget
 // Live Activity для идущей прогулки: банер на экране блокировки + Dynamic
@@ -19,7 +18,13 @@ struct WalkLiveActivityWidget: Widget {
                     HStack(spacing: 6) {
                         Image(systemName: context.attributes.weatherIconSymbol ?? "figure.walk")
                             .symbolRenderingMode(.multicolor)
-                        Text("\(Int(context.attributes.weatherTemperature.rounded()))°")
+                        Group {
+                            if let temperature = context.attributes.weatherTemperature {
+                                Text("\(Int(temperature.rounded()))°")
+                            } else {
+                                Text("—")
+                            }
+                        }
                             .font(.headline)
                     }
                 }
@@ -30,9 +35,7 @@ struct WalkLiveActivityWidget: Widget {
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(L10n.format("Одежда: %lld · TOG %.1f",
-                                         context.state.outfitCount,
-                                         context.state.effectiveTOG))
+                        Text(outfitSummary(for: context))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         if let title = context.state.lastEventTitle {
@@ -40,7 +43,8 @@ struct WalkLiveActivityWidget: Widget {
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
-                        quickMarkButtons(state: context.state, foreground: .primary)
+                        Text(L10n.text("Откройте SkyKid, чтобы завершить прогулку"))
+                            .font(.caption2.weight(.semibold))
                     }
                 }
             } compactLeading: {
@@ -73,7 +77,9 @@ private struct WalkLockScreenView: View {
                     Text(context.attributes.weatherDescription ?? L10n.text("Прогулка идёт"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(tone.onColor.opacity(0.9))
-                    Text(L10n.format("%lld°C", Int(context.attributes.weatherTemperature.rounded())))
+                    Text(context.attributes.weatherTemperature.map {
+                        L10n.format("%lld°C", Int($0.rounded()))
+                    } ?? L10n.text("Температура неизвестна"))
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(tone.onColor)
                 }
@@ -85,10 +91,7 @@ private struct WalkLockScreenView: View {
             }
 
             HStack(spacing: 12) {
-                Label(
-                    L10n.format("Одежда: %lld · TOG %.1f", context.state.outfitCount, context.state.effectiveTOG),
-                    systemImage: "hanger"
-                )
+                Label(outfitSummary(for: context), systemImage: "hanger")
                 .font(.caption2)
                 .foregroundStyle(tone.onColor.opacity(0.85))
 
@@ -99,7 +102,12 @@ private struct WalkLockScreenView: View {
                 }
             }
 
-            quickMarkButtons(state: context.state, foreground: tone.onColor)
+            Label(
+                L10n.text("Откройте SkyKid, чтобы завершить прогулку"),
+                systemImage: "arrow.up.forward.app.fill"
+            )
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(tone.onColor)
         }
         .padding(16)
         .widgetURL(URL(string: "skykid://walk"))
@@ -107,72 +115,26 @@ private struct WalkLockScreenView: View {
     }
 }
 
-// MARK: - Quick mark buttons
-// Общие для Lock Screen и развёрнутого Dynamic Island: сон/подъём и
-// люлька — переключатели (подпись/иконка зависят от текущего состояния),
-// отметка — фиксированная кнопка. Растянуты на всю ширину, единый стиль
-// (заливка/обводка от `foreground`) — контраст гарантирован по построению,
-// а не подобран под конкретную погоду/фон.
+// MARK: - Outfit presentation
 
-@ViewBuilder
-private func quickMarkButtons(state: WalkActivityAttributes.ContentState, foreground: Color) -> some View {
-    let isBusy = state.pendingControl != nil
-    HStack(spacing: 8) {
-        quickMarkButton(
-            WalkSleepToggleIntent(),
-            title: state.isSleeping ? L10n.text("Проснулся") : L10n.text("Уснул"),
-            icon: state.isSleeping ? "sun.max.fill" : "moon.zzz.fill",
-            foreground: foreground,
-            isPending: state.pendingControl == .sleep,
-            isBusy: isBusy
+private func outfitSummary(for context: ActivityViewContext<WalkActivityAttributes>) -> String {
+    L10n.format(
+        "Одежда: %lld · %@",
+        context.state.outfitCount,
+        liveActivityFitLabel(
+            effective: context.state.effectiveTOG,
+            target: context.attributes.targetTOG
         )
-        quickMarkButton(
-            WalkBassinetteToggleIntent(),
-            title: state.isBassinetteOpen ? L10n.text("Закрыли") : L10n.text("Открыли"),
-            icon: state.isBassinetteOpen ? "tray.and.arrow.down.fill" : "tray.and.arrow.up.fill",
-            foreground: foreground,
-            isPending: state.pendingControl == .bassinette,
-            isBusy: isBusy
-        )
-        quickMarkButton(
-            WalkCheckpointIntent(),
-            title: L10n.text("Отметка"),
-            icon: "flag.fill",
-            foreground: foreground,
-            isPending: state.pendingControl == .checkpoint,
-            isBusy: isBusy
-        )
-    }
-    .frame(maxWidth: .infinity)
+    )
 }
 
-/// `isPending` — именно эта кнопка сейчас выполняется (показывает спиннер),
-/// `isBusy` — какая-то из трёх выполняется (весь ряд затемнён и недоступен).
-private func quickMarkButton<I: LiveActivityIntent>(
-    _ intent: I, title: String, icon: String, foreground: Color, isPending: Bool, isBusy: Bool
-) -> some View {
-    Button(intent: intent) {
-        VStack(spacing: 3) {
-            if isPending {
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .tint(foreground)
-            } else {
-                Image(systemName: icon)
-                    .font(.body.weight(.semibold))
-            }
-            Text(title)
-                .font(.caption.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .foregroundStyle(foreground)
-        .opacity(isBusy && !isPending ? 0.45 : 1)
-        .background(foreground.opacity(0.16), in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(foreground.opacity(0.3), lineWidth: 1))
+private func liveActivityFitLabel(effective: Double, target: Double?) -> String {
+    guard let target else { return L10n.text("Проверьте комплект") }
+    switch effective - target {
+    case ..<(-1.0):      return L10n.text("Добавьте тёплый слой")
+    case -1.0..<(-0.4):  return L10n.text("Добавьте лёгкий слой")
+    case -0.4...0.4:     return L10n.text("Комплект подходит")
+    case 0.4...1.0:      return L10n.text("Снимите один лёгкий слой")
+    default:             return L10n.text("Снимите один тёплый слой")
     }
-    .buttonStyle(.plain)
-    .disabled(isBusy)
 }

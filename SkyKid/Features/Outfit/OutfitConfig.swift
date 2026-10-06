@@ -110,28 +110,21 @@ enum OutfitConfig {
         static let ageAdjColdThreshold: Double = 18.0
         static let ageAdjHotThreshold: Double = 24.0
 
-        // §4.3 Prematurity
-        static let pretermDelta: Double = 0.5
-        static let pretermGestationThreshold: Int = 34       // weeks
-        static let pretermChronoMonthsThreshold: Int = 3     // months
-
-        // §4.4 Activity
+        // §4.3 Activity
         static let actSleepingDelta: Double = 0.5
         static let actCalmDelta: Double = 0.0
         static let actActiveInStrollerDelta: Double = -0.3
         static let actWalkingCrawlingDelta: Double = -1.2    // ASSUMPTION: using spec value; use -1.0 for cautious mode
+        // A long walk has no standalone thermal delta. Duration is handled by
+        // the safety policy; the thermal target follows actual activity and
+        // transport instead of an unsupported numeric duration adjustment.
+        static let longWalkThermalDelta: Double = 0.0
         static let errandsInOutDelta: Double = -0.5
 
-        // §4.5 Health
-        static let feverDelta: Double = -0.5
-        static let anemiaOutDelta: Double = 0.3
-        // Legacy HealthFeature bridge
-        static let legacyFreqIllnessDelta: Double = -0.2
-        static let legacyColdSensitiveDelta: Double = 0.3
-        static let legacyPrematureDelta: Double = 0.3
-        static let legacyHeatSensitiveDelta: Double = -0.3
+        // Medical states do not have numeric TOG constants. Acute illness,
+        // prematurity and diagnoses are handled by MedicalSafetyPolicy.
 
-        // §4.6 Clamp
+        // §4.5 Clamp
         static let minTOG: Double = 0.2
         static let maxTOG: Double = 9.0
 
@@ -177,6 +170,17 @@ enum OutfitConfig {
         // §6.3 Rain Cover
         static let rainCoverVentilationAbove: Double = 15.0    // T_micro threshold
         static let rainCoverGreenhouseAbove: Double = 22.0
+
+        // Walk-window ranking is an environmental comparison, not a safety
+        // percentage. Missing optional values contribute no invented penalty.
+        static let walkWindowHorizon: TimeInterval = 24 * 3_600
+        static let walkWindowMaximumForecastAge: TimeInterval = 3 * 3_600
+        static let walkWindowMaximumGap: TimeInterval = 3_601
+        static let walkWindowRainWeight: Double = 0.04
+        static let walkWindowWindWeight: Double = 0.08
+        static let walkWindowUVWeight: Double = 0.35
+        static let walkWindowMinimumEvidenceFields: Int = 2
+        static let walkWindowMissingEvidencePenalty: Double = 1.5
 
     }
 }

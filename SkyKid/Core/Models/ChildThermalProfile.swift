@@ -1,5 +1,17 @@
 import Foundation
 
+// MARK: - SupportedChildAgeScope
+
+/// Shared by the app and widget targets so persisted snapshots can enforce
+/// the same reviewed age boundary without importing app-only safety code.
+enum SupportedChildAgeScope: Equatable, Sendable {
+    case supported
+    case futureBirthDate
+    case olderThanMaximum
+
+    var isSupported: Bool { self == .supported }
+}
+
 // MARK: - StableThermalTrait
 
 /// Long-lived characteristics that may affect thermal comfort.
@@ -53,6 +65,30 @@ enum StableThermalTrait: String, Codable, CaseIterable, Identifiable, Hashable, 
 /// Persistent child data. It deliberately excludes today's health, activity,
 /// transport and other conditions of a particular walk.
 struct ChildThermalProfile: Codable, Equatable, Sendable {
+    static let maximumSupportedAgeMonths = 12
+
+    static func supportedAgeScope(
+        for birthday: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> SupportedChildAgeScope {
+        let today = calendar.startOfDay(for: now)
+        let birthDate = calendar.startOfDay(for: birthday)
+
+        guard birthDate <= today else { return .futureBirthDate }
+        guard let oldestSupportedBirthDate = calendar.date(
+            byAdding: .month,
+            value: -maximumSupportedAgeMonths,
+            to: today
+        ) else {
+            return .olderThanMaximum
+        }
+
+        return birthDate >= oldestSupportedBirthDate
+            ? .supported
+            : .olderThanMaximum
+    }
+
     var name: String
     var gender: ChildGender
     var birthday: Date

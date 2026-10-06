@@ -16,31 +16,40 @@ extension ActiveWalk {
 
 // MARK: - ActiveWalkStore
 
-/// Хранит единственную активную прогулку и синхронизирует её с AppGroup.
+/// Хранит единственную активную прогулку в App Group.
 @MainActor
 @Observable
 final class ActiveWalkStore {
+    enum StartResult: Equatable {
+        case started
+        case alreadyActive(existingID: UUID)
+    }
+
+    enum RestorationState: Equatable {
+        case none
+        case restored
+        case acknowledged
+    }
+
     static let shared = ActiveWalkStore()
 
     private(set) var current: ActiveWalk?
+    private(set) var restorationState: RestorationState = .none
 
     private let defaults: UserDefaults
     private let logStore: WalkLogStore
     private let liveActivity: WalkLiveActivityController
-    private let publisher: LiveWalkPublisher
     private let storageKey = ActiveWalkStorage.key
 
     init(
         defaults: UserDefaults = AppGroup.defaults,
         logStore: WalkLogStore = .shared,
-        liveActivity: WalkLiveActivityController = .shared,
-        publisher: LiveWalkPublisher = .shared
+        liveActivity: WalkLiveActivityController = .shared
     ) {
         self.defaults = defaults
         self.logStore = logStore
         self.liveActivity = liveActivity
-        self.publisher = publisher
-        load()
+        load(markAsRestored: true)
         if let current {
             liveActivity.reattachIfNeeded(for: current)
         }
@@ -50,43 +59,58 @@ final class ActiveWalkStore {
 
     // MARK: - Lifecycle
 
-    func start(_ walk: ActiveWalk) {
+    @discardableResult
+    func start(_ walk: ActiveWalk) -> StartResult {
+        if let current {
+            return .alreadyActive(existingID: current.id)
+        }
         current = walk
+        restorationState = .acknowledged
         save()
-        // Старт — без дебаунса: второй родитель должен увидеть прогулку
-        // сразу, а не через полторы секунды.
-        publisher.publishNow(walk)
         liveActivity.start(for: walk)
+        return .started
     }
 
-    /// Общий выход из прогулки — и для отмены, и для завершения (`finish()`
-    /// заканчивается этим же вызовом). Поэтому и слот на сервере снимается
-    /// здесь: отдельная врезка в `finish()` была бы дублем.
     func cancel() {
         current = nil
+        restorationState = .none
         defaults.removeObject(forKey: storageKey)
-        publisher.retract()
         liveActivity.end()
+    }
+
+    func replaceForRollback(with walk: ActiveWalk?) {
+        current = walk
+        restorationState = walk == nil ? .none : .acknowledged
+        if let walk {
+            save()
+            liveActivity.start(for: walk)
+        } else {
+            defaults.removeObject(forKey: storageKey)
+        }
     }
 
     /// Завершает прогулку: конвертирует её в `WalkLog` (isLiveTracked) и сохраняет в журнал.
     @discardableResult
     func finish(
-        comfortLevel: BabyComfortLevel = .comfortable,
+        feedback: WalkCompletionFeedback = .skipped,
         profile: ChildProfile?,
         now: Date = .now
     ) -> WalkLog? {
         guard let walk = current else { return nil }
 
-        let minutes = max(1, Int(now.timeIntervalSince(walk.startDate) / 60.0))
+        let minutes = Int(walk.elapsedSeconds(now: now) / 60.0)
         let log = WalkLog(
             date: walk.startDate,
+            algorithmVersion: walk.algorithmVersion,
             durationMinutes: minutes,
             outfitItemIDs: walk.outfitItemIDs,
-            comfortLevel: comfortLevel,
+            comfortLevel: feedback.comfort.legacyLevel,
+            comfortFeedback: feedback.comfort,
+            clothingAdjustment: feedback.clothingAdjustment,
+            adjustedGarmentID: feedback.garmentID,
             weatherTemperature: walk.weatherTemperature,
             apparentTemperature: walk.apparentTemperature,
-            microclimateTemperature: walk.microclimateTemperature ?? walk.apparentTemperature,
+            microclimateTemperature: walk.microclimateTemperature,
             transportMode: walk.transportMode,
             activityLevel: walk.activityLevel,
             walkType: walk.walkType,
@@ -95,11 +119,35 @@ final class ActiveWalkStore {
             events: walk.events.sorted { $0.timestamp < $1.timestamp },
             isLiveTracked: true,
             weatherCode: walk.weatherCode,
+            weatherSnapshot: walk.weatherSnapshot,
             plannedDurationMinutes: walk.plannedDurationMinutes
         )
         logStore.add(log, profile: profile)
         cancel()
         return log
+    }
+
+    func acknowledgeRestoredWalk() {
+        guard restorationState == .restored else { return }
+        restorationState = .acknowledged
+    }
+
+    /// Records only meaningful later observations and never rewrites the
+    /// provider evidence captured at walk start.
+    @discardableResult
+    func recordPassiveWeatherUpdate(_ snapshot: WeatherSnapshot) -> PassiveWeatherChange? {
+        guard var walk = current,
+              let previous = walk.latestWeatherSnapshot,
+              snapshot.capturedAt > previous.capturedAt,
+              let change = PassiveWeatherChangePolicy.change(from: previous, to: snapshot)
+        else { return nil }
+
+        var updates = walk.passiveWeatherUpdates ?? []
+        updates.append(PassiveWalkWeatherUpdate(snapshot: snapshot, change: change))
+        walk.passiveWeatherUpdates = updates
+        current = walk
+        save()
+        return change
     }
 
     // MARK: - Timeline mutations
@@ -186,30 +234,23 @@ final class ActiveWalkStore {
     /// приложение, т.к. быстрые метки с экрана блокировки пишут события
     /// напрямую в хранилище, минуя этот процесс.
     ///
-    /// Здесь же прочитанное догоняющей публикацией уезжает на сервер: в
-    /// виджет-процессе, где выполняются интенты Live Activity, нет ни
-    /// Supabase-клиента, ни сессии, поэтому отметки с локскрина второй
-    /// родитель увидит не мгновенно, а когда владелец вернётся в приложение.
     func refresh() {
-        load()
-        if let current {
-            publisher.publishNow(current)
-        }
+        load(markAsRestored: false)
     }
 
-    private func load() {
+    private func load(markAsRestored: Bool) {
         guard let data = defaults.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode(ActiveWalk.self, from: data)
         else { return }
         current = decoded
+        if markAsRestored {
+            restorationState = .restored
+        }
     }
 
-    /// Единственная точка, через которую проходят все мутации прогулки, —
-    /// поэтому публикация висит здесь, а не на каждом из шести методов.
     private func save() {
         guard let walk = current,
               let data = try? JSONEncoder().encode(walk) else { return }
         defaults.set(data, forKey: storageKey)
-        publisher.schedule(walk)
     }
 }

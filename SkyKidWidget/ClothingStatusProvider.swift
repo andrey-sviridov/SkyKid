@@ -71,7 +71,7 @@ struct ClothingStatusProvider: TimelineProvider {
         snapshot: OutfitRecommendationSnapshot?,
         at date: Date
     ) -> ClothingStatusEntry {
-        guard let snapshot, snapshot.isFresh(at: date) else {
+        guard let snapshot, snapshot.freshness(at: date) == .fresh else {
             return .refreshRequired(from: snapshot)
         }
 
@@ -89,8 +89,8 @@ struct ClothingStatusProvider: TimelineProvider {
         regularUpdate: Date,
         snapshot: OutfitRecommendationSnapshot?
     ) -> Date {
-        guard let snapshot, snapshot.isFresh(at: now) else { return regularUpdate }
-        let expiryUpdate = max(snapshot.expiresAt, now.addingTimeInterval(60))
+        guard let snapshot, snapshot.freshness(at: now) == .fresh else { return regularUpdate }
+        let expiryUpdate = max(snapshot.freshnessExpirationDate, now.addingTimeInterval(1))
         return min(regularUpdate, expiryUpdate)
     }
 }

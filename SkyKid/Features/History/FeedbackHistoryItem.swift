@@ -9,6 +9,7 @@ struct FeedbackHistoryItem: Identifiable, Equatable, Sendable {
     let title: String
     let source: String
     let context: String
+    let clothingAdjustment: String?
 }
 
 // MARK: - FeedbackHistoryItemBuilder
@@ -24,7 +25,8 @@ enum FeedbackHistoryItemBuilder {
                 feedback: observation.feedback,
                 title: title(for: observation.feedback),
                 source: source(for: observation.source),
-                context: context(for: observation.context)
+                context: context(for: observation.context),
+                clothingAdjustment: clothingAdjustment(for: observation.context.clothingAdjustment)
             )
         }
     }
@@ -59,5 +61,16 @@ enum FeedbackHistoryItemBuilder {
             context.activityLevel.label,
             temperature
         )
+    }
+
+    private static func clothingAdjustment(
+        for adjustment: ClothingAdjustment?
+    ) -> String? {
+        switch adjustment {
+        case .addedLayer: return L10n.text("Добавили слой во время прогулки")
+        case .removedLayer: return L10n.text("Сняли слой во время прогулки")
+        case .some(.none): return L10n.text("Одежду не меняли")
+        case .some(.unknown), nil: return nil
+        }
     }
 }

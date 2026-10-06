@@ -81,6 +81,11 @@ struct FeedbackHistorySection: View {
                 Text(item.source)
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
+                if let clothingAdjustment = item.clothingAdjustment {
+                    Text(clothingAdjustment)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .accessibilityElement(children: .combine)

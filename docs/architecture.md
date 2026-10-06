@@ -6,8 +6,8 @@
 - **`@Observable` + `@MainActor`** на долгоживущих VM; локальное состояние короткой формы может быть value-type
 - **`@unchecked Sendable`** на `ChildProfileStore` — корректно, т.к. UserDefaults thread-safe
 - `LocationManager` — `@Observable NSObject`, запрашивает геолокацию, останавливает обновление после первого фикса
-- `RadarTileView` — UIViewRepresentable-мост для `MKTileOverlay` поверх SwiftUI `Map`
 - **App Group** (`group.com.skykid.app`) — единое хранилище; виджет и приложение читают один `UserDefaults(suiteName:)`
+- Профиль, журнал и активная прогулка изменяются локальными store-объектами без скрытых сетевых side effect; аккаунт, семейная синхронизация и remote-live отсутствуют
 - **WidgetKit** — `StaticConfiguration`; таймлайн обновляется каждые 30 мин ИЛИ немедленно при загрузке погоды (`WidgetCenter.reloadAllTimelines()`)
 
 ## SOLID
@@ -23,7 +23,7 @@
 ## Поток данных
 
 ```
-ContentView
+ContentView → AppComposition → RootFlow → MainTabView
   ├─ ChildProfileStore → ChildThermalProfile (persistent)
   ├─ WalkContextStore → WalkContext (in-memory, one planned walk)
   └─ LocationManager.location → onChange → WeatherViewModel.load(coordinate:cityName:)
@@ -46,7 +46,6 @@ ContentView
                  ├─ OutfitParentSummaryBuilder → что надеть / почему / что проверить
                  ├─ ParentOutfitSummaryCard → возраст + общая уверенность
                  ├─ WardrobeAlternativesCard → отсутствующие вещи как замены
-                 ├─ OutfitCalculationDetailsCard → свёрнутая техническая трассировка
                  ├─ WalkPreparationView → update WalkContext → recalculate same weather
                  └─ OutfitRecommendation
                       ├─ EffectiveTemperatureCalculator → WeatherThermalEffects
@@ -77,8 +76,8 @@ ContentView
   │    └─ ActiveWalkView
   │         ├─ WalkTimerHeaderCard
   │         ├─ WalkOutfitChipsCard → UserWardrobeStore
-  │         ├─ WalkQuickActionsCard
-  │         └─ WalkTimelineCard → ActiveWalkStore
+  │         ├─ WalkWeatherSnapshotCard
+  │         └─ WalkOutfitChipsCard → ActiveWalkStore
   └─ WalkHistoryView
        ├─ WalkHistoryInsightsCard → последние 7 дней
        └─ FeedbackHistorySection → PersonalOffsetStore
@@ -119,23 +118,78 @@ NotificationService
 
 `SafeReminderContentFactory` отделяет проверяемые тексты от `UserNotifications`. Повторяющееся уведомление не хранит комплект или температуру: к моменту доставки они могут устареть. Старый идентификатор такого уведомления удаляется при инициализации сервиса.
 
-## Онбординг / навигация (ContentView)
+## Онбординг / навигация
+
+`RootFlow` принимает два равноправных локальных источника координат: одноразовое
+местоположение Core Location или сохранённый вручную выбранный город. Отказ в
+разрешении не блокирует приложение: `LocationSelectionStore` хранит выбранный
+вариант и координаты города в App Group, а Apple geocoder скрыт за тестируемым
+`CityGeocoding`. Данные ребёнка геокодеру и погодному провайдеру не передаются.
 
 ```
-childProfile == nil → ChildProfileSetupView  (первый запуск)
+ContentView (тонкий entry adapter) → AppComposition (единственные экземпляры зависимостей)
+  → RootFlow (startup/lifecycle routing)
+childProfile == nil → ChildProfileSetupView (первый запуск)
 childProfile != nil →
   .notDetermined → PermissionView
   .denied        → DeniedView
-  иначе          → TabView (теги 0, 2–5)
-    0 — Погода     (WeatherView)
-    2 — Одежда     (OutfitView)
-    3 — Прогулка   (WalkTabView → ActiveWalkView / WalkSetupSheet)
-    4 — История    (WalkHistoryView)
-    5 — Профиль    (ProfileSummaryView + sheet редактирования)
+  иначе          → MainTabView (ровно три вкладки)
+    Сегодня — погода + рекомендация + контекст + окно + состояние прогулки
+    История — WalkHistoryView
+    Профиль — ProfileSummaryView
+
+`TodayViewModel` оркестрирует только presentation-состояния loading / unavailable /
+stale / blocked / ready. Расчёт остаётся единственным результатом
+`BuildOutfitRecommendationUseCase`; активная прогулка продолжает принадлежать
+`ActiveWalkStore` и восстанавливается из App Group.
 ```
 
 ## Тема оформления
 
 `@AppStorage("colorScheme")` — `"system"` / `"light"` / `"dark"`.  
-Читается в `ContentView` → `.preferredColorScheme(preferredScheme)`.  
+Читается в `RootFlow` → `.preferredColorScheme(preferredScheme)`.
 Picker — вкладка «Профиль» → секция «Оформление».
+
+## Backup, restore и удаление данных
+
+`LocalBackupService` собирает доменные снимки локальных store, кодирует
+версионированный `SkyKidBackup` и выполняет двухфазный restore:
+decode/migrate/validate, затем подтверждённый replace. Commit упорядочен как
+profile → walks → personalization → wardrobe → settings; при ошибке применяется
+rollback-снимок. Файл передаётся через системный share sheet и не загружается
+автоматически.
+
+`LocalDataResetService` — единственный orchestrator удаления. Он останавливает
+активную/Live Activity прогулку, очищает прогулки, персонализацию, гардероб,
+ recommendation snapshot, профиль, текущий контекст, weather/location cache,
+напоминания и выбор/ключи погодного провайдера. Язык и тема сохраняются;
+внешние backup-файлы и системные permissions не затрагиваются. Отмена ничего не
+меняет, частичная ошибка восстанавливает локальный снимок.
+
+`ShareOutfitComposer` формирует только presentation-текст: имя при наличии,
+погода и её актуальность, одежда, сценарий и короткая причина. UUID, координаты,
+health-поля, история, внутренние ID и TOG не включаются.
+
+## Отложенная граница данных об окружающей среде
+
+AQI не входит в runtime-модель v1. Если отдельный продуктовый, privacy- и
+safety-review разрешит интеграцию, минимальная композиция будет выглядеть так:
+
+```text
+WeatherService → WeatherSnapshot ───────────────┐
+                                                ├→ Today orchestration
+AirQualityService → AirQualityObservation? ─────┘        ├→ одежда: только WeatherSnapshot
+                                                        └→ отдельная AQ policy/UI guidance
+```
+
+`AirQualityObservation` — будущий узкий контракт, а не универсальный словарь
+environment metrics. Ему потребуются timestamp, фактический provider, конкретная
+региональная шкала и статус качества. AQ policy не изменяет TOG и не входит в
+медицинские правила; она может сформировать только отдельно проверенный
+информационный совет. `nil`, stale или low-confidence AQI означает отсутствие
+совета, но никогда не отсутствие рекомендации одежды.
+
+WeatherKit остаётся реализацией существующего `WeatherService`, а не причиной
+обобщать доменный pipeline. Capability, framework и production adapter можно
+добавить только после внешнего entitlement/commercial решения, описанного в
+`docs/api.md`.

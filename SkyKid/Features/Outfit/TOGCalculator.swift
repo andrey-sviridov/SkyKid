@@ -39,7 +39,7 @@ enum TOGCalculator {
 
     struct Output: Sendable {
         let TOG_required: Double
-        let TOG_base: Double          // pre-modifier base for fever cap
+        let TOG_base: Double          // base curve value, retained for explanation
         let steps: [CalcStep]
     }
 
@@ -58,59 +58,40 @@ enum TOGCalculator {
         ))
 
         // §4.2 Age Adjustment
-        let dAge = ageDelta(correctedWeeks: profile.correctedAgeWeeks, T_micro: T)
+        let dAge = ageDelta(
+            chronologicalWeeks: profile.chronologicalAgeWeeks,
+            T_micro: T
+        )
         if dAge != 0 {
             steps.append(CalcStep(
                 label: L10n.text("Возрастная поправка (§4.2)"),
                 value: dAge,
                 unit: "TOG",
                 note: L10n.format(
-                    "Скорр. возраст %lld нед.",
-                    profile.correctedAgeWeeks
+                    "Возраст %lld нед.",
+                    profile.chronologicalAgeWeeks
                 )
             ))
         }
 
-        // §4.3 Prematurity
-        let dPreterm = pretermDelta(profile: profile)
-        if dPreterm != 0 {
-            steps.append(CalcStep(
-                label: L10n.text("Недоношенность (§4.3)"),
-                value: dPreterm,
-                unit: "TOG",
-                note: nil
-            ))
-        }
-
-        // §4.4 Activity
+        // §4.3 Activity
         let dActivity = activityDelta(
             activity: input.walkContext.activityLevel,
             walkType: input.walkContext.walkType
         )
         if dActivity != 0 {
             steps.append(CalcStep(
-                label: L10n.text("Активность (§4.4)"),
+                label: L10n.text("Активность (§4.3)"),
                 value: dActivity,
                 unit: "TOG",
                 note: input.walkContext.activityLevel.label
             ))
         }
 
-        // §4.5 Health
-        let (dHealth, feverActive) = healthDelta(
-            profile: profile,
-            walkContext: input.walkContext
-        )
-        if dHealth != 0 {
-            steps.append(CalcStep(
-                label: L10n.text("Здоровье (§4.5)"),
-                value: dHealth,
-                unit: "TOG",
-                note: nil
-            ))
-        }
-
-        var TOG_required = TOG_base + dAge + dPreterm + dActivity + dHealth
+        // Medical conditions and acute illness never change the thermal
+        // arithmetic. Their limitations are evaluated independently by
+        // MedicalSafetyPolicy and SafetyRulesEngine.
+        var TOG_required = TOG_base + dAge + dActivity
 
         // §8 Personal Offset
         if input.personalOffset != 0 {
@@ -123,21 +104,10 @@ enum TOGCalculator {
             ))
         }
 
-        // §4.5 Fever hard cap — safety rules always win over personalization.
-        if feverActive {
-            TOG_required = min(TOG_required, TOG_base)
-            steps.append(CalcStep(
-                label: L10n.text("Ограничение при температуре (§4.5)"),
-                value: TOG_required,
-                unit: "TOG",
-                note: L10n.text("Применено после персональной поправки")
-            ))
-        }
-
-        // §4.6 Clamp
+        // §4.5 Clamp
         TOG_required = min(max(TOG_required, OutfitConfig.TOG.minTOG), OutfitConfig.TOG.maxTOG)
         steps.append(CalcStep(
-            label: L10n.text("Итоговый TOG_required (§4.6)"),
+            label: L10n.text("Итоговый TOG_required (§4.5)"),
             value: TOG_required,
             unit: "TOG",
             note: nil
@@ -168,7 +138,7 @@ enum TOGCalculator {
 
     // MARK: - §4.2 Age Adjustment
 
-    private static func ageDelta(correctedWeeks: Int, T_micro: Double) -> Double {
+    private static func ageDelta(chronologicalWeeks: Int, T_micro: Double) -> Double {
         let table = OutfitConfig.TOG.ageAdjTable
         let coldThresh = OutfitConfig.TOG.ageAdjColdThreshold
         let hotThresh  = OutfitConfig.TOG.ageAdjHotThreshold
@@ -176,8 +146,7 @@ enum TOGCalculator {
         var cold = 0.0
         var hot  = 0.0
 
-        // Negative correctedWeeks → treat as 0–4 weeks (youngest bucket)
-        let clampedWeeks = max(0, correctedWeeks)
+        let clampedWeeks = max(0, chronologicalWeeks)
 
         var lo = 0
         for entry in table {
@@ -196,20 +165,7 @@ enum TOGCalculator {
         return cold + t * (hot - cold)
     }
 
-    // MARK: - §4.3 Prematurity
-
-    private static func pretermDelta(profile: ChildThermalProfile) -> Double {
-        let corrWeeks   = profile.correctedAgeWeeks
-        let gestWeeks   = profile.gestationalAgeWeeks
-        let chronoMonths = profile.chronologicalAgeMonths
-
-        let isPreterm = corrWeeks < 0
-                     || (gestWeeks < OutfitConfig.TOG.pretermGestationThreshold
-                         && chronoMonths < OutfitConfig.TOG.pretermChronoMonthsThreshold)
-        return isPreterm ? OutfitConfig.TOG.pretermDelta : 0
-    }
-
-    // MARK: - §4.4 Activity
+    // MARK: - §4.3 Activity
 
     private static func activityDelta(activity: BabyActivityLevel, walkType: WalkType) -> Double {
         var delta: Double
@@ -219,39 +175,13 @@ enum TOGCalculator {
         case .activeInStroller: delta = OutfitConfig.TOG.actActiveInStrollerDelta
         case .walkingCrawling:  delta = OutfitConfig.TOG.actWalkingCrawlingDelta
         }
-        // WalkType errandsInOut adds an extra penalty and prefers layered outfit
-        if walkType == .long { delta += OutfitConfig.TOG.errandsInOutDelta }  // reuse long penalty
+        // Long exposure is a safety concern, not a standalone thermal input.
+        // Keep its explicitly named rule separate from the legacy errands
+        // constant; activity and transport determine the thermal target.
+        if walkType == .long {
+            delta += OutfitConfig.TOG.longWalkThermalDelta
+        }
         return delta
     }
 
-    // MARK: - §4.5 Health
-
-    private static func healthDelta(
-        profile: ChildThermalProfile,
-        walkContext: WalkContext
-    ) -> (delta: Double, feverActive: Bool) {
-        var delta = 0.0
-        let feverActive = walkContext.hasFever
-
-        if feverActive {
-            delta += OutfitConfig.TOG.feverDelta
-        }
-
-        for trait in profile.stableTraits {
-            switch trait {
-            case .frequentIllness:
-                delta += OutfitConfig.TOG.legacyFreqIllnessDelta
-            case .coldSensitive:
-                delta += OutfitConfig.TOG.legacyColdSensitiveDelta
-            case .heatSensitive:
-                delta += OutfitConfig.TOG.legacyHeatSensitiveDelta
-            case .anemia:
-                delta += OutfitConfig.TOG.anemiaOutDelta
-            case .atopicDermatitis, .cardioRespiratory:
-                break
-            }
-        }
-
-        return (delta, feverActive)
-    }
 }

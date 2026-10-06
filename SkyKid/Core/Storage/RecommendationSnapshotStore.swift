@@ -10,7 +10,7 @@ protocol RecommendationSnapshotStoring {
 
 extension RecommendationSnapshotStoring {
     func loadFresh(at date: Date = Date()) -> OutfitRecommendationSnapshot? {
-        guard let snapshot = load(), snapshot.isFresh(at: date) else { return nil }
+        guard let snapshot = load(), snapshot.freshness(at: date) == .fresh else { return nil }
         return snapshot
     }
 }
@@ -34,9 +34,16 @@ struct AppGroupRecommendationSnapshotStore: RecommendationSnapshotStoring {
     }
 
     func load() -> OutfitRecommendationSnapshot? {
+        load(at: Date())
+    }
+
+    /// Loads only snapshots that still belong to the reviewed age scope.
+    /// `date` is injectable for the birthday-transition regression tests.
+    func load(at date: Date) -> OutfitRecommendationSnapshot? {
         guard let data = defaults.data(forKey: Self.storageKey),
               let snapshot = try? JSONDecoder().decode(OutfitRecommendationSnapshot.self, from: data),
-              snapshot.schemaVersion == OutfitRecommendationSnapshot.currentSchemaVersion
+              snapshot.schemaVersion == OutfitRecommendationSnapshot.currentSchemaVersion,
+              snapshot.isSupportedForChildAge(at: date)
         else { return nil }
         return snapshot
     }

@@ -4,12 +4,11 @@ struct ChildProfileSetupView: View {
     @Binding var profile: ChildProfile?
     @Environment(\.dismiss) private var dismiss
     @Environment(ChildProfileStore.self) private var childProfileStore
-    @Environment(SupabaseAuthService.self) private var authService
 
     // Basic
     @State private var name     = ""
     @State private var gender: ChildGender = .boy
-    @State private var birthday = Calendar.current.date(byAdding: .year, value: -2, to: Date()) ?? Date()
+    @State private var birthday = AgeSafetyPolicy.supportedBirthdayRange().upperBound
     // Preferences
     @State private var tempOffset: Double = 0
     @State private var stableTraits: Set<StableThermalTrait> = []
@@ -18,71 +17,16 @@ struct ChildProfileSetupView: View {
     @State private var gestationalAgeWeeks = 36
 
     @State private var nameError = false
-    @State private var showJoinFamily = false
+    @State private var ageError = false
     @FocusState private var nameFocused: Bool
 
     private var isEditing: Bool { profile != nil }
-
-    /// В онбординге этот экран открывается сразу после выбора «Продолжить
-    /// без аккаунта» — и остаётся возможность передумать и вернуться к
-    /// `AuthGateView`. Вошедшему возвращаться некуда: гейт он уже прошёл.
-    private var canReturnToAuthGate: Bool {
-        !isEditing && authService.isOfflineMode && !authService.isSignedIn
-    }
-
-    /// Второй родитель попадает сюда же, хотя ребёнок давно заведён — просто
-    /// в семье первого. Без ввода кода прямо здесь он был бы вынужден
-    /// сначала завести ребёнка-дубликат: карточка семьи живёт в профиле, а
-    /// профиль открывается только после создания.
-    private var canJoinFamily: Bool {
-        !isEditing && authService.isSignedIn
-    }
-
-    private var joinFamilyCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Вас пригласил второй родитель?", systemImage: "person.2.fill")
-                .font(.subheadline.weight(.semibold))
-
-            Text("Введите код приглашения — ребёнок и журнал прогулок подтянутся сами, заполнять ничего не нужно.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button {
-                showJoinFamily = true
-            } label: {
-                Label("Ввести код", systemImage: "square.and.arrow.down")
-                    .font(.subheadline.weight(.medium))
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(.primary.opacity(0.12), lineWidth: 1))
-    }
-
-    /// Присоединение закрывает онбординг само — профиль приезжает из семьи.
-    private func joinFamily(code: String) async -> Bool {
-        do {
-            let joinedProfile = try await SupabaseSyncService.shared
-                .joinFamilyAndPullData(code: code)
-            // Профиля в семье может ещё не быть — тогда экран остаётся
-            // открытым, но всё созданное на нём уже уедет в общую семью.
-            if let joinedProfile { profile = joinedProfile }
-            return true
-        } catch {
-            return false
-        }
-    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     if !isEditing { welcomeHeader }
-                    if canJoinFamily { joinFamilyCard }
                     formCard
                     if isInfantOrBaby {
                         togCard
@@ -105,20 +49,8 @@ struct ChildProfileSetupView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Готово") { save() }.fontWeight(.semibold)
                     }
-                } else if canReturnToAuthGate {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            authService.exitOfflineMode()
-                        } label: {
-                            Label("Вход", systemImage: "chevron.left")
-                                .labelStyle(.titleAndIcon)
-                        }
-                    }
                 }
             }
-        }
-        .sheet(isPresented: $showJoinFamily) {
-            JoinFamilySheet { await joinFamily(code: $0) }
         }
         .onAppear {
             if let p = profile {
@@ -206,15 +138,29 @@ struct ChildProfileSetupView: View {
             Divider().padding(.leading, 16)
 
             // Дата рождения
-            HStack {
-                Label("Дата рождения", systemImage: "birthday.cake.fill")
-                    .font(.caption.weight(.medium)).foregroundStyle(.secondary)
-                Spacer()
-                DatePicker("", selection: $birthday, in: maxBirthday...Date(),
-                           displayedComponents: .date)
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
-                    .onChange(of: birthday) { _, _ in nameFocused = false }
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Label("Дата рождения", systemImage: "birthday.cake.fill")
+                        .font(.caption.weight(.medium)).foregroundStyle(.secondary)
+                    Spacer()
+                    DatePicker("", selection: $birthday, in: birthdayPickerRange,
+                               displayedComponents: .date)
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .onChange(of: birthday) { _, _ in
+                            nameFocused = false
+                            ageError = false
+                        }
+                }
+                if ageError {
+                    Label(
+                        "Для рекомендации SkyKid поддерживает возраст от рождения до 12 месяцев",
+                        systemImage: "exclamationmark.circle.fill"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .padding(16)
         }
@@ -341,8 +287,7 @@ struct ChildProfileSetupView: View {
     // MARK: - Birth data
 
     private var isInfantOrBaby: Bool {
-        let months = Calendar.current.dateComponents([.month], from: birthday, to: Date()).month ?? 0
-        return months < 36
+        AgeSafetyPolicy.scope(for: birthday).isSupported
     }
 
     // MARK: - Gestational age card
@@ -391,8 +336,8 @@ struct ChildProfileSetupView: View {
         return tempOffset < 0 ? .blue : .orange
     }
 
-    private var maxBirthday: Date {
-        Calendar.current.date(byAdding: .year, value: -18, to: Date()) ?? Date()
+    private var birthdayPickerRange: ClosedRange<Date> {
+        AgeSafetyPolicy.birthdayPickerRange(existingBirthday: profile?.birthday)
     }
 
     private var tempOffsetLabel: String {
@@ -419,13 +364,24 @@ struct ChildProfileSetupView: View {
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { withAnimation { nameError = true }; return }
+        guard AgeSafetyPolicy.scope(for: birthday).isSupported else {
+            withAnimation { ageError = true }
+            return
+        }
         nameFocused = false
-        var p = ChildProfile(name: trimmed, gender: gender, birthday: birthday)
+        var p = ChildProfile(
+            id: profile?.id ?? UUID(),
+            name: trimmed,
+            gender: gender,
+            birthday: birthday
+        )
         p.temperaturePreferenceOffset = tempOffset
         p.stableTraits                = stableTraits
         p.gestationalAgeWeeks         = bornEarly ? gestationalAgeWeeks : 40
         childProfileStore.profile = p
-        profile = p
+        // Keep the binding in sync with the persisted value. In the edit
+        // flow this preserves the child's immutable identity across renames.
+        profile = childProfileStore.profile ?? p
         if isEditing { dismiss() }
     }
 }
@@ -436,12 +392,10 @@ struct ChildProfileSetupView: View {
 #Preview("📝 Онбординг") {
     ChildProfileSetupView(profile: .constant(nil))
         .environment(ChildProfileStore.shared)
-        .environment(SupabaseAuthService.shared)
 }
 
 #Preview("✏️ Редактирование") {
     ChildProfileSetupView(profile: .constant(.mock))
         .environment(ChildProfileStore.shared)
-        .environment(SupabaseAuthService.shared)
 }
 #endif

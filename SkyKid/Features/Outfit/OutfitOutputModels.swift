@@ -141,6 +141,7 @@ struct SafetyWarning: Codable, Equatable, Sendable {
         case feverStayHome
         case illnessNeedsCaution
         case medicalPlanPriority
+        case medicalRecommendationLimited
         case faceVentilationRisk
         case wetClothingTOGLoss      // мокрая одежда теряет TOG
         case longWalkBorderlineTemp  // длинная прогулка + граничная температура

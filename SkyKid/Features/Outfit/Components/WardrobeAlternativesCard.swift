@@ -6,6 +6,7 @@ struct WardrobeAlternativesCard: View {
     let alternatives: [RecommendedLayer]
     let fit: OutfitFit?
     let severity: SafetyWarning.Severity
+    @Environment(UserWardrobeStore.self) private var wardrobeStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -50,6 +51,13 @@ struct WardrobeAlternativesCard: View {
                 Text(substitutionHint(for: alternative))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+            }
+            if wardrobeStore.ownership(of: alternative.id) == .unavailable {
+                Button(L10n.text("Отметить, что вещь есть")) {
+                    wardrobeStore.setOwnership(.owned, for: alternative.id)
+                }
+                .font(.caption.weight(.semibold))
+                .frame(minHeight: 44)
             }
         }
         .accessibilityElement(children: .combine)

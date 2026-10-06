@@ -1,77 +1,181 @@
 import Foundation
+import Observation
 
-// SRP: личный гардероб пользователя — какие предметы из GarmentCatalog реально есть.
-// OutfitSolver фильтрует каталог по этому набору; экран «Мой гардероб» редактирует.
+enum WardrobeOwnership: String, Codable, CaseIterable, Sendable {
+    case unknown
+    case owned
+    case unavailable
+}
+
+struct WardrobeMigrationState: Equatable, Sendable {
+    let confirmedOwnedIDs: Set<String>
+    let unavailableIDs: Set<String>
+}
 
 @MainActor
 @Observable
 final class UserWardrobeStore {
     static let shared = UserWardrobeStore()
 
-    static let key        = "user_wardrobe"
-    static let seenKey    = "user_wardrobe_seen"      // снимок ID каталога на момент сохранения
+    static let key = "user_wardrobe"
+    static let unavailableKey = "user_wardrobe_unavailable"
+    static let seenKey = "user_wardrobe_seen"
     static let versionKey = "user_wardrobe_schema_version"
+    static let currentSchemaVersion = 5
 
-    /// Версия единого каталога: скрытые solver-ID удалены, а реальные предметы
-    /// получили зоны тела и ограничения совместимости.
-    static let currentSchemaVersion = 4
+    private(set) var confirmedOwnedIDs: Set<String>
+    private(set) var unavailableIDs: Set<String>
 
-    /// id предметов в наличии. По умолчанию (ключ отсутствует) — весь каталог.
-    private(set) var ownedIDs: Set<String>
-
-    private init() {
-        let allIDs = Set(GarmentCatalog.all.map(\.id))
-        ownedIDs = Self.migratedOwnedIDs(
-            saved:         AppGroup.defaults.stringArray(forKey: Self.key).map(Set.init),
-            seen:          AppGroup.defaults.stringArray(forKey: Self.seenKey).map(Set.init),
-            storedVersion: AppGroup.defaults.integer(forKey: Self.versionKey),
-            allIDs:        allIDs
-        )
-        persist(allIDs: allIDs)
+    /// Compatibility input for the existing recommendation pipeline. Unknown
+    /// items remain candidates; only an explicit "don't have" removes one.
+    var ownedIDs: Set<String> {
+        allIDs.subtracting(unavailableIDs)
     }
 
-    /// Чистая функция миграции — без побочных эффектов, удобно тестировать.
-    /// - при известном старом снимке сохраняет пользовательские отметки;
-    /// - при неизвестной старой схеме безопасно включает весь каталог;
-    /// - авто-владение предметами, добавленными после прошлого запуска;
-    /// - отбрасывание мёртвых ID, которых больше нет в каталоге.
+    private let defaults: UserDefaults
+    private let allIDs: Set<String>
+
+    init(
+        defaults: UserDefaults = AppGroup.defaults,
+        catalogIDs: Set<String> = Set(GarmentCatalog.all.map(\.id))
+    ) {
+        self.defaults = defaults
+        self.allIDs = catalogIDs
+        let migrated = Self.migratedState(
+            savedOwned: defaults.stringArray(forKey: Self.key).map(Set.init),
+            savedUnavailable: defaults.stringArray(forKey: Self.unavailableKey).map(Set.init),
+            seen: defaults.stringArray(forKey: Self.seenKey).map(Set.init),
+            storedVersion: defaults.integer(forKey: Self.versionKey),
+            allIDs: catalogIDs
+        )
+        confirmedOwnedIDs = migrated.confirmedOwnedIDs
+        unavailableIDs = migrated.unavailableIDs
+        persist()
+    }
+
+    static func migratedState(
+        savedOwned: Set<String>?,
+        savedUnavailable: Set<String>?,
+        seen: Set<String>?,
+        storedVersion: Int,
+        allIDs: Set<String>
+    ) -> WardrobeMigrationState {
+        guard let savedOwned else {
+            return WardrobeMigrationState(
+                confirmedOwnedIDs: requiredIDs(in: allIDs),
+                unavailableIDs: []
+            )
+        }
+
+        let owned = canonicalized(savedOwned, allIDs: allIDs)
+        let unavailable = canonicalized(savedUnavailable ?? [], allIDs: allIDs)
+
+        if storedVersion < currentSchemaVersion {
+            let legacySeen = canonicalized(seen ?? allIDs, allIDs: allIDs)
+            let wasAutomaticallySeeded = owned == legacySeen && unavailable.isEmpty
+            if wasAutomaticallySeeded {
+                return WardrobeMigrationState(
+                    confirmedOwnedIDs: requiredIDs(in: allIDs),
+                    unavailableIDs: []
+                )
+            }
+
+            return WardrobeMigrationState(
+                confirmedOwnedIDs: owned.union(requiredIDs(in: allIDs)),
+                unavailableIDs: legacySeen
+                    .subtracting(owned)
+                    .subtracting(requiredIDs(in: allIDs))
+            )
+        }
+
+        return WardrobeMigrationState(
+            confirmedOwnedIDs: owned.union(requiredIDs(in: allIDs)),
+            unavailableIDs: unavailable
+                .subtracting(owned)
+                .subtracting(requiredIDs(in: allIDs))
+        )
+    }
+
     static func migratedOwnedIDs(
         saved: Set<String>?,
         seen: Set<String>?,
         storedVersion: Int,
         allIDs: Set<String>
     ) -> Set<String> {
-        guard let saved else {
-            return allIDs
+        migratedState(
+            savedOwned: saved,
+            savedUnavailable: nil,
+            seen: seen,
+            storedVersion: storedVersion,
+            allIDs: allIDs
+        ).confirmedOwnedIDs
+    }
+
+    private static func canonicalized(
+        _ identifiers: Set<String>,
+        allIDs: Set<String>
+    ) -> Set<String> {
+        Set(identifiers.map { identifier in
+            let canonical = GarmentCatalog.canonicalID(for: identifier)
+            return allIDs.contains(canonical) ? canonical : identifier
+        }).intersection(allIDs)
+    }
+
+    private static func requiredIDs(in allIDs: Set<String>) -> Set<String> {
+        allIDs.contains("diaper") ? ["diaper"] : []
+    }
+
+    func ownership(of id: String) -> WardrobeOwnership {
+        if confirmedOwnedIDs.contains(id) { return .owned }
+        if unavailableIDs.contains(id) { return .unavailable }
+        return .unknown
+    }
+
+    func isOwned(_ id: String) -> Bool {
+        ownership(of: id) == .owned
+    }
+
+    func setOwnership(_ ownership: WardrobeOwnership, for id: String) {
+        guard allIDs.contains(id), id != "diaper" else { return }
+        confirmedOwnedIDs.remove(id)
+        unavailableIDs.remove(id)
+        switch ownership {
+        case .unknown: break
+        case .owned: confirmedOwnedIDs.insert(id)
+        case .unavailable: unavailableIDs.insert(id)
         }
-        let canonicalSaved = Set(saved.map { canonicalID($0, availableIn: allIDs) })
-        let validSaved = canonicalSaved.intersection(allIDs)
-
-        if storedVersion < currentSchemaVersion, seen == nil {
-            return allIDs
-        }
-
-        let canonicalSeen = Set((seen ?? []).map { canonicalID($0, availableIn: allIDs) })
-        let newItems = allIDs.subtracting(canonicalSeen)
-        return validSaved.union(newItems).union(["diaper"])
+        persist()
     }
-
-    private static func canonicalID(_ id: String, availableIn allIDs: Set<String>) -> String {
-        let canonical = GarmentCatalog.canonicalID(for: id)
-        return allIDs.contains(canonical) ? canonical : id
-    }
-
-    private func persist(allIDs: Set<String>) {
-        AppGroup.defaults.set(Array(ownedIDs).sorted(), forKey: Self.key)
-        AppGroup.defaults.set(Array(allIDs).sorted(),   forKey: Self.seenKey)
-        AppGroup.defaults.set(Self.currentSchemaVersion, forKey: Self.versionKey)
-    }
-
-    func isOwned(_ id: String) -> Bool { ownedIDs.contains(id) }
 
     func toggle(_ id: String) {
-        if ownedIDs.contains(id) { ownedIDs.remove(id) }
-        else { ownedIDs.insert(id) }
-        persist(allIDs: Set(GarmentCatalog.all.map(\.id)))
+        setOwnership(isOwned(id) ? .unknown : .owned, for: id)
+    }
+
+    func backupState() -> WardrobeBackup {
+        WardrobeBackup(
+            confirmedOwnedIDs: confirmedOwnedIDs,
+            unavailableIDs: unavailableIDs
+        )
+    }
+
+    func replaceForRestore(with backup: WardrobeBackup) {
+        confirmedOwnedIDs = backup.confirmedOwnedIDs.intersection(allIDs)
+            .union(Self.requiredIDs(in: allIDs))
+        unavailableIDs = backup.unavailableIDs.intersection(allIDs)
+            .subtracting(confirmedOwnedIDs)
+        persist()
+    }
+
+    func clearAll() {
+        confirmedOwnedIDs = Self.requiredIDs(in: allIDs)
+        unavailableIDs = []
+        persist()
+    }
+
+    private func persist() {
+        defaults.set(Array(confirmedOwnedIDs).sorted(), forKey: Self.key)
+        defaults.set(Array(unavailableIDs).sorted(), forKey: Self.unavailableKey)
+        defaults.set(Array(allIDs).sorted(), forKey: Self.seenKey)
+        defaults.set(Self.currentSchemaVersion, forKey: Self.versionKey)
     }
 }

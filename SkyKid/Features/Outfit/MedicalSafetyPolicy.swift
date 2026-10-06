@@ -43,6 +43,13 @@ enum MedicalSafetyPolicy {
                 message: L10n.text("Для этого профиля включён более осторожный режим. Если у вас есть индивидуальный план врача, ориентируйтесь на него."),
                 systemImage: "cross.case.fill"
             ))
+        } else if hasMedicalRecommendationLimitation(context.profile) {
+            warnings.append(SafetyWarning(
+                code: .medicalRecommendationLimited,
+                severity: .info,
+                message: L10n.text("Медицинские особенности не меняют числовой расчёт одежды. При наличии индивидуального плана врача ориентируйтесь на него; SkyKid не заменяет медицинскую оценку."),
+                systemImage: "cross.case.fill"
+            ))
         }
 
         return MedicalSafetyAssessment(
@@ -55,6 +62,14 @@ enum MedicalSafetyPolicy {
 // MARK: - Exposure limits
 
 private extension MedicalSafetyPolicy {
+    static func hasMedicalRecommendationLimitation(
+        _ profile: ChildThermalProfile
+    ) -> Bool {
+        profile.gestationalAgeWeeks < 37
+            || profile.stableTraits.contains(.anemia)
+            || profile.stableTraits.contains(.cardioRespiratory)
+    }
+
     static func adjustedExposureLimits(
         _ ageLimits: OutdoorSafetyLimits,
         for profile: ChildThermalProfile

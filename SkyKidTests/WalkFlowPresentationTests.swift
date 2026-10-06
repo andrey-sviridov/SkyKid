@@ -19,6 +19,29 @@ final class WalkFlowPresentationTests: XCTestCase {
         XCTAssertTrue(stale.isStale)
     }
 
+    func test_walkOutfitVerdict_isHonestWhenRecommendationIsUnknown() {
+        let verdict = WalkTOGVerdict(effective: 1.2, target: nil)
+
+        XCTAssertNil(verdict.delta)
+        XCTAssertEqual(verdict.level, .unknown)
+        XCTAssertEqual(verdict.level.label, L10n.text("Проверьте комплект"))
+    }
+
+    func test_walkOutfitVerdict_usesPlainAddSuitableAndRemoveGuidance() {
+        XCTAssertEqual(
+            WalkTOGVerdict(effective: 0.5, target: 2).level.label,
+            L10n.text("Добавьте тёплый слой")
+        )
+        XCTAssertEqual(
+            WalkTOGVerdict(effective: 2, target: 2).level.label,
+            L10n.text("Комплект подходит")
+        )
+        XCTAssertEqual(
+            WalkTOGVerdict(effective: 3.5, target: 2).level.label,
+            L10n.text("Снимите один тёплый слой")
+        )
+    }
+
     func test_undoRemovesLastEventAndRevertsGarmentChange() {
         let walk = ActiveWalk(
             startDate: now,
@@ -43,6 +66,76 @@ final class WalkFlowPresentationTests: XCTestCase {
         XCTAssertEqual(undone?.events.count, 1)
         XCTAssertEqual(undone?.events.first?.kind, .sleep)
         XCTAssertEqual(undone?.outfitItemIDs, ["bodysuit_ss"])
+    }
+
+    func test_trackedWalkWithoutWeather_staysUnknownAndDoesNotPersistTwelveDegrees() throws {
+        let walk = WalkSetupSheet.makeTrackedWalk(
+            startDate: now,
+            plannedDurationMinutes: 30,
+            weather: nil,
+            recommendation: nil,
+            walkContext: nil,
+            outfitItemIDs: ["bodysuit_ss"]
+        )
+
+        XCTAssertNil(walk.weatherSnapshot)
+        XCTAssertNil(walk.weatherCode)
+        XCTAssertNil(walk.microclimateTemperature)
+        XCTAssertNil(walk.weatherTemperature)
+        XCTAssertNil(walk.apparentTemperature)
+
+        let data = try JSONEncoder().encode(walk)
+        let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertNil(payload["weatherTemperature"])
+        XCTAssertNil(payload["apparentTemperature"])
+    }
+
+    func test_manualLog_doesNotBorrowCurrentWeatherOrRecommendation() {
+        let log = LogWalkSheet.makeManualLog(
+            date: now,
+            durationMinutes: 30,
+            outfitItemIDs: ["bodysuit_ss"],
+            comfortLevel: .comfortable,
+            temperature: nil,
+            effectiveOutfitTOG: 0.3
+        )
+
+        XCTAssertNil(log.weatherTemperature)
+        XCTAssertNil(log.apparentTemperature)
+        XCTAssertNil(log.weatherSnapshot)
+        XCTAssertNil(log.microclimateTemperature)
+        XCTAssertNil(log.transportMode)
+        XCTAssertNil(log.activityLevel)
+        XCTAssertNil(log.walkType)
+        XCTAssertNil(log.targetTOG)
+    }
+
+    func test_trackedWalkSnapshotPreservesWeatherCaptureTime() throws {
+        let capturedAt = now.addingTimeInterval(-30 * 60)
+        let weather = NormalizedWeather(
+            temperature: 8,
+            apparentTemperature: 6,
+            humidity: 70,
+            windSpeed: 2,
+            windDirection: 0,
+            precipitation: 0,
+            weatherCode: 1,
+            windGust: 2,
+            uvIndex: 0,
+            cloudCover: 50
+        )
+
+        let walk = WalkSetupSheet.makeTrackedWalk(
+            startDate: now,
+            plannedDurationMinutes: 30,
+            weather: weather,
+            weatherCapturedAt: capturedAt,
+            recommendation: nil,
+            walkContext: nil,
+            outfitItemIDs: []
+        )
+
+        XCTAssertEqual(walk.weatherSnapshot?.capturedAt, capturedAt)
     }
 
     func test_historyInsightsUseOnlyRecentWalks() {

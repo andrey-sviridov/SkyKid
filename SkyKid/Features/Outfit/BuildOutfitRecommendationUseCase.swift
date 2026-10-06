@@ -6,6 +6,10 @@ import Foundation
 /// The returned value and the persisted value originate from the same calculation.
 @MainActor
 struct BuildOutfitRecommendationUseCase {
+    enum Error: Swift.Error, Equatable {
+        case unsupportedAge(AgeSafetyPolicy.SupportedAgeScope)
+    }
+
     struct Output {
         let recommendation: OutfitRecommendation
         let snapshot: OutfitRecommendationSnapshot
@@ -29,8 +33,20 @@ struct BuildOutfitRecommendationUseCase {
         profile: ChildThermalProfile,
         walkContext: WalkContext,
         cityName: String,
-        generatedAt: Date = Date()
-    ) -> Output {
+        generatedAt: Date = Date(),
+        now: Date? = nil
+    ) throws -> Output {
+        let evaluationDate = now ?? generatedAt
+        let ageScope = AgeSafetyPolicy.scope(
+            for: profile,
+            now: evaluationDate,
+            calendar: .current
+        )
+        guard ageScope.isSupported else {
+            snapshotStore.clear()
+            throw Error.unsupportedAge(ageScope)
+        }
+
         let recommendation = recommendationService.recommend(
             weather: weather,
             profile: profile,
@@ -40,6 +56,7 @@ struct BuildOutfitRecommendationUseCase {
             recommendation: recommendation,
             childName: profile.name,
             childAgeLabel: profile.ageLabel,
+            childBirthday: profile.birthday,
             cityName: cityName,
             context: RecommendationSnapshotContext(
                 weatherCondition: weather.conditionDescription,
@@ -49,6 +66,7 @@ struct BuildOutfitRecommendationUseCase {
                 activity: walkContext.activityLevel.label,
                 walkType: walkContext.walkType.label
             ),
+            algorithmVersion: OutfitRecommendationSnapshot.currentAlgorithmVersion,
             generatedAt: generatedAt
         )
         snapshotStore.save(snapshot)
@@ -61,9 +79,10 @@ struct BuildOutfitRecommendationUseCase {
         profile: ChildProfile,
         gearSetup: GearSetup,
         cityName: String,
-        generatedAt: Date = Date()
-    ) -> Output {
-        execute(
+        generatedAt: Date = Date(),
+        now: Date? = nil
+    ) throws -> Output {
+        try execute(
             weather: weather,
             profile: profile.thermalProfile,
             walkContext: .migrated(
@@ -72,7 +91,8 @@ struct BuildOutfitRecommendationUseCase {
                 availableGarmentIDs: UserWardrobeStore.shared.ownedIDs
             ),
             cityName: cityName,
-            generatedAt: generatedAt
+            generatedAt: generatedAt,
+            now: now
         )
     }
 

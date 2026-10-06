@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Карточка «Во что одет»: список одежды, снятие вещей, суммарный TOG и вердикт.
+/// Карточка «Во что одет»: список одежды, снятие вещей и понятная оценка комплекта.
 struct WalkOutfitChipsCard: View {
     @Binding var selectedIDs: [String]
     let profile: ChildProfile?
@@ -52,9 +52,9 @@ struct WalkOutfitChipsCard: View {
                 verdictBar
             }
         } trailing: {
-            Text(L10n.format("%.1f TOG", effectiveTOG))
+            Text(verdict.level.label)
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(verdict.level.color)
         }
         .sheet(isPresented: $showPicker) {
             GarmentPickerSheet(profile: profile, selectedIDs: $selectedIDs, onAdd: onAdd)
@@ -79,10 +79,10 @@ struct WalkOutfitChipsCard: View {
             )
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.name)
+                Text(OutfitFitPresentation.consumerGarmentName(item.name))
                     .font(.subheadline.weight(.medium))
                     .lineLimit(1)
-                Text(L10n.format("%.2f TOG", item.tog))
+                Text(WalkTOGVerdict.densityLabel(for: item.tog))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -127,15 +127,9 @@ struct WalkOutfitChipsCard: View {
                 Text(level.label)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(level.color)
-                if let target = targetTOG {
-                    Text(L10n.format("Цель ~%.1f TOG", target))
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                } else {
-                    Text("Нет данных о рекомендации")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
+                Text(level.guidance)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
             Spacer()
         }

@@ -15,6 +15,8 @@ enum OutfitSolver {
         let gearSetup: GearSetup
         let weather: NormalizedWeather
         let precipFlags: EffectiveTemperatureCalculator.PrecipFlags
+        /// Candidate garments. With progressive wardrobe data this includes
+        /// confirmed-owned and unknown items, but excludes explicit unavailable.
         var ownedGarmentIDs: Set<String>?
 
         init(

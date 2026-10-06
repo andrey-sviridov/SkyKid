@@ -2,9 +2,9 @@ import SwiftUI
 
 struct WardrobeItemRow: View {
     let item: GarmentItem
-    let isOwned: Bool
+    let ownership: WardrobeOwnership
     let isLast: Bool
-    let action: () -> Void
+    let action: (WardrobeOwnership) -> Void
 
     @State private var isInfoPresented = false
     @State private var isPhotoPresented = false
@@ -13,7 +13,7 @@ struct WardrobeItemRow: View {
         HStack(spacing: 12) {
             GarmentIconView(
                 item: item,
-                isSelected: isOwned,
+                isSelected: ownership == .owned,
                 accentColor: .green,
                 size: 34,
                 shape: .roundedRectangle(8)
@@ -35,8 +35,8 @@ struct WardrobeItemRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .font(.subheadline)
-                        .foregroundStyle(isOwned ? .primary : .secondary)
-                    Text(String(format: "%.2g TOG", item.tog))
+                        .foregroundStyle(ownership == .unavailable ? .secondary : .primary)
+                    Text(statusLabel)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -45,13 +45,16 @@ struct WardrobeItemRow: View {
             }
             .buttonStyle(.plain)
 
-            Button(action: action) {
-                Image(systemName: isOwned ? "checkmark.circle.fill" : "circle")
+            Menu {
+                ownershipButton(.unknown, label: L10n.text("Не указано"), icon: "questionmark.circle")
+                ownershipButton(.owned, label: L10n.text("Есть"), icon: "checkmark.circle")
+                ownershipButton(.unavailable, label: L10n.text("Нет"), icon: "xmark.circle")
+            } label: {
+                Image(systemName: statusIcon)
                     .font(.system(size: 20))
-                    .foregroundStyle(isOwned ? .green : Color.secondary)
-                    .frame(width: 36, height: 36)
+                    .foregroundStyle(statusColor)
+                    .frame(width: 44, height: 44)
             }
-            .buttonStyle(.plain)
         }
         .frame(height: 54)
         .sheet(isPresented: $isInfoPresented) {
@@ -63,6 +66,40 @@ struct WardrobeItemRow: View {
 
         if !isLast {
             Divider().padding(.leading, 46)
+        }
+    }
+
+    private var statusLabel: String {
+        switch ownership {
+        case .unknown: return L10n.text("Не указано")
+        case .owned: return L10n.text("Есть")
+        case .unavailable: return L10n.text("Нет")
+        }
+    }
+
+    private var statusIcon: String {
+        switch ownership {
+        case .unknown: return "questionmark.circle"
+        case .owned: return "checkmark.circle.fill"
+        case .unavailable: return "xmark.circle.fill"
+        }
+    }
+
+    private var statusColor: Color {
+        switch ownership {
+        case .unknown: return .secondary
+        case .owned: return .green
+        case .unavailable: return .orange
+        }
+    }
+
+    private func ownershipButton(
+        _ value: WardrobeOwnership,
+        label: String,
+        icon: String
+    ) -> some View {
+        Button { action(value) } label: {
+            Label(label, systemImage: icon)
         }
     }
 }

@@ -4,7 +4,7 @@ import Security
 // MARK: - KeychainStore
 
 /// Тонкая обёртка над Keychain Services для хранения секретов (ключ
-/// шифрования имени ребёнка, сессия Supabase Auth) — ни то, ни другое не
+/// чувствительных локальных значений — такие данные не должны храниться в
 /// должно лежать в обычном UserDefaults/App Group.
 enum KeychainStore {
 

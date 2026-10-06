@@ -6,7 +6,9 @@ struct WalkSetupSheet: View {
     var weather: NormalizedWeather?
     var profile: ChildProfile?
     var recommendation: OutfitRecommendation?
+    var recommendationAlgorithmVersion: Int? = nil
     var walkContext: WalkContext?
+    var weatherCapturedAt: Date? = nil
     var onStarted: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
@@ -92,24 +94,59 @@ struct WalkSetupSheet: View {
     }
 
     private func startWalk() {
-        let walk = ActiveWalk(
+        let walk = Self.makeTrackedWalk(
             startDate: .now,
             plannedDurationMinutes: plannedMinutes,
-            weatherTemperature: weather?.temperature ?? 12,
-            apparentTemperature: weather?.apparentTemperature ?? weather?.temperature ?? 12,
-            microclimateTemperature: recommendation?.temperatures.microclimate,
-            weatherCode: weather?.weatherCode,
-            weatherIconSymbol: weather?.conditionIcon,
-            weatherDescription: weather?.conditionDescription,
-            transportMode: walkContext?.transportMode,
-            activityLevel: walkContext?.activityLevel,
-            walkType: walkContext?.walkType,
-            targetTOG: recommendation?.targetTOG,
-            outfitItemIDs: selectedIDs,
-            events: []
+            weather: weather,
+            weatherCapturedAt: weatherCapturedAt,
+            recommendation: recommendation,
+            algorithmVersion: recommendationAlgorithmVersion,
+            walkContext: walkContext,
+            outfitItemIDs: selectedIDs
         )
         store.start(walk)
         onStarted()
         dismiss()
+    }
+
+    // MARK: - Walk factory
+
+    /// Builds the durable walk boundary without inventing weather. The scalar
+    /// temperature fields are legacy compatibility fields; only a non-nil
+    /// snapshot represents captured weather for a new walk.
+    static func makeTrackedWalk(
+        startDate: Date,
+        plannedDurationMinutes: Int?,
+        weather: NormalizedWeather?,
+        weatherCapturedAt: Date? = nil,
+        recommendation: OutfitRecommendation?,
+        algorithmVersion: Int? = nil,
+        walkContext: WalkContext?,
+        outfitItemIDs: [String]
+    ) -> ActiveWalk {
+        let weatherSnapshot = weatherCapturedAt.flatMap { capturedAt in
+            weather?.weatherSnapshot(capturedAt: capturedAt)
+        }
+
+        return ActiveWalk(
+            startDate: startDate,
+            plannedDurationMinutes: plannedDurationMinutes,
+            weatherTemperature: weatherSnapshot?.temperature,
+            apparentTemperature: weatherSnapshot?.apparentTemperature,
+            microclimateTemperature: weatherSnapshot == nil
+                ? nil
+                : recommendation?.temperatures.microclimate,
+            weatherCode: weatherSnapshot == nil ? nil : weather?.weatherCode,
+            weatherSnapshot: weatherSnapshot,
+            weatherIconSymbol: weatherSnapshot == nil ? nil : weather?.conditionIcon,
+            weatherDescription: weatherSnapshot == nil ? nil : weather?.conditionDescription,
+            transportMode: walkContext?.transportMode,
+            activityLevel: walkContext?.activityLevel,
+            walkType: walkContext?.walkType,
+            targetTOG: weatherSnapshot == nil ? nil : recommendation?.targetTOG,
+            algorithmVersion: algorithmVersion,
+            outfitItemIDs: outfitItemIDs,
+            events: []
+        )
     }
 }

@@ -1,81 +1,47 @@
 import SwiftUI
 
-// MARK: - WalkHistoryInsightsCard
+// MARK: - ThermalLearningCard
 
-/// One quiet overview above the journal. It appears only after enough data is
-/// available to make the numbers useful.
-struct WalkHistoryInsightsCard: View {
+struct ThermalLearningCard: View {
     let insights: WalkHistoryInsights
 
     var body: some View {
         SectionCard(
-            title: L10n.text("Последние 7 дней"),
-            systemImage: "chart.bar.xaxis"
+            title: L10n.text("Что SkyKid узнал"),
+            systemImage: "sparkles"
         ) {
-            Text(L10n.text("По вашим отметкам"))
-                .font(.caption)
+            Label(insights.similarWalkCountText, systemImage: "figure.walk")
+                .font(.subheadline.weight(.semibold))
+
+            Text(insights.comfortPattern)
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 0) {
-                metric(
-                    value: String(insights.walkCount),
-                    label: L10n.text("Прогулок")
-                )
-
-                Divider().frame(height: 42)
-
-                metric(
-                    value: WalkDurationFormatter.string(minutes: insights.averageDurationMinutes),
-                    label: L10n.text("Средняя прогулка")
-                )
-
-                Divider().frame(height: 42)
-
-                metric(
-                    value: sleepValue,
-                    label: L10n.text("Сон всего")
-                )
-
-                Divider().frame(height: 42)
-
-                metric(
-                    value: L10n.format("%lld%%", insights.comfortablePercent),
-                    label: L10n.text("Комфортно")
-                )
+            if let clothingPattern = insights.clothingPattern {
+                Label(clothingPattern, systemImage: "tshirt")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
+
+            Divider()
+
+            Text(insights.adaptation)
+                .font(.subheadline.weight(.medium))
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilitySummary)
-        .accessibilityIdentifier("history.insights")
-    }
-
-    private var sleepValue: String {
-        guard let minutes = insights.sleepMinutes else { return "—" }
-        return WalkDurationFormatter.string(minutes: minutes)
+        .accessibilityIdentifier("history.thermalLearning")
     }
 
     private var accessibilitySummary: String {
-        L10n.format(
-            "%lld прогулок за 7 дней, средняя длительность %@, сна %@, комфортно %@",
-            insights.walkCount,
-            WalkDurationFormatter.string(minutes: insights.averageDurationMinutes),
-            sleepValue,
-            L10n.format("%lld%%", insights.comfortablePercent)
-        )
-    }
-
-    private func metric(value: String, label: String) -> some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
+        [
+            L10n.text("Что SkyKid узнал"),
+            insights.similarWalkCountText,
+            insights.comfortPattern,
+            insights.clothingPattern,
+            insights.adaptation
+        ]
+        .compactMap { $0 }
+        .joined(separator: ". ")
     }
 }

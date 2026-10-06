@@ -16,6 +16,126 @@ final class WeatherNormalizerTests: XCTestCase {
         }
     }
 
+    // MARK: - Durable weather provenance
+
+    func test_completeNormalizedWeather_createsVersionedSnapshotWithQuality() throws {
+        let weather = try WeatherNormalizer.normalize(
+            completeObservation(source: .openMeteo)
+        )
+        let capturedAt = Date(timeIntervalSince1970: 1_755_000_000)
+        let snapshot = try XCTUnwrap(
+            WeatherSnapshot(
+                normalizedWeather: weather,
+                capturedAt: capturedAt,
+                staleAfter: 7_200
+            )
+        )
+
+        XCTAssertEqual(snapshot.schemaVersion, WeatherSnapshot.currentSchemaVersion)
+        XCTAssertEqual(snapshot.provider, .openMeteo)
+        XCTAssertEqual(snapshot.capturedAt, capturedAt)
+        XCTAssertEqual(snapshot.temperature ?? .nan, 12, accuracy: 0.001)
+        XCTAssertEqual(snapshot.apparentTemperature, 10)
+        XCTAssertEqual(snapshot.status(for: .temperature)?.quality, .observed)
+        XCTAssertEqual(snapshot.status(for: .hourlyForecast)?.quality, .observed)
+    }
+
+    func test_partialNormalizedWeather_preservesOptionalUnknownsAndQuality() throws {
+        let weather = try WeatherNormalizer.normalize(
+            RawWeatherObservation(source: .weatherAPI, temperature: 20)
+        )
+        let snapshot = try XCTUnwrap(
+            WeatherSnapshot(
+                normalizedWeather: weather,
+                capturedAt: Date(timeIntervalSince1970: 1_755_000_000)
+            )
+        )
+
+        XCTAssertNil(snapshot.uvIndex)
+        XCTAssertNil(snapshot.cloudCover)
+        XCTAssertEqual(snapshot.status(for: .uvIndex)?.quality, .unavailable)
+        XCTAssertEqual(snapshot.status(for: .cloudCover)?.quality, .unavailable)
+        XCTAssertEqual(snapshot.status(for: .apparentTemperature)?.quality, .estimated)
+        XCTAssertEqual(snapshot.apparentTemperature, 20)
+    }
+
+    func test_missingCoreTemperature_cannotCreateSnapshot() {
+        XCTAssertNil(
+            WeatherSnapshot(
+                provider: .openMeteo,
+                temperature: nil,
+                capturedAt: Date(timeIntervalSince1970: 1_755_000_000)
+            )
+        )
+    }
+
+    func test_snapshotRoundTrip_preservesProvenance() throws {
+        let snapshot = try XCTUnwrap(
+            WeatherSnapshot(
+                provider: .yandex,
+                temperature: 4,
+                apparentTemperature: 1,
+                humidity: nil,
+                weatherCode: 61,
+                fieldStatuses: [
+                    .temperature: WeatherSnapshotFieldStatus(
+                        origin: .provider,
+                        quality: .observed,
+                        note: nil
+                    ),
+                    .humidity: WeatherSnapshotFieldStatus(
+                        origin: .safetyFallback,
+                        quality: .unavailable,
+                        note: "not returned"
+                    )
+                ],
+                capturedAt: Date(timeIntervalSince1970: 1_755_000_000),
+                staleAfter: 600
+            )
+        )
+        let data = try JSONEncoder().encode(snapshot)
+        let decoded = try JSONDecoder().decode(WeatherSnapshot.self, from: data)
+
+        XCTAssertEqual(decoded, snapshot)
+        XCTAssertEqual(decoded.status(for: .humidity)?.note, "not returned")
+        XCTAssertEqual(decoded.freshnessInput.staleAfter, 600)
+    }
+
+    func test_snapshotFreshness_isDeterministicAtBoundary() throws {
+        let capturedAt = Date(timeIntervalSince1970: 1_755_000_000)
+        let snapshot = try XCTUnwrap(
+            WeatherSnapshot(
+                provider: .manual,
+                temperature: 10,
+                capturedAt: capturedAt,
+                staleAfter: 120
+            )
+        )
+
+        XCTAssertEqual(
+            snapshot.freshness(at: capturedAt.addingTimeInterval(119.999)),
+            .fresh
+        )
+        XCTAssertEqual(
+            snapshot.freshness(at: capturedAt.addingTimeInterval(120)),
+            .stale
+        )
+    }
+
+    func test_snapshotWithFutureCaptureTime_isNotFresh() throws {
+        let now = Date(timeIntervalSince1970: 1_755_000_000)
+        let snapshot = try XCTUnwrap(
+            WeatherSnapshot(
+                provider: .openMeteo,
+                temperature: 10,
+                capturedAt: now.addingTimeInterval(60)
+            )
+        )
+
+        XCTAssertEqual(snapshot.freshness(at: now), .stale)
+        XCTAssertFalse(snapshot.isFresh(at: now))
+    }
+
     func test_missingGust_usesSustainedWindAndMarksValueDerived() throws {
         let weather = try WeatherNormalizer.normalize(
             completeObservation(source: .openWeatherMap, windSpeed: 5, windGust: nil)

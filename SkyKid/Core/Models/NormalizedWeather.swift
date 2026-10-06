@@ -1,5 +1,48 @@
 import Foundation
 
+// MARK: - Shared weather values
+
+enum PrecipType: String, Equatable, Sendable {
+    case none
+    case drizzle
+    case lightRain
+    case rain
+    case snow
+
+    init(wmoCode: Int) {
+        switch wmoCode {
+        case 51, 53, 55, 56, 57:             self = .drizzle
+        case 61, 80:                         self = .lightRain
+        case 63, 65, 66, 67, 81, 82,
+             95, 96, 99:                     self = .rain
+        case 71, 73, 75, 77, 85, 86:         self = .snow
+        default:                             self = .none
+        }
+    }
+}
+
+struct HourlyForecast: Equatable, Sendable {
+    let time: Date
+    let temperature: Double
+    let apparentTemperature: Double
+    let precipProbability: Double
+    let weatherCode: Int
+
+    init(
+        time: Date,
+        temperature: Double,
+        apparentTemperature: Double,
+        precipProbability: Double,
+        weatherCode: Int = 0
+    ) {
+        self.time = time
+        self.temperature = temperature
+        self.apparentTemperature = apparentTemperature
+        self.precipProbability = precipProbability
+        self.weatherCode = weatherCode
+    }
+}
+
 // MARK: - Weather field quality
 
 enum WeatherField: String, CaseIterable, Hashable, Sendable {
@@ -124,6 +167,13 @@ struct NormalizedWeather: Equatable, Sendable {
     let hourly: [HourlyForecast]
     let fieldStatuses: [WeatherField: WeatherFieldStatus]
 
+    /// Captures normalized weather at the boundary where it is persisted in
+    /// a recommendation or walk. The snapshot owns its Codable contract and
+    /// does not expose network DTOs to storage or widget code.
+    func weatherSnapshot(capturedAt: Date) -> WeatherSnapshot? {
+        WeatherSnapshot(normalizedWeather: self, capturedAt: capturedAt)
+    }
+
     var confidence: WeatherConfidence {
         WeatherConfidenceCalculator.calculate(statuses: fieldStatuses)
     }
@@ -147,28 +197,83 @@ struct NormalizedWeather: Equatable, Sendable {
     }
 
     var conditionDescription: String {
-        legacyData.conditionDescription
+        switch weatherCode {
+        case 0: return L10n.text("Ясно")
+        case 1, 2, 3: return L10n.text("Облачно")
+        case 45, 48: return L10n.text("Туман")
+        case 51, 53, 55: return L10n.text("Морось")
+        case 61, 63, 65: return L10n.text("Дождь")
+        case 71, 73, 75, 77: return L10n.text("Снег")
+        case 80, 81, 82: return L10n.text("Ливень")
+        case 95, 96, 99: return L10n.text("Гроза")
+        default: return "—"
+        }
     }
 
     var conditionIcon: String {
-        legacyData.conditionIcon
+        switch weatherCode {
+        case 0: return "sun.max.fill"
+        case 1: return "cloud.sun.fill"
+        case 2, 3: return "cloud.fill"
+        case 45, 48: return "cloud.fog.fill"
+        case 51, 53, 55: return "cloud.drizzle.fill"
+        case 61, 63, 65: return "cloud.rain.fill"
+        case 71, 73, 75, 77: return "snowflake"
+        case 80, 81, 82: return "cloud.heavyrain.fill"
+        case 95, 96, 99: return "cloud.bolt.rain.fill"
+        default: return "cloud.fill"
+        }
     }
+}
 
-    var legacyData: WeatherData {
-        WeatherData(
-            temperature: temperature,
-            apparentTemperature: apparentTemperature,
-            humidity: humidity,
-            windSpeed: windSpeed,
-            windDirection: windDirection,
-            precipitation: precipitation,
-            weatherCode: weatherCode,
-            windGust: windGust,
-            uvIndex: uvIndex,
-            cloudCover: cloudCover,
-            precipType: precipType,
-            hourly: hourly
+// MARK: - Durable provenance
+
+extension WeatherSnapshot {
+    init?(
+        normalizedWeather weather: NormalizedWeather,
+        capturedAt: Date,
+        staleAfter: TimeInterval = WeatherSnapshotFreshnessInput.defaultStaleAfter
+    ) {
+        let statuses = Dictionary(uniqueKeysWithValues: weather.fieldStatuses.map { field, status in
+            (
+                WeatherSnapshotField(rawValue: field.rawValue)!,
+                WeatherSnapshotFieldStatus(
+                    origin: WeatherSnapshotValueOrigin(rawValue: status.origin.rawValue)!,
+                    quality: WeatherSnapshotFieldQuality(rawValue: status.quality.rawValue)!,
+                    note: status.note
+                )
+            )
+        })
+
+        self.init(
+            provider: WeatherSnapshotProvider(rawValue: weather.source.rawValue)!,
+            temperature: weather.temperature,
+            apparentTemperature: weather.optionalMeasurement(
+                .apparentTemperature,
+                value: weather.apparentTemperature
+            ),
+            humidity: weather.optionalMeasurement(.humidity, value: weather.humidity),
+            windSpeed: weather.optionalMeasurement(.windSpeed, value: weather.windSpeed),
+            windGust: weather.optionalMeasurement(.windGust, value: weather.windGust),
+            windDirection: weather.optionalMeasurement(.windDirection, value: weather.windDirection),
+            precipitation: weather.optionalMeasurement(.precipitation, value: weather.precipitation),
+            precipitationType: weather.optionalMeasurement(
+                .precipitationType,
+                value: weather.precipType.rawValue
+            ),
+            weatherCode: weather.optionalMeasurement(.weatherCode, value: weather.weatherCode),
+            uvIndex: weather.optionalMeasurement(.uvIndex, value: weather.uvIndex),
+            cloudCover: weather.optionalMeasurement(.cloudCover, value: weather.cloudCover),
+            fieldStatuses: statuses,
+            capturedAt: capturedAt,
+            staleAfter: staleAfter
         )
+    }
+}
+
+private extension NormalizedWeather {
+    func optionalMeasurement<T>(_ field: WeatherField, value: T) -> T? {
+        status(for: field).quality == .unavailable ? nil : value
     }
 }
 

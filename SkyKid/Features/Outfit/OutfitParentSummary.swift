@@ -4,11 +4,75 @@ import Foundation
 
 struct OutfitParentSummary: Equatable, Sendable {
     let outfit: String
+    let garments: [OutfitGarmentPresentation]
+    let fit: OutfitFitPresentation
     let reason: String
     let check: String
     let ageContext: String
     let confidence: RecommendationConfidence
     let confidenceReason: String
+
+    var garmentNames: [String] { garments.map(\.name) }
+}
+
+struct OutfitGarmentPresentation: Identifiable, Equatable, Sendable {
+    let id: String
+    let name: String
+    let systemImage: String
+}
+
+enum OutfitFitPresentation: Equatable, Sendable {
+    case suitable
+    case addLightLayer
+    case addWarmLayer
+    case removeLightLayer
+    case removeWarmLayer
+    case unknown
+
+    init(fit: OutfitFit?) {
+        guard let fit, fit.hasRequiredBodyCoverage else {
+            self = .unknown
+            return
+        }
+        self.init(delta: fit.deltaTOG)
+    }
+
+    init(effective: Double, target: Double?) {
+        guard let target else {
+            self = .unknown
+            return
+        }
+        self.init(delta: effective - target)
+    }
+
+    var label: String {
+        switch self {
+        case .suitable:         return L10n.text("Комплект подходит")
+        case .addLightLayer:    return L10n.text("Добавьте лёгкий слой")
+        case .addWarmLayer:     return L10n.text("Добавьте тёплый слой")
+        case .removeLightLayer: return L10n.text("Снимите один лёгкий слой")
+        case .removeWarmLayer:  return L10n.text("Снимите один тёплый слой")
+        case .unknown:          return L10n.text("Проверьте комплект")
+        }
+    }
+
+    static func consumerGarmentName(_ name: String) -> String {
+        name.replacingOccurrences(
+            of: #"\s*\([^)]*\bTOG\b[^)]*\)"#,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+    }
+
+    private init(delta: Double) {
+        switch delta {
+        case ..<(-1.0):      self = .addWarmLayer
+        case -1.0..<(-0.4):  self = .addLightLayer
+        case -0.4...0.4:     self = .suitable
+        case 0.4...1.0:      self = .removeLightLayer
+        default:             self = .removeWarmLayer
+        }
+    }
 }
 
 enum RecommendationConfidence: String, Equatable, Sendable {
@@ -30,9 +94,19 @@ enum OutfitParentSummaryBuilder {
             recommendation: recommendation,
             weather: weather
         )
+        let fit = OutfitFitPresentation(fit: recommendation.fit)
+        let garments = recommendation.allDisplayLayers.map {
+            OutfitGarmentPresentation(
+                id: $0.id,
+                name: OutfitFitPresentation.consumerGarmentName($0.name),
+                systemImage: $0.systemImage
+            )
+        }
 
         return OutfitParentSummary(
-            outfit: outfitText(from: recommendation.allDisplayLayers),
+            outfit: outfitText(from: garments.map(\.name), fit: fit),
+            garments: garments,
+            fit: fit,
             reason: reasonText(
                 recommendation: recommendation,
                 weather: weather,
@@ -51,18 +125,19 @@ enum OutfitParentSummaryBuilder {
 
     // MARK: - Outfit text
 
-    private static func outfitText(from layers: [RecommendedLayer]) -> String {
-        guard !layers.isEmpty else {
-            return L10n.text("Дополнительные слои на корпус не нужны")
+    private static func outfitText(
+        from garmentNames: [String],
+        fit: OutfitFitPresentation
+    ) -> String {
+        guard !garmentNames.isEmpty else {
+            return L10n.format(
+                "%@. %@",
+                fit.label,
+                L10n.text("Дополнительные слои на корпус не нужны")
+            )
         }
 
-        let names = layers.map(\.name)
-        guard names.count > 4 else { return joined(names) }
-        return L10n.format(
-            "%@ и ещё %lld",
-            joined(Array(names.prefix(3))),
-            names.count - 3
-        )
+        return L10n.format("%@. %@", fit.label, joined(garmentNames))
     }
 
     private static func joined(_ values: [String]) -> String {
@@ -156,7 +231,7 @@ enum OutfitParentSummaryBuilder {
         case .high:
             return L10n.text("Погодные данные и доступный комплект хорошо согласуются с расчётом.")
         case .medium:
-            return L10n.text("Комплект близок к расчётной цели, но нужна обычная проверка на прогулке.")
+            return L10n.text("Комплект близок к условиям, но нужна обычная проверка на прогулке.")
         case .low:
             return L10n.text("Используйте рекомендацию осторожно и проверьте ребёнка раньше.")
         }

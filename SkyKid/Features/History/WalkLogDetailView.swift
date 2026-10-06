@@ -6,8 +6,6 @@ struct WalkLogDetailView: View {
     let onChanged: () -> Void
 
     @State private var log: WalkLog
-    @State private var showAddEvent = false
-    @State private var reclassifyingEvent: WalkEvent?
     @Environment(\.dismiss) private var dismiss
 
     init(log: WalkLog, store: WalkLogStore, profile: ChildProfile?, onChanged: @escaping () -> Void) {
@@ -17,7 +15,7 @@ struct WalkLogDetailView: View {
         _log = State(initialValue: log)
     }
 
-    private var comfortColor: Color { log.comfortLevel.color }
+    private var comfortColor: Color { log.comfortFeedback.color }
 
     var body: some View {
         ScrollView {
@@ -25,7 +23,7 @@ struct WalkLogDetailView: View {
                 comfortHero
                 infoCard
                 if !log.outfitItemIDs.isEmpty { outfitCard }
-                if log.isLiveTracked { timelineCard }
+                feedbackCard
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
@@ -47,118 +45,6 @@ struct WalkLogDetailView: View {
                 .accessibilityLabel(L10n.text("Действия"))
             }
         }
-        .sheet(isPresented: $showAddEvent) {
-            AddWalkEventSheet(walkStart: log.date) { event in
-                log.events.append(event)
-                persist()
-            }
-        }
-        .sheet(item: $reclassifyingEvent) { event in
-            WalkEventReclassifySheet(event: event, profile: profile) { kind, garmentID, note in
-                reclassify(event, kind: kind, garmentID: garmentID, note: note)
-            }
-        }
-    }
-
-    private func persist() {
-        log.events.sort { $0.timestamp < $1.timestamp }
-        store.update(log, profile: profile)
-        onChanged()
-    }
-
-    private func reclassify(_ event: WalkEvent, kind: WalkEventKind, garmentID: String?, note: String?) {
-        guard let idx = log.events.firstIndex(where: { $0.id == event.id }) else { return }
-        let result = WalkEventReclassifier.apply(
-            old: log.events[idx],
-            newKind: kind,
-            newGarmentID: garmentID,
-            newNote: note,
-            outfitItemIDs: log.outfitItemIDs
-        )
-        log.events[idx] = result.event
-        log.outfitItemIDs = result.outfitItemIDs
-        persist()
-    }
-
-    // MARK: Timeline
-
-    private var timelineCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Label("Таймлайн прогулки", systemImage: "list.bullet.rectangle")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button { showAddEvent = true } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(.blue)
-                }
-                .buttonStyle(.plain)
-            }
-
-            if log.events.isEmpty {
-                Text("Отметок не было")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            } else {
-                ForEach(log.events.sorted { $0.timestamp > $1.timestamp }) { event in
-                    timelineRow(event)
-                        .contextMenu {
-                            Button {
-                                reclassifyingEvent = event
-                            } label: {
-                                Label("Назначить действие", systemImage: "pencil")
-                            }
-                            Button(role: .destructive) {
-                                log.events.removeAll { $0.id == event.id }
-                                persist()
-                            } label: {
-                                Label("Удалить отметку", systemImage: "trash")
-                            }
-                        }
-                }
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
-    }
-
-    private func timelineRow(_ event: WalkEvent) -> some View {
-        let color = event.kind.color
-        let subtitle: String? = event.garmentID.flatMap { GarmentCatalog.byID[$0]?.name } ?? event.note
-        return HStack(spacing: 12) {
-            ZStack {
-                Circle().fill(color.opacity(0.15)).frame(width: 32, height: 32)
-                Image(systemName: event.kind.icon).font(.system(size: 14)).foregroundStyle(color)
-            }
-            VStack(alignment: .leading, spacing: 1) {
-                Text(event.kind.title).font(.subheadline.weight(.medium))
-                if let subtitle {
-                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            Spacer()
-            Text(event.timestamp, format: .dateTime.hour().minute())
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-            if event.kind == .checkpoint {
-                Button {
-                    reclassifyingEvent = event
-                } label: {
-                    Text("Назначить")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.blue, in: Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.vertical, 2)
     }
 
     // MARK: Sections
@@ -169,11 +55,11 @@ struct WalkLogDetailView: View {
                 Circle()
                     .fill(comfortColor.opacity(0.15))
                     .frame(width: 72, height: 72)
-                Image(systemName: log.comfortLevel.icon)
+                Image(systemName: log.comfortFeedback.icon)
                     .font(.system(size: 32))
                     .foregroundStyle(comfortColor)
             }
-            Text(log.comfortLevel.label)
+            Text(log.comfortFeedback.label)
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(comfortColor)
             Text("Самочувствие малыша")
@@ -252,12 +138,30 @@ struct WalkLogDetailView: View {
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.primary.opacity(0.10), lineWidth: 1))
     }
 
+    private var feedbackCard: some View {
+        SectionCard(title: L10n.text("После прогулки"), systemImage: "checkmark.bubble") {
+            infoRow(
+                icon: "thermometer.medium",
+                label: L10n.text("Самочувствие"),
+                value: log.comfortFeedback.label
+            )
+            Divider().padding(.leading, 52)
+            infoRow(
+                icon: "arrow.triangle.2.circlepath",
+                label: L10n.text("Одежда"),
+                value: log.clothingAdjustment.label
+            )
+        }
+    }
+
     private func deleteLog() {
-        if let idx = store.logs.firstIndex(where: { $0.id == log.id }) {
-            store.delete(at: IndexSet(integer: idx))
+        let logID = log.id
+        dismiss()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(250))
+            store.delete(id: logID)
             onChanged()
         }
-        dismiss()
     }
 
     private var durationString: String {

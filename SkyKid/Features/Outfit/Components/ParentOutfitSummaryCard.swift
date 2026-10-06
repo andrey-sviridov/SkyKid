@@ -10,12 +10,7 @@ struct ParentOutfitSummaryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
-            answerRow(
-                title: L10n.text("Что надеть"),
-                text: summary.outfit,
-                systemImage: "hanger",
-                tint: .indigo
-            )
+            outfitAnswer
             answerRow(
                 title: L10n.text("Почему"),
                 text: summary.reason,
@@ -93,6 +88,41 @@ struct ParentOutfitSummaryCard: View {
     }
 
     // MARK: - Answer rows
+
+    private var outfitAnswer: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "hanger")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(.indigo)
+                .frame(width: 26)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.text("Что надеть"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Text(summary.fit.label)
+                    .font(.subheadline.weight(.semibold))
+                    .fixedSize(horizontal: false, vertical: true)
+                garmentList
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var garmentList: some View {
+        if summary.garments.isEmpty {
+            Text(L10n.text("Дополнительные слои на корпус не нужны"))
+                .font(.subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(summary.garments) { garment in
+                    RecommendedGarmentRow(garment: garment)
+                }
+            }
+        }
+    }
 
     private func answerRow(
         title: String,

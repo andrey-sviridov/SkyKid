@@ -13,7 +13,7 @@ final class WalkContextStore {
     private(set) var context: WalkContext?
     private var profileIdentity: String?
 
-    private init() {}
+    init() {}
 
     // MARK: - Lifecycle
 
@@ -54,6 +54,16 @@ final class WalkContextStore {
             for: profile.thermalProfile,
             availableGarmentIDs: availableGarmentIDs
         )
+    }
+
+    func clear() {
+        context = nil
+        profileIdentity = nil
+    }
+
+    func replaceForRollback(with context: WalkContext?) {
+        self.context = context
+        profileIdentity = nil
     }
 
     // MARK: - Identity

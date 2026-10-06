@@ -28,7 +28,7 @@ final class WalkLiveActivityController {
             targetTOG: walk.targetTOG
         )
         let content = ActivityContent(
-            state: Self.contentState(for: walk, lastEvent: walk.events.last),
+            state: Self.contentState(for: walk, lastEvent: Self.latestGarmentEvent(in: walk)),
             staleDate: nil
         )
         activity = try? Activity.request(attributes: attributes, content: content, pushType: nil)
@@ -74,5 +74,11 @@ final class WalkLiveActivityController {
             isBassinetteOpen: walk.isBassinetteOpen,
             pendingControl: nil
         )
+    }
+
+    private static func latestGarmentEvent(in walk: ActiveWalk) -> WalkEvent? {
+        walk.events.last {
+            $0.kind == .addedGarment || $0.kind == .removedGarment
+        }
     }
 }

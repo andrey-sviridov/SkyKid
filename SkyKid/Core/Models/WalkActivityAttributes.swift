@@ -7,9 +7,7 @@ import Foundation
 // ContentState намеренно содержит только примитивы — виджет-таргет не
 // должен зависеть от GarmentCatalog/WalkEventKind.
 
-/// Какая из кнопок быстрых меток сейчас применяется — от тапа до записи
-/// события показывает спиннер и блокирует весь ряд кнопок, чтобы было видно,
-/// что действие в процессе.
+/// Legacy compatibility for already-running activities created before SKY-019.
 enum QuickMarkControl: String, Codable, Hashable {
     case sleep, bassinette, checkpoint
 }
@@ -21,19 +19,15 @@ struct WalkActivityAttributes: ActivityAttributes {
         var lastEventTitle: String?
         var lastEventIcon: String?
         var lastEventDate: Date?
-        /// Спит ли ребёнок сейчас — определяет подпись/иконку кнопки «Сон/Подъём»
-        /// на экране блокировки.
+        /// Legacy fields remain decodable until the model cleanup phase.
         var isSleeping: Bool
-        /// Открыта ли люлька сейчас — определяет подпись/иконку кнопки-переключателя.
         var isBassinetteOpen: Bool
-        /// Кнопка, у которой тап уже произошёл, но событие ещё не записано —
-        /// `nil`, когда все три кнопки в состоянии покоя.
         var pendingControl: QuickMarkControl?
     }
 
     var startDate: Date
     var plannedDurationMinutes: Int?
-    var weatherTemperature: Double
+    var weatherTemperature: Double?
     var weatherCode: Int?
     var weatherIconSymbol: String?
     var weatherDescription: String?

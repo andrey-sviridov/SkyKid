@@ -1,7 +1,6 @@
 import SwiftUI
 
-// P1-1: экран «Мой гардероб» — отметить, какие предметы каталога реально есть.
-// OutfitSolver рекомендует только из отмеченного.
+// Optional reference screen; setup is never required for recommendations.
 
 struct MyWardrobeView: View {
     @Environment(UserWardrobeStore.self) private var store
@@ -39,7 +38,7 @@ struct MyWardrobeView: View {
             Image(systemName: "info.circle.fill")
                 .font(.title3)
                 .foregroundStyle(.blue)
-            Text("Снимите отметку с вещей, которых у вас нет, — SkyKid не будет их рекомендовать и подскажет, чего не хватает.")
+            Text("Отмечайте только то, что точно знаете. Новые вещи остаются со статусом «Не указано», пока вы не ответите.")
                 .font(.caption)
                 .foregroundStyle(.primary)
         }
@@ -58,10 +57,12 @@ struct MyWardrobeView: View {
                 ForEach(Array(items.enumerated()), id: \.element.id) { idx, item in
                     WardrobeItemRow(
                         item: item,
-                        isOwned: store.isOwned(item.id),
+                        ownership: store.ownership(of: item.id),
                         isLast: idx == items.count - 1
-                    ) {
-                        withAnimation(.spring(response: 0.28)) { store.toggle(item.id) }
+                    ) { ownership in
+                        withAnimation(.spring(response: 0.28)) {
+                            store.setOwnership(ownership, for: item.id)
+                        }
                     }
                 }
             }

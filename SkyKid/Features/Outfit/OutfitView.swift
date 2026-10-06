@@ -11,6 +11,7 @@ struct OutfitView: View {
     let onFeedbackRecorded: () -> Void
 
     @Environment(NotificationService.self) private var notificationService
+    @Environment(UserWardrobeStore.self) private var wardrobeStore
     @State private var viewModel: OutfitViewModel
     @State private var showWalkPreparation = false
 
@@ -65,6 +66,12 @@ struct OutfitView: View {
                                 showWalkPreparation = true
                             }
                         }
+                        if !unknownRecommendedItems.isEmpty {
+                            WardrobeConfirmationCard(
+                                items: unknownRecommendedItems,
+                                onAnswer: wardrobeStore.setOwnership
+                            )
+                        }
                         let safetyWarnings = visibleSafetyWarnings(in: rec)
                         if !safetyWarnings.isEmpty {
                             OutfitSafetyWarningsSection(warnings: safetyWarnings)
@@ -79,14 +86,6 @@ struct OutfitView: View {
                                 fit: rec.fit,
                                 severity: guidance.severity
                             )
-                        }
-                        OutfitFeedbackSection(
-                            feedback: viewModel.feedbackSent,
-                            confirmationMessage: viewModel.feedbackMessage
-                        ) { feedback in
-                            if viewModel.recordFeedback(feedback) {
-                                onFeedbackRecorded()
-                            }
                         }
                     }
                     .containerRelativeFrame(.horizontal)
@@ -155,6 +154,34 @@ struct OutfitView: View {
                 }
                 .foregroundStyle(.primary)
             }
+            if let profile,
+               let recommendation = viewModel.recommendation,
+               let walkContext {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ShareLink(item: ShareOutfitComposer.compose(
+                        summary: OutfitParentSummaryBuilder.make(
+                            recommendation: recommendation,
+                            weather: weather,
+                            profile: profile.thermalProfile,
+                            walkContext: walkContext
+                        ),
+                        childName: profile.name,
+                        weather: weather,
+                        weatherUpdatedAt: nil,
+                        walkContext: walkContext
+                    )) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel(L10n.text("Поделиться рекомендацией"))
+                }
+            }
+        }
+    }
+
+    private var unknownRecommendedItems: [GarmentItem] {
+        viewModel.displayLayers.compactMap { layer in
+            guard wardrobeStore.ownership(of: layer.id) == .unknown else { return nil }
+            return GarmentCatalog.byID[layer.id]
         }
     }
 
@@ -277,7 +304,7 @@ struct OutfitView: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(layer.name)
+                Text(OutfitFitPresentation.consumerGarmentName(layer.name))
                     .font(.body.weight(.medium))
                     .fixedSize(horizontal: false, vertical: true)
                 Text(layer.reason)
@@ -314,7 +341,9 @@ struct OutfitView: View {
         )
         .padding(.vertical, 0.5)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(layer.name). \(layer.reason). Добавлено в комплект")
+        .accessibilityLabel(
+            "\(OutfitFitPresentation.consumerGarmentName(layer.name)). \(layer.reason). Добавлено в комплект"
+        )
     }
 
     // MARK: - Guidance filtering
@@ -377,6 +406,7 @@ struct OutfitView: View {
         )
     }
     .environment(NotificationService.shared)
+    .environment(UserWardrobeStore.shared)
 }
 
 #Preview("❄️ Зима · 4 мес") {
@@ -400,6 +430,7 @@ struct OutfitView: View {
         )
     }
     .environment(NotificationService.shared)
+    .environment(UserWardrobeStore.shared)
 }
 
 #Preview("Нет профиля") {
@@ -407,5 +438,50 @@ struct OutfitView: View {
         OutfitView(weather: .mock)
     }
     .environment(NotificationService.shared)
+    .environment(UserWardrobeStore.shared)
 }
 #endif
+
+// MARK: - Wardrobe confirmation
+
+private struct WardrobeConfirmationCard: View {
+    let items: [GarmentItem]
+    let onAnswer: (WardrobeOwnership, String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label(L10n.text("Эти вещи есть дома?"), systemImage: "hanger")
+                .font(.subheadline.weight(.semibold))
+            Text(L10n.text("Ответьте только если удобно — это уточнит следующие рекомендации."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ForEach(items.prefix(3)) { item in
+                HStack(spacing: 10) {
+                    Text(OutfitFitPresentation.consumerGarmentName(item.name))
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    answerButton(L10n.text("Есть"), ownership: .owned, itemID: item.id)
+                    answerButton(L10n.text("Нет"), ownership: .unavailable, itemID: item.id)
+                }
+                .accessibilityElement(children: .contain)
+            }
+        }
+        .padding(16)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.indigo.opacity(0.25)))
+        .accessibilityIdentifier("outfit.wardrobeConfirmation")
+    }
+
+    private func answerButton(
+        _ title: String,
+        ownership: WardrobeOwnership,
+        itemID: String
+    ) -> some View {
+        Button(title) { onAnswer(ownership, itemID) }
+            .font(.caption.weight(.semibold))
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .frame(minHeight: 44)
+    }
+}

@@ -3,8 +3,7 @@ import SwiftUI
 // MARK: - WalkCompletionView
 
 /// Экран, который показывается сразу после завершения живой прогулки.
-/// Основные итоги остаются на виду, а подробности открываются отдельной
-/// кнопкой, чтобы завершение не превращалось в длинный отчёт.
+/// Короткое подтверждение сохранения без журнала событий.
 struct WalkCompletionView: View {
     let log: WalkLog
 
@@ -20,23 +19,6 @@ struct WalkCompletionView: View {
                 VStack(spacing: 16) {
                     completionHero
                     previewCard
-
-                    NavigationLink {
-                        WalkSummaryView(log: log)
-                    } label: {
-                        Label(
-                            L10n.text("Сводка о прогулке"),
-                            systemImage: "list.bullet.clipboard.fill"
-                        )
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 15)
-                        .background(Color.blue, in: RoundedRectangle(cornerRadius: 16))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("walk.completion.summary")
-                    .accessibilityHint(L10n.text("Показывает длительность сна и другие итоги прогулки"))
 
                 }
                 .padding(.horizontal, 16)
@@ -87,22 +69,16 @@ struct WalkCompletionView: View {
             Divider().frame(height: 54)
 
             MetricTile(
-                icon: "moon.zzz.fill",
-                color: .purple,
-                value: sleepValue,
-                label: L10n.text("Сон")
+                icon: log.comfortFeedback.icon,
+                color: log.comfortFeedback.color,
+                value: log.comfortFeedback.label,
+                label: L10n.text("Самочувствие")
             )
         }
         .padding(.vertical, 16)
         .glassCard(cornerRadius: 18, padding: 0)
     }
 
-    private var sleepValue: String {
-        guard let minutes = summary.sleepDurationMinutes else {
-            return L10n.text("Не отмечен")
-        }
-        return L10n.format("%lld мин", minutes)
-    }
 }
 
 #if DEBUG

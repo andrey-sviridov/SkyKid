@@ -14,26 +14,28 @@ struct LogWalkSheet: View {
     @State private var durationMinutes: Int = 30
     @State private var comfortLevel: BabyComfortLevel = .comfortable
     @State private var selectedOutfitIDs: Set<String> = []
-    @State private var walkTemperature: Double = 12
+    // A manual log has no captured weather by default. The scalar is retained
+    // for legacy consumers; it is not provenance and is never filled from the
+    // current screen context.
+    @State private var walkTemperature: Double?
 
     private var isEditing: Bool { editingLog != nil }
-
-    private var suggestedIDs: [String] {
-        guard let recommendation else { return [] }
-        return recommendation.allDisplayLayers.map(\.id)
-    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     WalkDateTimeCard(date: $walkDate)
-                    WalkTemperatureCard(temperature: $walkTemperature)
+                    if isEditing {
+                        WalkTemperatureCard(temperature: $walkTemperature)
+                    } else {
+                        WalkWeatherSnapshotCard(weather: nil)
+                    }
                     DurationPickerCard(durationMinutes: $durationMinutes)
                     ComfortLevelCard(selected: $comfortLevel)
                     OutfitSummaryCard(
                         selectedIDs: $selectedOutfitIDs,
-                        suggestedIDs: suggestedIDs,
+                        suggestedIDs: [],
                         profile: profile,
                         startInManual: isEditing
                     )
@@ -65,8 +67,8 @@ struct LogWalkSheet: View {
                     comfortLevel       = log.comfortLevel
                     selectedOutfitIDs  = Set(log.outfitItemIDs)
                 } else {
-                    walkTemperature   = weather?.apparentTemperature ?? weather?.temperature ?? 12
-                    selectedOutfitIDs = Set(suggestedIDs)
+                    walkTemperature   = nil
+                    selectedOutfitIDs = []
                 }
             }
         }
@@ -80,32 +82,51 @@ struct LogWalkSheet: View {
             existing.durationMinutes    = durationMinutes
             existing.comfortLevel       = comfortLevel
             existing.outfitItemIDs      = Array(selectedOutfitIDs)
-            existing.microclimateTemperature = existing.microclimateTemperature ?? walkTemperature
-            existing.transportMode      = existing.transportMode ?? walkContext?.transportMode
-            existing.activityLevel      = existing.activityLevel ?? walkContext?.activityLevel
-            existing.walkType           = existing.walkType ?? walkContext?.walkType
-            existing.targetTOG           = existing.targetTOG ?? recommendation?.targetTOG
             existing.effectiveOutfitTOG  = selectedOutfitTOG
             store.update(existing, profile: profile)
         } else {
-            let log = WalkLog(
+            let log = Self.makeManualLog(
                 date: walkDate,
                 durationMinutes: durationMinutes,
                 outfitItemIDs: Array(selectedOutfitIDs),
                 comfortLevel: comfortLevel,
-                weatherTemperature: walkTemperature,
-                apparentTemperature: weather?.apparentTemperature ?? walkTemperature,
-                microclimateTemperature: recommendation?.temperatures.microclimate ?? walkTemperature,
-                transportMode: walkContext?.transportMode,
-                activityLevel: walkContext?.activityLevel,
-                walkType: walkContext?.walkType,
-                targetTOG: recommendation?.targetTOG,
+                temperature: walkTemperature,
                 effectiveOutfitTOG: selectedOutfitTOG
             )
             store.add(log, profile: profile)
         }
         onSaved()
         dismiss()
+    }
+
+    // MARK: - Log factory
+
+    /// Manual history is deliberately detached from the current weather and
+    /// recommendation context. A temperature is only the user's explicit
+    /// legacy scalar input; it is not persisted as weather provenance.
+    static func makeManualLog(
+        date: Date,
+        durationMinutes: Int,
+        outfitItemIDs: [String],
+        comfortLevel: BabyComfortLevel,
+        temperature: Double?,
+        effectiveOutfitTOG: Double?
+    ) -> WalkLog {
+        WalkLog(
+            date: date,
+            durationMinutes: durationMinutes,
+            outfitItemIDs: outfitItemIDs,
+            comfortLevel: comfortLevel,
+            weatherTemperature: temperature,
+            apparentTemperature: temperature,
+            microclimateTemperature: nil,
+            transportMode: nil,
+            activityLevel: nil,
+            walkType: nil,
+            targetTOG: nil,
+            effectiveOutfitTOG: effectiveOutfitTOG,
+            weatherSnapshot: nil
+        )
     }
 
     private var selectedOutfitTOG: Double? {

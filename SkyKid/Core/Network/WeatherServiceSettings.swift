@@ -69,10 +69,14 @@ enum WeatherProvider: String, CaseIterable, Identifiable {
 
     // MARK: - UserDefaults keys
 
+#if DEBUG
     static let providerKey    = "weatherProvider"
     static let owmKeyKey      = "owmApiKey"        // OpenWeatherMap
     static let wapiKeyKey     = "wapiApiKey"        // WeatherAPI.com
     static let yandexKeyKey   = "yandexApiKey"      // Яндекс Погода
+#else
+    fileprivate static let providerKey = "weatherProvider"
+#endif
 
     // MARK: - Factory
 
@@ -80,6 +84,7 @@ enum WeatherProvider: String, CaseIterable, Identifiable {
     /// Returns nil if the provider needs an API key that has not been set,
     /// or if the provider's integration is unavailable.
     static func makeService(for provider: WeatherProvider) -> (any WeatherService)? {
+#if DEBUG
         switch provider {
         case .openMeteo:
             return OpenMeteoService()
@@ -105,13 +110,20 @@ enum WeatherProvider: String, CaseIterable, Identifiable {
         case .gismeteo:
             return nil
         }
+#else
+        OpenMeteoService()
+#endif
     }
 
     /// The service currently selected in Settings. Falls back to Open-Meteo
     /// if the active provider is misconfigured (e.g. missing API key).
     static var activeService: any WeatherService {
+#if DEBUG
         let raw      = UserDefaults.standard.string(forKey: providerKey) ?? ""
         let provider = WeatherProvider(rawValue: raw) ?? .openMeteo
         return makeService(for: provider) ?? OpenMeteoService()
+#else
+        return OpenMeteoService()
+#endif
     }
 }

@@ -7,7 +7,6 @@ struct ProfileSummaryView: View {
     @Binding var profile: ChildProfile?
     @Environment(NotificationService.self) private var notificationService
     @Environment(UserWardrobeStore.self) private var wardrobeStore
-    @Environment(SupabaseAuthService.self) private var authService
     @State private var showEdit = false
     @State private var notificationsOn = false
     @State private var showWalkSchedule = false
@@ -19,16 +18,13 @@ struct ProfileSummaryView: View {
             if let p = profile {
                 VStack(spacing: 20) {
                     nameHeader(p)
-                    AccountCard(profile: p)
-                    if authService.isSignedIn {
-                        FamilyCard()
-                    }
                     if hasAdditionalProfileDetails(p) {
                         infoCards(p)
                     }
                     wardrobeCard
                     remindersCard
                     appSettingsCard
+                    dataManagementCard
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
@@ -253,9 +249,6 @@ struct ProfileSummaryView: View {
                 VStack(spacing: 12) {
                     themeCard
                     AppLanguagePickerCard()
-                    if authService.isSignedIn {
-                        LiveWalkNotificationsCard()
-                    }
                     siriCard
                 }
             }
@@ -320,6 +313,45 @@ struct ProfileSummaryView: View {
                 owned,
                 total
             )
+    }
+
+    // MARK: - Theme card
+
+    private var dataManagementCard: some View {
+        VStack(spacing: 0) {
+            NavigationLink {
+                MethodologyView()
+            } label: {
+                settingsRow(L10n.text("Как работает SkyKid"), icon: "info.circle.fill")
+            }
+            Divider().padding(.leading, 36)
+            NavigationLink {
+                BackupRestoreView {
+                    profile = ChildProfileStore.shared.profile
+                }
+            } label: {
+                settingsRow(L10n.text("Резервная копия"), icon: "externaldrive.fill")
+            }
+            Divider().padding(.leading, 36)
+            NavigationLink {
+                DeleteLocalDataConfirmationView { profile = nil }
+            } label: {
+                settingsRow(L10n.text("Удалить локальные данные"), icon: "trash", color: .red)
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
+    }
+
+    private func settingsRow(_ title: String, icon: String, color: Color = .secondary) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon).foregroundStyle(color).frame(width: 24)
+            Text(title).foregroundStyle(color == .red ? Color.red : Color.primary)
+            Spacer()
+            Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 
     // MARK: - Theme card
@@ -426,7 +458,6 @@ struct ProfileSummaryView: View {
         ProfileSummaryView(profile: .constant(.mock))
             .environment(NotificationService.shared)
             .environment(UserWardrobeStore.shared)
-            .environment(SupabaseAuthService.shared)
             .environment(WalkLogStore.shared)
     }
 }

@@ -19,7 +19,9 @@ struct WalkSummary: Equatable {
     let eventCount: Int
     let plannedDurationMinutes: Int?
     let comfortLevel: BabyComfortLevel
-    let weatherTemperature: Double
+    let comfortFeedback: WalkComfortFeedback
+    let clothingAdjustment: ClothingAdjustment
+    let weatherTemperature: Double?
 
     var hasSleepData: Bool {
         sleepSessionCount > 0
@@ -36,7 +38,7 @@ struct WalkSummary: Equatable {
 /// Чистый расчёт итогов по событиям прогулки.
 enum WalkSummaryBuilder {
     static func make(from log: WalkLog) -> WalkSummary {
-        let durationMinutes = max(1, log.durationMinutes)
+        let durationMinutes = max(0, log.durationMinutes)
         let startDate = log.date
         let endDate = startDate.addingTimeInterval(TimeInterval(durationMinutes * 60))
         let events = log.events
@@ -72,6 +74,8 @@ enum WalkSummaryBuilder {
             eventCount: log.events.count,
             plannedDurationMinutes: log.plannedDurationMinutes,
             comfortLevel: log.comfortLevel,
+            comfortFeedback: log.comfortFeedback,
+            clothingAdjustment: log.clothingAdjustment,
             weatherTemperature: log.weatherTemperature
         )
     }

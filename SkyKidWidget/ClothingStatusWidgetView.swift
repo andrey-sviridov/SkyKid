@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import WidgetKit
 
@@ -168,7 +169,7 @@ struct SmallWidgetView: View {
                 .padding(.bottom, 6)
 
             ForEach(rec.outfitItems.prefix(2), id: \.self) { item in
-                Text("· \(item)")
+                Text("· \(consumerGarmentName(item))")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -310,7 +311,7 @@ struct MediumWidgetView: View {
 
             ForEach(rec.outfitItems.prefix(4), id: \.self) { item in
                 Label {
-                    Text(item).lineLimit(1)
+                    Text(consumerGarmentName(item)).lineLimit(1)
                 } icon: {
                     Image(systemName: sfSymbol(for: item))
                         .symbolRenderingMode(.hierarchical)
@@ -447,13 +448,23 @@ struct RectangularAccessoryView: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
 
-            Text(rec.topItemsSummary)
+            Text(rec.outfitItems.prefix(3).map(consumerGarmentName).joined(separator: " · "))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }
         .containerBackground(.clear, for: .widget)
     }
+}
+
+// MARK: - Consumer garment names
+
+private func consumerGarmentName(_ name: String) -> String {
+    name.replacingOccurrences(
+        of: #"\s*\([^)]*\bTOG\b[^)]*\)"#,
+        with: "",
+        options: [.regularExpression, .caseInsensitive]
+    )
 }
 
 // MARK: - Общий компонент: бейдж статуса

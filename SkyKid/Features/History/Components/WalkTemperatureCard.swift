@@ -1,9 +1,10 @@
 import SwiftUI
 
 struct WalkTemperatureCard: View {
-    @Binding var temperature: Double
+    @Binding var temperature: Double?
 
     private var tempColor: Color {
+        guard let temperature else { return .secondary }
         switch temperature {
         case ...0:    return .blue
         case 0..<15:  return Color(red: 0.2, green: 0.55, blue: 1.0)
@@ -24,11 +25,11 @@ struct WalkTemperatureCard: View {
                 .foregroundStyle(.tertiary)
 
             HStack(spacing: 20) {
-                stepButton(icon: "minus", action: { temperature = max(-30, temperature - 1) })
+                stepButton(icon: "minus", action: { temperature = max(-30, (temperature ?? 0) - 1) })
 
                 Spacer()
 
-                Text("\(Int(temperature.rounded()))°C")
+                Text(temperature.map { "\(Int($0.rounded()))°C" } ?? L10n.text("Не указана"))
                     .font(.system(size: 44, weight: .thin, design: .rounded))
                     .foregroundStyle(tempColor)
                     .contentTransition(.numericText())
@@ -37,10 +38,17 @@ struct WalkTemperatureCard: View {
 
                 Spacer()
 
-                stepButton(icon: "plus", action: { temperature = min(45, temperature + 1) })
+                stepButton(icon: "plus", action: { temperature = min(45, (temperature ?? 0) + 1) })
             }
 
-            Slider(value: $temperature, in: -30...45, step: 1)
+            Slider(
+                value: Binding(
+                    get: { temperature ?? 0 },
+                    set: { temperature = $0 }
+                ),
+                in: -30...45,
+                step: 1
+            )
                 .tint(tempColor)
                 .transaction { t in t.animation = nil }
         }

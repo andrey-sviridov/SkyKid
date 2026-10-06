@@ -13,17 +13,17 @@ final class WalkLogStore {
 
     private let defaults: UserDefaults
     private let personalizationStore: PersonalOffsetStore
-    private let syncService: SupabaseSyncService
+    private let nowProvider: () -> Date
     private let storageKey = "walk_logs_v1"
 
     init(
         defaults: UserDefaults = AppGroup.defaults,
         personalizationStore: PersonalOffsetStore = .shared,
-        syncService: SupabaseSyncService = .shared
+        nowProvider: @escaping () -> Date = Date.init
     ) {
         self.defaults = defaults
         self.personalizationStore = personalizationStore
-        self.syncService = syncService
+        self.nowProvider = nowProvider
         load()
     }
 
@@ -33,7 +33,6 @@ final class WalkLogStore {
         logs.insert(log, at: 0)
         save()
         synchronizePersonalization(for: log, profile: profile)
-        Task { await syncService.pushWalkLog(log) }
     }
 
     func update(_ log: WalkLog, profile: ChildProfile?) {
@@ -41,20 +40,16 @@ final class WalkLogStore {
         logs[index] = log
         save()
         synchronizePersonalization(for: log, profile: profile)
-        Task { await syncService.pushWalkLog(log) }
     }
 
-    /// Стирает локальный журнал прогулок без каскадного удаления на
-    /// сервере — вызывается при выходе из аккаунта
-    /// (`SupabaseAuthService.signOut()`), где записи принадлежат уже
-    /// отвязываемому пользователю. Не должно триггерить `deleteWalkLogRemote`:
-    /// сами данные на сервере ещё принадлежат этому аккаунту и должны
-    /// остаться доступны, если пользователь снова войдёт на этом или другом
-    /// устройстве — стираем только локальный кеш, чтобы следующий
-    /// `ContentView.syncOnLaunch()` не запушил их под чужим `auth.uid()`.
     func clearAll() {
         logs.forEach { personalizationStore.removeObservation(sourceID: $0.id) }
         logs = []
+        save()
+    }
+
+    func replaceForRestore(with logs: [WalkLog]) {
+        self.logs = logs.sorted { $0.date > $1.date }
         save()
     }
 
@@ -65,9 +60,11 @@ final class WalkLogStore {
         logs.remove(atOffsets: offsets)
         save()
         deletedIDs.forEach { personalizationStore.removeObservation(sourceID: $0) }
-        for id in deletedIDs {
-            Task { await syncService.deleteWalkLogRemote(id: id) }
-        }
+    }
+
+    func delete(id: UUID) {
+        guard let index = logs.firstIndex(where: { $0.id == id }) else { return }
+        delete(at: IndexSet(integer: index))
     }
 
     // MARK: - Stats
@@ -85,24 +82,39 @@ final class WalkLogStore {
         for log: WalkLog,
         profile: ChildProfile?
     ) {
+        // Evaluate a historical record in the walk's own temporal context;
+        // editing it today must not make its original weather snapshot stale.
+        guard log.personalizationEligibility(at: log.date).isEligible else {
+            personalizationStore.removeObservation(sourceID: log.id)
+            return
+        }
+
         guard let profile else {
             personalizationStore.removeObservation(sourceID: log.id)
             return
         }
 
-        let defaults = WalkContext.standard(
-            for: profile.thermalProfile,
-            availableGarmentIDs: Set(log.outfitItemIDs)
-        )
+        guard let microclimateTemperature = log.microclimateTemperature,
+              let transportMode = log.transportMode,
+              let activityLevel = log.activityLevel,
+              let walkType = log.walkType
+        else {
+            personalizationStore.removeObservation(sourceID: log.id)
+            return
+        }
+
         let context = PersonalizationContext(
-            microclimateTemperature: log.microclimateTemperature ?? log.apparentTemperature,
-            transportMode: log.transportMode ?? defaults.transportMode,
-            activityLevel: log.activityLevel ?? defaults.activityLevel,
-            walkType: log.walkType ?? .regular,
+            microclimateTemperature: microclimateTemperature,
+            transportMode: transportMode,
+            activityLevel: activityLevel,
+            walkType: walkType,
             outfitItemIDs: log.outfitItemIDs,
             targetTOG: log.targetTOG,
             effectiveOutfitTOG: log.effectiveOutfitTOG,
-            durationMinutes: log.durationMinutes
+            durationMinutes: log.durationMinutes,
+            childAgeBand: PersonalizationAgeBand(ageGroup: profile.ageGroup),
+            weatherCode: log.weatherCode ?? log.weatherSnapshot?.weatherCode,
+            clothingAdjustment: log.clothingAdjustment
         )
 
         personalizationStore.removeObservation(sourceID: log.id)
@@ -116,11 +128,11 @@ final class WalkLogStore {
         )
     }
 
-    private func feedback(for comfortLevel: BabyComfortLevel) -> UserFeedback {
-        switch comfortLevel {
-        case .cold:             return .tooCold
-        case .comfortable:      return .comfortable
-        case .warm, .sweating:  return .tooWarm
+    private func feedback(for comfort: BabyComfortLevel) -> UserFeedback {
+        switch comfort {
+        case .cold: return .tooCold
+        case .comfortable: return .comfortable
+        case .warm, .sweating: return .tooWarm
         }
     }
 

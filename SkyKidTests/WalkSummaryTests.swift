@@ -59,6 +59,23 @@ final class WalkSummaryTests: XCTestCase {
         XCTAssertFalse(summary.hasSleepData)
     }
 
+    func test_summaryPreservesZeroDurationAndOptionalFeedback() {
+        let log = WalkLog(
+            date: startDate,
+            durationMinutes: 0,
+            comfortLevel: .comfortable,
+            comfortFeedback: .skipped,
+            clothingAdjustment: .addedLayer,
+            events: []
+        )
+
+        let summary = WalkSummaryBuilder.make(from: log)
+
+        XCTAssertEqual(summary.durationMinutes, 0)
+        XCTAssertEqual(summary.comfortFeedback, .skipped)
+        XCTAssertEqual(summary.clothingAdjustment, .addedLayer)
+    }
+
     // MARK: - Fixtures
 
     private func event(at minute: Int, kind: WalkEventKind) -> WalkEvent {

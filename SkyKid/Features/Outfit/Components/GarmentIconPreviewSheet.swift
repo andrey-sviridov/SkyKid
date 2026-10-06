@@ -9,11 +9,11 @@ struct GarmentIconPreviewSheet: View {
                 .padding(.top, 18)
 
             VStack(spacing: 6) {
-                Text(item.name)
+                Text(OutfitFitPresentation.consumerGarmentName(item.name))
                     .font(.headline)
                     .multilineTextAlignment(.center)
-                Text(String(format: "%.2g TOG", item.tog))
-                    .font(.subheadline.monospacedDigit())
+                Text(WalkTOGVerdict.densityLabel(for: item.tog))
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
 

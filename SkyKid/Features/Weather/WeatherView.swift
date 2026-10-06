@@ -19,6 +19,7 @@ struct WeatherView: View {
             }
         }
         .skyKidBackground()
+#if DEBUG
         .toolbar {
             providerToolbarItem
         }
@@ -33,6 +34,7 @@ struct WeatherView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
+#endif
     }
 
     // MARK: - Hero
@@ -178,6 +180,7 @@ struct WeatherView: View {
     }
 
     // Источник остаётся доступным, но не занимает место в основном прогнозе.
+#if DEBUG
     private var providerToolbarItem: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button {
@@ -188,6 +191,7 @@ struct WeatherView: View {
             .accessibilityLabel(L10n.text("Источник данных"))
         }
     }
+#endif
 
 }
 
